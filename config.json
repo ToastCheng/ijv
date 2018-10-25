@@ -1,0 +1,51 @@
+{
+
+	"session_id": "test",
+
+	"save_path": "output/",
+	"forward": true,
+
+	"num_photon": 2e9,
+	"photon_batch": 5e7,
+	"max_detect_photon": 5e8,
+	"voxel_size": 0.5,	
+	"gris_size": 100.0,	
+
+	"start_time": 0,
+	"end_time": 4e-8,
+	"interval_time": 4e-8,
+
+	"min_energy": 1e-15,
+
+	"external_reflection": true,
+	"internal_reflection": true,
+
+	"source_type": "pencil",
+	"source_radium": -2,
+	"source_position": [-12, 0, 0],
+	"source_direction": [0, 0, 1],
+
+	"binary_path": "mcx/bin/mcx",
+
+	"medium_n": 1.457,
+
+	"tissue_type": "muscle",
+
+	"experience_type": "human",
+	"experience_type": "phantom",
+
+	"absorb_file": "input/coefficients.csv",
+	"fiber_file": "input/fiber.csv",
+	"input_file": "input/parameters.json",
+	"wavelength_file": "input/wavelength.csv",
+	"geometry_file": "input_mcx/case3.json",
+
+
+	"compress": {"use": true, "n": 1, "NA": 0.12},
+	"denoise": {"use": true, "num_run": 5, "num_pick": 3},
+	"white": {"use": true, "mch_file_path": []}
+
+
+
+
+}
