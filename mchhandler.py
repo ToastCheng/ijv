@@ -35,11 +35,11 @@ class MCHHandler:
 
 		self.detector_na = 0.22
 		self.detector_n = 1.457
-		# self.critical_angle = np.arcsin(self.detector_na/self.detector_n)
-		self.critical_angle = 12
+		self.critical_angle = np.arcsin(self.detector_na/self.detector_n)
+		# self.critical_angle = 12
 
 
-	def compute_reflectance_white(self, mch_file=None, test=False):
+	def compute_reflectance_white(self, wl, mch_file=None, test=False):
 		# reload a .mch file
 		if mch_file is not None:
 			self.df, self.header, self.photon = self._load_mch(mch_file)
@@ -64,46 +64,46 @@ class MCHHandler:
 			df = pd.DataFrame(data, columns=['detector_idx', 'media_0', 'media_1', 'media_2', 'angle'])
 
 
-		# [medium, wavelength, ScvO2]
-		# ->[ScvO2, wavelength, medium]
-		mua = self._make_tissue_white()
+		# [photon, medium]
+		path_length = df.iloc[:, 1:-1].values
+		path_length = torch.tensor(path_length).float().to(device)
+
+		# [medium, ScvO2]
+		mua = self._make_tissue_white(wl)
 		mua = torch.tensor(mua).float().to(device)
 
-		# [medium, photon]
-		path_length = df.iloc[:, 1:-1].values
-		path_length = torch.tensor(path_length).transpose(1, 0).float().to(device)
-
-		# [ScvO2, wavelength, photon]
-		# print(-torch.matmul(mua, path_length)*self.header["unitmm"])
-		weight = torch.exp(-torch.matmul(mua, path_length)*self.header["unitmm"]) 
+		# [photon, ScvO2]
+		weight = torch.exp(-torch.matmul(path_length, mua) *self.header["unitmm"]) 
 		
-		# [ScvO2, wavelength, 1]
-		result = torch.zeros(weight.shape[:-1]).unsqueeze(2).float().to(device)
+		# [1, ScvO2]
+		result = torch.zeros(1, weight.shape[1]).float().to(device)
 
 		# seperate photon with different detector
 		for idx in range(1, self.header["detnum"]+1):
 
 			# get the index of specific index
 			detector_list = df.index[df["detector_idx"] == idx].tolist()
-
+			if len(detector_list) == 0:
+				print("detector #%d detected no photon" % idx)
+				result = torch.cat((result, torch.zeros(1, weight.shape[1]).float().to(device)), 0)
+				continue
 			# pick the photon that detected by specific detector
-			# [ScvO2, wavelength, 1]
-			# print("go")
+			
+			# [photon, ScvO2]
+			_weight = weight[detector_list]
+			# print(_weight.shape)
+			_weight = _weight.sum(0)
+			_weight = _weight.unsqueeze(0)
+			# print(_weight.shape)
 			# print(result.shape)
-			# print(weight.shape)
-			_weight = weight[:, :, detector_list]
-			# print(_weight.shape)
-			_weight = _weight.sum(2)
-			_weight = _weight.unsqueeze(2)
-			# print(_weight.shape)
-			result = torch.cat((result, _weight), 2)
+			result = torch.cat((result, _weight), 0)
 
-		# [ScvO2, wavelength, SDS]
-		result = result[:, :, 1:]
+		# [SDS, ScvO2]
+		result = result[1:]
 
 		return result.cpu().numpy()/self.header["total_photon"]
 		
-	def _make_tissue_white(self):
+	def _make_tissue_white(self, wl):
 
 		# the ScvO2
 		ScvO2 = np.arange(0, 1.01, 0.01)
@@ -112,31 +112,31 @@ class MCHHandler:
 		oxy = self.mua['oxy'].values
 		deoxy = self.mua['deoxy'].values
 		water = self.mua['water'].values
-		wl = self.mua['nmlib'].values
+		collagen = self.mua['collagen'].values
+		wavelength = self.mua['wavelength'].values
 
 		# interpolation
-		oxy = np.interp(self.wavelength, wl, oxy)
-		deoxy = np.interp(self.wavelength, wl, deoxy)
-		water = np.interp(self.wavelength, wl, water)
+		oxy = np.interp(wl, wavelength, oxy)
+		deoxy = np.interp(wl, wavelength, deoxy)
+		water = np.interp(wl, wavelength, water)
+		collagen = np.interp(wl, wavelength, collagen)
 
 		# turn the unit 1/cm --> 1/mm
 		oxy *= 0.1
 		deoxy *= 0.1
 		water *= 0.1
+		collagen *= 0.1
 
-		# [medium, wavelength, 1]
-		mua = np.zeros((3, len(self.wavelength), 1))
+		# [medium, 1]
+		mua = np.zeros((3, 1))
 
 
 		for s in ScvO2:
 
-			muscle = self._calculate_mua(
-				self.input["muscle"]["blood_volume_fraction"],
-				self.input["muscle"]["ScvO2"],
+			muscle = self._calculate_muscle_mua(
 				self.input["muscle"]["water_volume"],
-				oxy, 
-				deoxy, 
-				water
+				water,
+				collagen
 				)
 
 			IJV = self._calculate_mua(
@@ -164,13 +164,11 @@ class MCHHandler:
 			# print(_mua.shape)
 			# print(mua.shape)
 			mua = np.concatenate(
-				[mua, _mua], 2
+				[mua, np.expand_dims(_mua, 1)], 1
 				)
 
-		# [medium, wavelength, ScvO2]
-		# -> [ScvO2, wavelength, medium]
-		mua = mua[:, :, 1:]
-		mua = np.transpose(mua, (2, 1, 0))
+		# [medium, ScvO2]
+		mua = mua[:, 1:]
 		return mua
 
 	def _parse_mch(self):
@@ -194,6 +192,11 @@ class MCHHandler:
 		return mua
 
 	@staticmethod
+	def _calculate_muscle_mua(w, water, collagen):
+		mua = w * water + (1-w) * collagen
+		return mua 
+
+	@staticmethod
 	def _load_mch(path):
 		data = load_mch(path)
 		# check if the mcx saved the photon seed
@@ -205,6 +208,39 @@ class MCHHandler:
 
 		return df, header, photon_seed
 
+	def test(self):
+		# JUST FOR DEVELOPMENT
+		wl = 900
+
+		# mua
+		oxy = self.mua['oxy'].values
+		deoxy = self.mua['deoxy'].values
+		water = self.mua['water'].values
+		wavelength = self.mua['wavelength'].values
+
+		# interpolation
+		oxy = np.interp(wl, wavelength, oxy)
+		deoxy = np.interp(wl, wavelength, deoxy)
+		water = np.interp(wl, wavelength, water)
+
+		# turn the unit 1/cm --> 1/mm
+		oxy *= 0.1
+		deoxy *= 0.1
+		water *= 0.1
+
+		IJV = []
+		for s in np.arange(0, 1, 0.01):
+			ijv = self._calculate_mua(
+					self.input["IJV"]["blood_volume_fraction"],
+					s,	# set ScvO2
+					self.input["IJV"]["water_volume"],
+					oxy, 
+					deoxy, 
+					water
+					)
+			IJV.append(ijv)
+		plt.plot(IJV)
+		plt.show()
 
 def test_compute_reflectance_white():
 	
@@ -270,11 +306,12 @@ def test_compute_reflectance_white():
 if __name__ == "__main__":
 	m = MCHHandler("stuff/test.mch")
 
-	s = time()
-	result = m.compute_reflectance_white(test=True)
-	e = time() - s
-	print("%2d:%2d" % (e//60, e%60))
-	# print(result)
-	print(result.shape)
-	# t = test_compute_reflectance_white()
+	# s = time()
+	# result = m.compute_reflectance_white(test=True)
+	# e = time() - s
+	# print("%2d:%2d" % (e//60, e%60))
+	# # print(result)
+	# print(result.shape)
+	# # t = test_compute_reflectance_white()
 
+	# m.test()

@@ -1,0 +1,56 @@
+{
+	"skin":{
+		"blood_volume_fraction": [, ],
+		"ScvO2": [, ],
+		"water_volume": [, ],
+		"n": [, ],
+		"g": [, ],
+		"muspx": [, ],
+		"fray": [, ],
+		"bmie": [, ]
+	},
+
+	"muscle":{
+		"blood_volume_fraction": [, ],
+		"ScvO2": [, ],
+		"water_volume": [, ],
+		"n": [, ],
+		"g": [, ],
+		"muspx": [, ],
+		"fray": [, ],
+		"bmie": [, ]
+	},
+
+	"IJV":{
+		"blood_volume_fraction": [, ],
+		"ScvO2": [, ],
+		"water_volume": [, ],
+		"n": [, ],
+		"g": [, ],
+		"muspx": [, ],
+		"fray": [, ],
+		"bmie": [, ]
+	},
+
+	"CCA":{
+		"blood_volume_fraction": [, ],
+		"ScvO2": [, ],
+		"water_volume": [, ],
+		"n": [, ],
+		"g": [, ],
+		"muspx": [, ],
+		"fray": [, ],
+		"bmie": [, ]
+	},
+
+	"geometry":{
+		"skin_thickness": [, ],
+		"ijv_radius": [],
+		"ijv_depth": [],
+		"cca_radius": [],
+		"cca_depth": [],
+		"ijv_cca_distance": []
+
+	}
+
+}

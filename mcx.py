@@ -1,17 +1,15 @@
 import os
 import json
 import pickle
-from tqdm import tqdm
 from datetime import datetime
+
+from tqdm import tqdm
 import matplotlib.pyplot as plt 
 import pandas as pd 
 import numpy as np
-from mchhandler_test import MCHHandler
 
+from mchhandler import MCHHandler
 
-def get_now_time():
-	now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-	return now
 
 
 class MCX:
@@ -35,22 +33,29 @@ class MCX:
 		oxy = self.mua['oxy'].values
 		deoxy = self.mua['deoxy'].values
 		water = self.mua['water'].values
-		wl = self.mua['nmlib'].values
+		collagen = self.mua['collagen'].values
+		wl = self.mua['wavelength'].values
 
 		# interpolation
 		oxy = np.interp(self.wavelength, wl, oxy)
 		deoxy = np.interp(self.wavelength, wl, deoxy)
+		collagen = np.interp(wl, wavelength, collagen)
 		water = np.interp(self.wavelength, wl, water)
 
 		# turn the unit 1/cm --> 1/mm
 		self.oxy = oxy * 0.1
 		self.deoxy = deoxy * 0.1
-		self.water = water *  0.1
+		self.water = water * 0.1
+		self.collagen = collagen * 0.1
+
 
 		self.session = self.session = os.path.join(self.config["save_path"], self.config["session_id"])
 		self.plot = os.path.join(self.session, 'plot')
 		self.result = os.path.join(self.session, 'result')
 		self.mcx_output = os.path.join(self.session, 'mcx_output')
+
+
+	# public functions
 
 	def run(self):
 		# run the MCX simulation
@@ -74,6 +79,18 @@ class MCX:
 		if not os.path.isdir(self.mcx_output):
 			os.mkdir(self.mcx_output)
 
+		# plot figure
+		skin = plt.Rectangle((0, 0), 100, self.parameters["geometry"]["skin_thickness"], fc="#d1a16e")
+		muscle = plt.Rectangle((0, self.parameters["geometry"]["skin_thickness"]), 100, 100-self.parameters["geometry"]["skin_thickness"], fc="#ea6935")
+		ijv = plt.Circle((50, self.parameters["ijv_depth"]), radius=self.parameters["ijv_radius"], fc="#437ddb")
+		cca = plt.Circle((50-self.parameters["ijv_cca_distance"], self.parameters["cca_depth"]), radius=self.parameters["cca_radius"], fc="#c61f28")
+		plt.axis([0, 100, 100, 0])
+		plt.gca().add_patch(skin)
+		plt.gca().add_patch(muscle)
+		plt.gca().add_patch(ijv)
+		plt.gca().add_patch(cca)
+		plt.savefig(os.path.join(self.plot, self.config["session_id"] + "_geometry.png"))
+
 
 		for idx, wl in tqdm(enumerate(self.wavelength)):
 			command = self._get_command(wl)
@@ -82,6 +99,46 @@ class MCX:
 			os.system(command)
 			os.chdir("../..")
 
+	def calculate_reflectance(self, plot=True, verbose=True, save=True):
+		# This function should called after 
+		# mcx.run(), or the .mch files are outputed by mcx
+		results = []
+		for wl in self.wavelength:
+			result = self.handler.compute_reflectance_white(
+				wl=wl,
+				mch_file=os.path.join(self.mcx_output, "%s_%d.mch" % (self.config["session_id"], wl))
+				)
+			results.append(result)
+		
+		# [wl, SDS, ScvO2]
+		# -> [ScvO2, SDS, wl]
+		results = np.asarray(results).transpose(2, 1, 0)
+		# print(results.shape)
+
+		if plot:
+			for r_idx, r in enumerate(results):
+				fig = plt.figure()
+				for d_idx, d in enumerate(r):
+					plt.plot(self.wavelength, np.log(d), label="detector %d" % d_idx)
+				
+				path = os.path.join(self.plot, "Scv_%d.png" % r_idx)
+				plt.title('Scv_%d' % r_idx)
+				plt.legend()
+				plt.savefig(path)
+				plt.close()
+
+		if save:
+			path = os.path.join(self.result, "result.pkl")
+			with open(path, 'wb') as f:
+				pickle.dump(results, f)
+
+	def reload_result(self, path):
+		with open(path, 'rb') as f:
+			results = pickle.load(f)
+		return results
+
+	# private functions
+
 	def _make_mcx_input(self, idx):
 		with open(self.config["geometry_file"]) as f:
 			# load a template first
@@ -89,63 +146,106 @@ class MCX:
 
 		mcx_input["Session"]["ID"] = self.config["session_id"] + "_%d" % self.wavelength[idx]
 
+		# optical parameter
 
+		# 
 		mcx_input["Domain"]["Media"][0]["mua"] = 0
 		mcx_input["Domain"]["Media"][0]["mus"] = 0
 		mcx_input["Domain"]["Media"][0]["g"] = 1
 		mcx_input["Domain"]["Media"][0]["n"] = 1
 
-		mcx_input["Domain"]["Media"][1]["name"] = "muscle"
+		# skin
+		mcx_input["Domain"]["Media"][1]["name"] = "skin"
 		mcx_input["Domain"]["Media"][1]["mua"] = self._calculate_mua(
 			idx, 
-			self.parameters["muscle"]["blood_volume_fraction"], 
-			self.parameters["muscle"]["ScvO2"], 
-			self.parameters["muscle"]["water_volume"]
+			self.parameters["skin"]["blood_volume_fraction"], 
+			self.parameters["skin"]["ScvO2"], 
+			self.parameters["skin"]["water_volume"]
 			)
 		mcx_input["Domain"]["Media"][1]["mus"] = self._calculate_mus(
+			idx,
+			self.parameters["skin"]["muspx"], 
+			self.parameters["skin"]["fray"], 
+			self.parameters["skin"]["bmie"],
+			self.parameters["skin"]["g"]
+			)
+		mcx_input["Domain"]["Media"][1]["g"] = self.parameters["skin"]["g"]
+		mcx_input["Domain"]["Media"][1]["n"] = self.parameters["skin"]["n"]
+
+		# muscle
+		mcx_input["Domain"]["Media"][2]["name"] = "muscle"
+		mcx_input["Domain"]["Media"][2]["mua"] = self._calculate_muscle_mua(
+			idx, 
+			self.parameters["muscle"]["water_volume"]
+			)
+		mcx_input["Domain"]["Media"][2]["mus"] = self._calculate_mus(
 			idx,
 			self.parameters["muscle"]["muspx"], 
 			self.parameters["muscle"]["fray"], 
 			self.parameters["muscle"]["bmie"],
 			self.parameters["muscle"]["g"]
 			)
-		mcx_input["Domain"]["Media"][1]["g"] = self.parameters["muscle"]["g"]
-		mcx_input["Domain"]["Media"][1]["n"] = self.parameters["muscle"]["n"]
+		mcx_input["Domain"]["Media"][2]["g"] = self.parameters["muscle"]["g"]
+		mcx_input["Domain"]["Media"][2]["n"] = self.parameters["muscle"]["n"]
 		
-
-		mcx_input["Domain"]["Media"][2]["name"] = "IJV"
-		mcx_input["Domain"]["Media"][2]["mua"] = 0	# for white MC
-		mcx_input["Domain"]["Media"][2]["mus"] = self._calculate_mus(
+		# IJV
+		mcx_input["Domain"]["Media"][3]["name"] = "IJV"
+		mcx_input["Domain"]["Media"][3]["mua"] = 0	# for white MC
+		mcx_input["Domain"]["Media"][3]["mus"] = self._calculate_mus(
 			idx,
 			self.parameters["IJV"]["muspx"], 
 			self.parameters["IJV"]["fray"], 
 			self.parameters["IJV"]["bmie"],
 			self.parameters["IJV"]["g"]
 			)
-		mcx_input["Domain"]["Media"][2]["g"] = self.parameters["IJV"]["g"]
-		mcx_input["Domain"]["Media"][2]["n"] = self.parameters["IJV"]["n"]
+		mcx_input["Domain"]["Media"][3]["g"] = self.parameters["IJV"]["g"]
+		mcx_input["Domain"]["Media"][3]["n"] = self.parameters["IJV"]["n"]
 		
-
-		mcx_input["Domain"]["Media"][3]["name"] = "CCA"
-		mcx_input["Domain"]["Media"][3]["mua"] = self._calculate_mua(
+		# CCA
+		mcx_input["Domain"]["Media"][4]["name"] = "CCA"
+		mcx_input["Domain"]["Media"][4]["mua"] = self._calculate_mua(
 			idx,
 			self.parameters["CCA"]["blood_volume_fraction"], 
 			self.parameters["CCA"]["ScvO2"], 
 			self.parameters["CCA"]["water_volume"]
 			)
-		mcx_input["Domain"]["Media"][3]["mus"] = self._calculate_mus(
+		mcx_input["Domain"]["Media"][4]["mus"] = self._calculate_mus(
 			idx,
 			self.parameters["CCA"]["muspx"], 
 			self.parameters["CCA"]["fray"], 
 			self.parameters["CCA"]["bmie"],
 			self.parameters["CCA"]["g"]
 			)
-		mcx_input["Domain"]["Media"][3]["g"] = self.parameters["CCA"]["g"]
-		mcx_input["Domain"]["Media"][3]["n"] = self.parameters["CCA"]["n"]
+		mcx_input["Domain"]["Media"][4]["g"] = self.parameters["CCA"]["g"]
+		mcx_input["Domain"]["Media"][4]["n"] = self.parameters["CCA"]["n"]
+
+
+		# geometry
+
+		# skin
+		mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]
+		mcx_input["Shapes"][1]["Subgrid"]["Size"] = [100, 150, self.parameters["geometry"]["skin_thickness"]]
+
+		# muscle
+		mcx_input["Shapes"][2]["Subgrid"]["O"] = [1, 1, 1+self.parameters["geometry"]["skin_thickness"]]
+		mcx_input["Shapes"][2]["Subgrid"]["Size"] = [100, 150, 300-self.parameters["geometry"]["skin_thickness"]]
+
+		# ijv 
+		mcx_input["Shapes"][3]["Cylinder"]["C0"] = [100, 50, self.parameters["ijv_depth"]]
+		mcx_input["Shapes"][3]["Cylinder"]["C1"] = [0, 50, self.parameters["ijv_depth"]]
+		mcx_input["Shapes"][3]["Cylinder"]["R"] = [self.parameters["ijv_radius"]]
+
+		# cca 
+		mcx_input["Shapes"][4]["Cylinder"]["C0"] = [100, 50-self.parameters["ijv_cca_distance"], self.parameters["cca_depth"]]
+		mcx_input["Shapes"][4]["Cylinder"]["C1"] = [0, 50-self.parameters["ijv_cca_distance"], self.parameters["cca_depth"]]
+		mcx_input["Shapes"][4]["Cylinder"]["R"] = [self.parameters["cca_radius"]]
+
 
 		# save the .json file in the output folder
 		with open(self.config["geometry_file"], 'w+') as f:
 			json.dump(mcx_input, f, indent=4)
+
+
 
 	def _calculate_mua(self, idx, b, s, w):
 		mua = b * (s * self.oxy[idx] + (1-s) * self.deoxy[idx]) + w * self.water[idx]
@@ -155,6 +255,10 @@ class MCX:
 		print("deoxy: ", self.deoxy[idx])
 		print("water: ", self.water[idx])
 		print("mua: ", mua)
+		return mua
+
+	def _calculate_muscle_mua(self, idx, w):
+		mua = w * self.water[idx] + (1-w) * self.collagen[idx]
 		return mua
 
 	def _calculate_mus(self, idx, mus500, fray, bmie, g):
@@ -196,44 +300,7 @@ class MCX:
 		print(command)
 		return command
 
-	def calculate_reflectance(self, plot=True, verbose=True, save=True):
-		# This function should called after 
-		# mcx.run(), or the .mch files are outputed by mcx
-		results = []
-		for wl in self.wavelength:
-			result = self.handler.compute_reflectance_white(
-				wl=wl,
-				mch_file=os.path.join(self.mcx_output, "%s_%d.mch" % (self.config["session_id"], wl))
-				)
-			results.append(result)
-		
-		# [wl, SDS, ScvO2]
-		# -> [ScvO2, SDS, wl]
-		results = np.asarray(results).transpose(2, 1, 0)
-		# print(results.shape)
-
-		if plot:
-			for r_idx, r in enumerate(results):
-				fig = plt.figure()
-				for d_idx, d in enumerate(r):
-					plt.plot(self.wavelength, np.log(d), label="detector %d" % d_idx)
-				
-				path = os.path.join(self.plot, "Scv_%d.png" % r_idx)
-				plt.title('Scv_%d' % r_idx)
-				plt.legend()
-				plt.savefig(path)
-				plt.close()
-
-		if save:
-			path = os.path.join(self.result, "result.pkl")
-			with open(path, 'wb') as f:
-				pickle.dump(results, f)
-
-	def reload_result(self, path):
-		with open(path, 'rb') as f:
-			results = pickle.load(f)
-		return results
-
+	
 
 def test_medium():
 	mcx = MCX()

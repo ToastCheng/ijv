@@ -34,7 +34,7 @@ class Calibrator:
 			config = json.load(f)
 
 		# parameters
-		self.wavelength = config["wavelength"]
+		self.wavelength = pd.read_csv(config["wavelength"]).values
 		self.num_fiber = config["num_fiber"]
 		self.num_phantom = config["num_phantom"]
 

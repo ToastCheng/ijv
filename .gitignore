@@ -1,3 +1,5 @@
+.DS_Store
+*.png
 20180408/*
 mcx/*
 output/*

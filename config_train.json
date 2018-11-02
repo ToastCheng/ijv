@@ -1,14 +1,14 @@
 {
 
-	"session_id": "test",
+	"session_id": "train",
 
-	"save_path": "output/",
+	"save_path": "train/",
 	"forward": true,
 
 	"num_photon": 2e9,
 	"photon_batch": 5e7,
 	"max_detect_photon": 5e8,
-	"voxel_size": 0.25,	
+	"voxel_size": 0.5,	
 
 
 	"source_type": "pencil",
@@ -20,11 +20,11 @@
 
 	"medium_n": 1.457,
 
-	"absorb_file": "input/coefficients_add.csv",
+	"absorb_file": "input/coefficients.csv",
 	"fiber_file": "input/fiber.csv",
-	"input_file": "input/parameters.json",
+	"input_file": "input/parameters_train.json",
 	"wavelength_file": "input/wavelength.csv",
-	"geometry_file": "input_mcx/case3.json"
+	"geometry_file": "input_mcx/case3.json",
 
 
 
