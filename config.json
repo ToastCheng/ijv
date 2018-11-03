@@ -5,8 +5,8 @@
 	"save_path": "output/",
 	"forward": true,
 
-	"num_photon": 2e9,
-	"photon_batch": 5e7,
+	"num_photon": 1e6,
+	"photon_batch": 1e6,
 	"max_detect_photon": 5e8,
 	"voxel_size": 0.25,	
 

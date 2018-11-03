@@ -128,10 +128,19 @@ class MCHHandler:
 		collagen *= 0.1
 
 		# [medium, 1]
-		mua = np.zeros((3, 1))
+		mua = np.zeros((self.header["maxmedia"], 1))
 
 
 		for s in ScvO2:
+
+			skin = self._calculate_mua(
+				self.input["skin"]["blood_volume_fraction"],
+				self.input["skin"]["ScvO2"],
+				self.input["skin"]["water_volume"],
+				oxy, 
+				deoxy, 
+				water
+				)
 
 			muscle = self._calculate_muscle_mua(
 				self.input["muscle"]["water_volume"],
@@ -157,7 +166,8 @@ class MCHHandler:
 				)
 
 			_mua = np.concatenate(
-				[np.expand_dims(muscle, 0), 
+				[np.expand_dims(skin, 0),
+				 np.expand_dims(muscle, 0), 
 				 np.expand_dims(IJV, 0), 
 				 np.expand_dims(CCA, 0)], 0
 				 )
@@ -170,6 +180,11 @@ class MCHHandler:
 		# [medium, ScvO2]
 		mua = mua[:, 1:]
 		return mua
+
+	def _convert_unit(self, length_mm):
+		# convert mm to number of grid
+		num_grid = length_mm//self.header["unitmm"]
+		return num_grid
 
 	def _parse_mch(self):
 		

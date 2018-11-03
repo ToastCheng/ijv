@@ -1,13 +1,13 @@
 {
 	"skin":{
-		"blood_volume_fraction": 0,
-		"ScvO2": 0,
+		"blood_volume_fraction": 0.5,
+		"ScvO2": 0.7,
 		"water_volume": 0,
-		"n": 0,
-		"g": 0,
-		"muspx": 0,
+		"n": 1.40,
+		"g": 0.94,
+		"muspx": 5.17,
 		"fray": 0,
-		"bmie": 0
+		"bmie": 1.0
 	},
 
 	"muscle":{
@@ -44,12 +44,12 @@
 	},
 
 	"geometry":{
-		"skin_thickness": ,
-		"ijv_radius": ,
-		"ijv_depth": ,
-		"cca_radius": ,
-		"cca_depth": ,
-		"ijv_cca_distance": 
+		"skin_thickness": 10,
+		"ijv_radius": 10,
+		"ijv_depth": 25,
+		"cca_radius": 5,
+		"cca_depth": 35,
+		"ijv_cca_distance": 10 
 
 	}
 

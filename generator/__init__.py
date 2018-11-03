@@ -37,11 +37,6 @@ class Generator:
 
 
 
-
-
-
-
-
 		
 	def add_parameter(self, name, max, min):
 		self.parameters[name] = self.Parameter(max, min)
@@ -53,7 +48,8 @@ class Generator:
 		for name, value in config.items():
 			self.add_parameter(name, value["max"], value["min"])
 
-
+	def _check(self):
+		pass
 
 
 

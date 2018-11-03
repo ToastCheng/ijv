@@ -39,7 +39,7 @@ class MCX:
 		# interpolation
 		oxy = np.interp(self.wavelength, wl, oxy)
 		deoxy = np.interp(self.wavelength, wl, deoxy)
-		collagen = np.interp(wl, wavelength, collagen)
+		collagen = np.interp(self.wavelength, wl, collagen)
 		water = np.interp(self.wavelength, wl, water)
 
 		# turn the unit 1/cm --> 1/mm
@@ -82,8 +82,8 @@ class MCX:
 		# plot figure
 		skin = plt.Rectangle((0, 0), 100, self.parameters["geometry"]["skin_thickness"], fc="#d1a16e")
 		muscle = plt.Rectangle((0, self.parameters["geometry"]["skin_thickness"]), 100, 100-self.parameters["geometry"]["skin_thickness"], fc="#ea6935")
-		ijv = plt.Circle((50, self.parameters["ijv_depth"]), radius=self.parameters["ijv_radius"], fc="#437ddb")
-		cca = plt.Circle((50-self.parameters["ijv_cca_distance"], self.parameters["cca_depth"]), radius=self.parameters["cca_radius"], fc="#c61f28")
+		ijv = plt.Circle((50, self.parameters["geometry"]["ijv_depth"]), radius=self.parameters["geometry"]["ijv_radius"], fc="#437ddb")
+		cca = plt.Circle((50-self.parameters["geometry"]["ijv_cca_distance"], self.parameters["geometry"]["cca_depth"]), radius=self.parameters["geometry"]["cca_radius"], fc="#c61f28")
 		plt.axis([0, 100, 100, 0])
 		plt.gca().add_patch(skin)
 		plt.gca().add_patch(muscle)
@@ -138,6 +138,11 @@ class MCX:
 		return results
 
 	# private functions
+
+	def _convert_unit(self, length_mm):
+		# convert mm to number of grid
+		num_grid = length_mm//self.config["voxel_size"]
+		return num_grid
 
 	def _make_mcx_input(self, idx):
 		with open(self.config["geometry_file"]) as f:
@@ -221,6 +226,9 @@ class MCX:
 
 
 		# geometry
+		for key in self.parameters["geometry"].keys():
+			self.parameters["geometry"][key] = self._convert_unit(self.parameters["geometry"][key])
+
 
 		# skin
 		mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]
@@ -231,14 +239,14 @@ class MCX:
 		mcx_input["Shapes"][2]["Subgrid"]["Size"] = [100, 150, 300-self.parameters["geometry"]["skin_thickness"]]
 
 		# ijv 
-		mcx_input["Shapes"][3]["Cylinder"]["C0"] = [100, 50, self.parameters["ijv_depth"]]
-		mcx_input["Shapes"][3]["Cylinder"]["C1"] = [0, 50, self.parameters["ijv_depth"]]
-		mcx_input["Shapes"][3]["Cylinder"]["R"] = [self.parameters["ijv_radius"]]
+		mcx_input["Shapes"][3]["Cylinder"]["C0"] = [100, 50, self.parameters["geometry"]["ijv_depth"]]
+		mcx_input["Shapes"][3]["Cylinder"]["C1"] = [0, 50, self.parameters["geometry"]["ijv_depth"]]
+		mcx_input["Shapes"][3]["Cylinder"]["R"] = [self.parameters["geometry"]["ijv_radius"]]
 
 		# cca 
-		mcx_input["Shapes"][4]["Cylinder"]["C0"] = [100, 50-self.parameters["ijv_cca_distance"], self.parameters["cca_depth"]]
-		mcx_input["Shapes"][4]["Cylinder"]["C1"] = [0, 50-self.parameters["ijv_cca_distance"], self.parameters["cca_depth"]]
-		mcx_input["Shapes"][4]["Cylinder"]["R"] = [self.parameters["cca_radius"]]
+		mcx_input["Shapes"][4]["Cylinder"]["C0"] = [100, 50-self.parameters["geometry"]["ijv_cca_distance"], self.parameters["geometry"]["cca_depth"]]
+		mcx_input["Shapes"][4]["Cylinder"]["C1"] = [0, 50-self.parameters["geometry"]["ijv_cca_distance"], self.parameters["geometry"]["cca_depth"]]
+		mcx_input["Shapes"][4]["Cylinder"]["R"] = [self.parameters["geometry"]["cca_radius"]]
 
 
 		# save the .json file in the output folder
@@ -249,12 +257,12 @@ class MCX:
 
 	def _calculate_mua(self, idx, b, s, w):
 		mua = b * (s * self.oxy[idx] + (1-s) * self.deoxy[idx]) + w * self.water[idx]
-		print("==============================")
-		print("wl: ", self.wavelength[idx])
-		print("oxy: ", self.oxy[idx])
-		print("deoxy: ", self.deoxy[idx])
-		print("water: ", self.water[idx])
-		print("mua: ", mua)
+		# print("==============================")
+		# print("wl: ", self.wavelength[idx])
+		# print("oxy: ", self.oxy[idx])
+		# print("deoxy: ", self.deoxy[idx])
+		# print("water: ", self.water[idx])
+		# print("mua: ", mua)
 		return mua
 
 	def _calculate_muscle_mua(self, idx, w):
