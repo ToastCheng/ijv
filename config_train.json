@@ -1,31 +1,14 @@
 {
-
-	"session_id": "train",
-
-	"save_path": "train/",
-	"forward": true,
-
-	"num_photon": 2e9,
-	"photon_batch": 5e7,
-	"max_detect_photon": 5e8,
-	"voxel_size": 0.5,	
-
-
-	"source_type": "pencil",
-	"source_radium": -2,
-	"source_position": [-12, 0, 0],
-	"source_direction": [0, 0, 1],
-
-	"binary_path": "mcx/bin/mcx",
-
-	"medium_n": 1.457,
-
-	"absorb_file": "input/coefficients.csv",
-	"fiber_file": "input/fiber.csv",
-	"input_file": "input/parameters_train.json",
-	"wavelength_file": "input/wavelength.csv",
-	"geometry_file": "input_mcx/case3.json",
-
-
-
+    "session_id": "train_0",
+    "num_photon": 2000000000.0,
+    "photon_batch": 50000000.0,
+    "max_detect_photon": 500000000.0,
+    "voxel_size": 0.25,
+    "binary_path": "mcx/bin/mcx",
+    "medium_n": 1.457,
+    "absorb_file": "input/coefficients.csv",
+    "fiber_file": "input/fiber.csv",
+    "input_file": "generator/parameter/parameter_0.json",
+    "wavelength_file": "input/wavelength.csv",
+    "geometry_file": "input_mcx/train.json"
 }

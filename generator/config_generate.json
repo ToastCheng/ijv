@@ -49,7 +49,7 @@
 		"ijv_depth": [2, 16],
 		"cca_radius": [2.5, 4.5],
 		"cca_depth": [5, 26],
-		"ijv_cca_distance": [5, 20]
+		"ijv_cca_distance": [5, 10]
 
 	}
 

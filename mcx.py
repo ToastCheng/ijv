@@ -3,7 +3,6 @@ import json
 import pickle
 from datetime import datetime
 
-from tqdm import tqdm
 import matplotlib.pyplot as plt 
 import pandas as pd 
 import numpy as np
@@ -49,7 +48,7 @@ class MCX:
 		self.collagen = collagen * 0.1
 
 
-		self.session = self.session = os.path.join(self.config["save_path"], self.config["session_id"])
+		self.session = self.session = os.path.join("output", self.config["session_id"])
 		self.plot = os.path.join(self.session, 'plot')
 		self.result = os.path.join(self.session, 'result')
 		self.mcx_output = os.path.join(self.session, 'mcx_output')
@@ -59,10 +58,6 @@ class MCX:
 
 	def run(self):
 		# run the MCX simulation
-
-		# save_path (root)
-		if not os.path.isdir(self.config["save_path"]):
-			os.mkdir(self.config["save_path"])
 		
 		# session name
 		if not os.path.isdir(self.session):
@@ -92,7 +87,7 @@ class MCX:
 		plt.savefig(os.path.join(self.plot, self.config["session_id"] + "_geometry.png"))
 
 
-		for idx, wl in tqdm(enumerate(self.wavelength)):
+		for idx, wl in enumerate(self.wavelength):
 			command = self._get_command(wl)
 			self._make_mcx_input(idx)
 			os.chdir("mcx/bin")
@@ -232,11 +227,11 @@ class MCX:
 
 		# skin
 		mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]
-		mcx_input["Shapes"][1]["Subgrid"]["Size"] = [100, 150, self.parameters["geometry"]["skin_thickness"]]
+		mcx_input["Shapes"][1]["Subgrid"]["Size"] = [100, 100, self.parameters["geometry"]["skin_thickness"]]
 
 		# muscle
 		mcx_input["Shapes"][2]["Subgrid"]["O"] = [1, 1, 1+self.parameters["geometry"]["skin_thickness"]]
-		mcx_input["Shapes"][2]["Subgrid"]["Size"] = [100, 150, 300-self.parameters["geometry"]["skin_thickness"]]
+		mcx_input["Shapes"][2]["Subgrid"]["Size"] = [100, 100, 300-self.parameters["geometry"]["skin_thickness"]]
 
 		# ijv 
 		mcx_input["Shapes"][3]["Cylinder"]["C0"] = [100, 50, self.parameters["geometry"]["ijv_depth"]]
