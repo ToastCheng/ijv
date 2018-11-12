@@ -4,6 +4,6 @@
 mcx/*
 output/*
 __pycache__/*
-test/*
 stuff/*
 utils/__pycache__/*
+generator/__pycache__/*
