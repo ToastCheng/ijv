@@ -39,7 +39,7 @@ class MCHHandler:
 		# self.critical_angle = 12
 
 
-	def compute_reflectance_white(self, wl, mch_file=None, test=False):
+	def compute_reflectance_white(self, wl, mch_file=None):
 		# reload a .mch file
 		if mch_file is not None:
 			self.df, self.header, self.photon = self._load_mch(mch_file)
@@ -48,13 +48,13 @@ class MCHHandler:
 		# filter the photon that not been detected(due to critical angle)
 		df = df[np.arccos(df.angle.abs()) <= self.critical_angle]
 		if len(df) == 0:
-			print('no photon detected')
-			return
+			print('no photon detected at %d' % wl)
+			return None, None
 		df = df.reset_index(drop=True)
 
 
 		# test speed
-		if test == True:
+		if False:
 			num_photon = int(1e6)
 			idx = np.random.randint(4, size=(num_photon, 1)) + 1
 			path = np.random.rand(num_photon, 3)
@@ -66,6 +66,13 @@ class MCHHandler:
 
 		# [photon, medium]
 		path_length = df.iloc[:, 1:-1].values
+
+		# calculate percentage
+		skin_portion = path_length.sum(0)[0]/path_length.sum()
+		muscle_portion = path_length.sum(0)[1]/path_length.sum()
+		ijv_portion = path_length.sum(0)[2]/path_length.sum()
+		cca_portion = path_length.sum(0)[3]/path_length.sum()
+
 		path_length = torch.tensor(path_length).float().to(device)
 
 		# [medium, ScvO2]
@@ -84,7 +91,7 @@ class MCHHandler:
 			# get the index of specific index
 			detector_list = df.index[df["detector_idx"] == idx].tolist()
 			if len(detector_list) == 0:
-				print("detector #%d detected no photon" % idx)
+				# print("detector #%d detected no photon" % idx)
 				result = torch.cat((result, torch.zeros(1, weight.shape[1]).float().to(device)), 0)
 				continue
 			# pick the photon that detected by specific detector
@@ -101,7 +108,7 @@ class MCHHandler:
 		# [SDS, ScvO2]
 		result = result[1:]
 
-		return result.cpu().numpy()/self.header["total_photon"]
+		return result.cpu().numpy()/self.header["total_photon"], (skin_portion, muscle_portion, ijv_portion, cca_portion)
 		
 	def _make_tissue_white(self, wl):
 
@@ -179,6 +186,144 @@ class MCHHandler:
 
 		# [medium, ScvO2]
 		mua = mua[:, 1:]
+		return mua
+
+	def compute_reflectance(self, wl, mch_file=None):
+		# reload a .mch file
+		if mch_file is not None:
+			self.df, self.header, self.photon = self._load_mch(mch_file)
+
+		df = self._parse_mch()
+		# filter the photon that not been detected(due to critical angle)
+		df = df[np.arccos(df.angle.abs()) <= self.critical_angle]
+		if len(df) == 0:
+			print('no photon detected at %d' % wl)
+			return None, None
+		df = df.reset_index(drop=True)
+
+
+		# test speed
+		if False:
+			num_photon = int(1e6)
+			idx = np.random.randint(4, size=(num_photon, 1)) + 1
+			path = np.random.rand(num_photon, 3)
+			angle = np.random.rand(num_photon, 1)
+			data = np.concatenate([idx, path, angle], 1)
+
+			df = pd.DataFrame(data, columns=['detector_idx', 'media_0', 'media_1', 'media_2', 'angle'])
+
+
+		# [photon, medium]
+		path_length = df.iloc[:, 1:-1].values
+
+		# calculate percentage
+		skin_portion = path_length.sum(0)[0]/path_length.sum()
+		muscle_portion = path_length.sum(0)[1]/path_length.sum()
+		ijv_portion = path_length.sum(0)[2]/path_length.sum()
+		cca_portion = path_length.sum(0)[3]/path_length.sum()
+
+		path_length = torch.tensor(path_length).float().to(device)
+
+		# [medium]
+		mua = self._make_tissue(wl)
+		mua = torch.tensor(mua).float().to(device)
+
+		# [photon]
+		weight = torch.exp(-torch.matmul(path_length, mua) *self.header["unitmm"]) 
+		
+		# [1]
+		result = torch.zeros(1).float().to(device)
+
+		# seperate photon with different detector
+		for idx in range(1, self.header["detnum"]+1):
+
+			# get the index of specific index
+			detector_list = df.index[df["detector_idx"] == idx].tolist()
+			if len(detector_list) == 0:
+				# print("detector #%d detected no photon" % idx)
+				result = torch.cat((result, torch.zeros(1).float().to(device)), 0)
+				continue
+			# pick the photon that detected by specific detector
+			
+			# [photon]
+			_weight = weight[detector_list]
+			# print(_weight.shape)
+			_weight = _weight.sum(0)
+			_weight = _weight.unsqueeze(0)
+			# print(_weight.shape)
+			# print(result.shape)
+			result = torch.cat((result, _weight), 0)
+
+		# [SDS, ScvO2]
+		result = result[1:]
+
+		return result.cpu().numpy()/self.header["total_photon"], (skin_portion, muscle_portion, ijv_portion, cca_portion)
+		
+	def _make_tissue(self, wl):
+
+		# the ScvO2
+		ScvO2 = np.arange(0, 1.01, 0.01)
+		
+		# mua
+		oxy = self.mua['oxy'].values
+		deoxy = self.mua['deoxy'].values
+		water = self.mua['water'].values
+		collagen = self.mua['collagen'].values
+		wavelength = self.mua['wavelength'].values
+
+		# interpolation
+		oxy = np.interp(wl, wavelength, oxy)
+		deoxy = np.interp(wl, wavelength, deoxy)
+		water = np.interp(wl, wavelength, water)
+		collagen = np.interp(wl, wavelength, collagen)
+
+		# turn the unit 1/cm --> 1/mm
+		oxy *= 0.1
+		deoxy *= 0.1
+		water *= 0.1
+		collagen *= 0.1
+
+		# [medium, 1]
+		mua = np.zeros((self.header["maxmedia"], 1))
+
+
+
+
+		skin = self._calculate_mua(
+			self.input["skin"]["blood_volume_fraction"],
+			self.input["skin"]["ScvO2"],
+			self.input["skin"]["water_volume"],
+			oxy, 
+			deoxy, 
+			water
+			)
+
+		muscle = self._calculate_muscle_mua(
+			self.input["muscle"]["water_volume"],
+			water,
+			collagen
+			)
+
+		IJV = self._calculate_mua(
+			self.input["IJV"]["blood_volume_fraction"],
+			self.input["IJV"]["ScvO2"],
+			self.input["IJV"]["water_volume"],
+			oxy, 
+			deoxy, 
+			water
+			)
+		CCA = self._calculate_mua(
+			self.input["CCA"]["blood_volume_fraction"],
+			self.input["CCA"]["ScvO2"],
+			self.input["CCA"]["water_volume"],
+			oxy, 
+			deoxy, 
+			water
+			)
+
+		mua = np.asarray([skin, muscle, IJV, CCA])
+
+		# [medium]
 		return mua
 
 	def _convert_unit(self, length_mm):

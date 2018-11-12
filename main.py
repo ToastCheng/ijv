@@ -16,6 +16,9 @@ def get_args():
 	parser.add_argument("-i", "--inverse", action="store_true")
 	parser.add_argument("-t", "--train", action="store_true")
 
+	parser.add_argument("-g", "--generate", type=int, default=0)
+
+
 
 	return parser.parse_args()
 
@@ -33,7 +36,8 @@ def main():
 
 	if args.train:
 
-		train()
+		generate_new_input = args.generate
+		train(generate_new_input)
 
 
 def forward(config):
@@ -48,15 +52,17 @@ def inverse():
 	pass
 
 
-def train():
+def train(generate_new_input):
 
 	train_list = glob(os.path.join('generator', 'parameter', '*'))
 	train_list.sort()
 	config_train = "config_train.json"
 
 	gen = Generator()
-	# for idx in range(100):
-	# 	gen.run(idx=idx)
+
+	if generate_new_input != 0:
+		for idx in range(generate_new_input):
+			gen.run(idx=idx)
 
 	for idx, parameter in enumerate(train_list):
 		with open('config_train.json', 'rb') as f:
@@ -68,12 +74,14 @@ def train():
 
 		mcx = MCX("config_train.json")
 		mcx.run()
-		mcx.calculate_reflectance(plot=False)
+		mcx.calculate_reflectance(plot=True)
 		
 
 	# from pprint import PrettyPrinter
 	# pp = PrettyPrinter()
 	# pp.pprint(train_list)
+
+
 
 
 if __name__ == "__main__":

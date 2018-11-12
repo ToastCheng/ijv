@@ -1,5 +1,5 @@
 {
-    "session_id": "train_0",
+    "session_id": "test_whiteMC",
     "train": true,
     "num_photon": 1000000.0,
     "photon_batch": 1000000.0,
@@ -8,7 +8,7 @@
     "medium_n": 1.457,
     "absorb_file": "input/coefficients.csv",
     "fiber_file": "input/fiber.csv",
-    "input_file": "generator/parameter/parameter_0.json",
+    "input_file": "input/parameters.json",
     "wavelength_file": "input/wavelength.csv",
     "geometry_file": "input_mcx/train.json"
 }
