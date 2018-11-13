@@ -64,9 +64,16 @@ def test_smooth():
 	mcx.run()
 	mcx.calculate_reflectance()
 
+	reflec_2e8 = mcx.reflectance[70][-1]
+
 	mcx2 = MCX('test/test_smooth_2e9.json')
 	mcx2.run()
 	mcx2.calculate_reflectance()
+
+	reflec_2e9 = mcx2.reflectance[70][-1]
+
+	df = pd.DataFrame({"2e8": reflec_2e8, "2e9": reflec_2e9})
+	df.to_csv("test/result_smooth.csv", index=False)
 
 
 
@@ -77,5 +84,7 @@ def rmse(x, y):
 
 
 if __name__ == "__main__":
-	main()
-	os.system("sudo shutdown")
+	# main()
+	# os.system("sudo shutdown")
+	df = pd.read_csv("test/result_whiteMC.csv")
+	print (rmse(df["normal"], df["white"]))

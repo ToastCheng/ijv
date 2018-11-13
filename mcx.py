@@ -122,19 +122,17 @@ class MCX:
 					continue
 				results.append(result)
 
+				portions["wavelength"].append(wl)
+				portions["skin"].append(portion[0])
+				portions["muscle"].append(portion[1])
+				portions["ijv"].append(portion[2])
+				portions["cca"].append(portion[3])
+
 			# [wl, SDS, ScvO2]
 			# -> [ScvO2, SDS, wl]
 			results = np.asarray(results).transpose(2, 1, 0)
 			self.reflectance = results
 			# print(results.shape)
-			
-			portions["wavelength"].append(wl)
-			portions["skin"].append(portion[0])
-			portions["muscle"].append(portion[1])
-			portions["ijv"].append(portion[2])
-			portions["cca"].append(portion[3])
-
-
 
 		else:
 			for wl in self.wavelength:
@@ -146,17 +144,17 @@ class MCX:
 					continue
 				results.append(result)
 
+				portions["wavelength"].append(wl)
+				portions["skin"].append(portion[0])
+				portions["muscle"].append(portion[1])
+				portions["ijv"].append(portion[2])
+				portions["cca"].append(portion[3])
+
 			# [wl, SDS]
 			# -> [SDS, wl]
 			results = np.asarray(results).transpose(1, 0)
 			self.reflectance = results
 			# print(results.shape)
-
-			portions["wavelength"].append(wl)
-			portions["skin"].append(portion[0])
-			portions["muscle"].append(portion[1])
-			portions["ijv"].append(portion[2])
-			portions["cca"].append(portion[3])
 
 
 		if plot:

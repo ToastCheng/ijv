@@ -44,12 +44,12 @@
 	},
 
 	"geometry":{
-		"skin_thickness": 2,
+		"skin_thickness": 1,
 		"ijv_radius": 10,
-		"ijv_depth": 25,
-		"cca_radius": 5,
-		"cca_depth": 35,
-		"ijv_cca_distance": 10 
+		"ijv_depth": 10,
+		"cca_radius": 4,
+		"cca_depth": 20,
+		"ijv_cca_distance": 7 
 
 	}
 
