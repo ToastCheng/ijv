@@ -7,13 +7,19 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 
 import utils
+from utils.line import LineBot
 from mcx import MCX
 from generator import Generator
 
 
+line = LineBot()
+
+
 def main():
 	test_whiteMC()
+	line.print("test white done")
 	test_smooth()
+	line.print("test smooth done")
 
 def test_whiteMC():
 	"""
@@ -29,7 +35,7 @@ def test_whiteMC():
 	reflec_white = mcx.reflectance[70][-1]
 
 	# normal
-	mcx2 = MCX("test/test_white.json")
+	mcx2 = MCX("test/test_normal.json")
 	mcx2.run(white=False)
 	mcx2.calculate_reflectance(white=False, plot=False)
 
@@ -72,3 +78,4 @@ def rmse(x, y):
 
 if __name__ == "__main__":
 	main()
+	os.system("sudo shutdown")

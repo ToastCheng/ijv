@@ -453,7 +453,8 @@ class MCX:
 		unitmm = "%f " % self.config["voxel_size"]
 		photon = "%d " % self.config["photon_batch"]
 		num_batch = "%d " % (self.config["num_photon"]//self.config["photon_batch"])
-		maxdetphoton = "%d" % (self.config["num_photon"]//5)
+		maxdetphoton = "100000000"
+		# maxdetphoton = "%d" % (self.config["num_photon"]//5)
 		save_mc2 = "0" if self.config["train"] else "1"
 
 		command = \

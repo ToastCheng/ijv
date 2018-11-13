@@ -1,5 +1,5 @@
 {
-    "session_id": "test_whiteMC",
+    "session_id": "test_normal",
     "train": true,
     "num_photon": 2000000000.0,
     "photon_batch": 50000000.0,
