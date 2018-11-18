@@ -478,7 +478,7 @@ class MCX:
 		num_batch = "%d " % (self.config["num_photon"]//self.config["photon_batch"])
 		maxdetphoton = "100000000"
 		# maxdetphoton = "%d" % (self.config["num_photon"]//5)
-		save_mc2 = "0" if self.config["train"] else "1"
+		save_mc2 = "0 " if self.config["train"] else "1 "
 
 		command = \
 		"./mcx --session " + session_name +\
