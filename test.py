@@ -18,8 +18,8 @@ line = LineBot()
 def main():
 	test_whiteMC()
 	line.print("test white done")
-	# test_smooth()
-	# line.print("test smooth done")
+	test_smooth()
+	line.print("test smooth done")
 
 def test_whiteMC():
 	"""
@@ -29,14 +29,14 @@ def test_whiteMC():
 
 	# white
 	mcx = MCX("test/test_white.json")
-	# mcx.run()
+	mcx.run()
 	mcx.calculate_reflectance(plot=True)
 
 	reflec_white = mcx.reflectance[70]
 
 	# normal
 	mcx2 = MCX("test/test_normal.json")
-	# mcx2.run(white=False)
+	mcx2.run(white=False)
 	mcx2.calculate_reflectance(white=False, plot=False)
 
 	reflec = mcx2.reflectance
