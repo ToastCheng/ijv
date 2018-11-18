@@ -1,6 +1,7 @@
 import os
 import json
 import pickle
+from glob import glob 
 from datetime import datetime
 from collections import defaultdict
 
@@ -8,6 +9,7 @@ import matplotlib.pyplot as plt
 import pandas as pd 
 import numpy as np
 
+from utils import load_mc2
 from mchhandler import MCHHandler
 
 
@@ -56,6 +58,7 @@ class MCX:
 
 		self.session = self.session = os.path.join("output", self.config["session_id"])
 		self.plot = os.path.join(self.session, 'plot')
+		self.plot_mc2 = os.path.join(self.session, 'plot_mc2')
 		self.result = os.path.join(self.session, 'result')
 		self.mcx_output = os.path.join(self.session, 'mcx_output')
 
@@ -74,6 +77,11 @@ class MCX:
 		# directory for saving plot
 		if not os.path.isdir(self.plot):
 			os.mkdir(self.plot)
+
+		# directory for saving mc2 plot
+		if not os.path.isdir(self.plot_mc2):
+			os.mkdir(self.plot_mc2)
+
 
 		# directory for saving result
 		if not os.path.isdir(self.result):
@@ -105,6 +113,19 @@ class MCX:
 			os.chdir("mcx/bin")
 			os.system(command)
 			os.chdir("../..")
+
+		mc2_list = glob(os.path.join(self.mcx_output, "*.mc2"))
+
+		for mc2 in mc2_list:
+			fig = plt.figure(figsize=(10,16))
+			d = load_mc2(mc2, [100, 100, 300])
+			plt.imshow(d[50,:,:100].T)
+			name = mc2.split('/')[-1].split('.')[0]
+			plt.title(name)
+			plt.xlabel('y axis')
+			plt.ylabel('z axis')
+			plt.savefig(os.path.join(self.plot_mc2, name + ".png"))
+			plt.close()
 
 	def calculate_reflectance(self, white=True, plot=True, verbose=True, save=True):
 		# This function should called after 
@@ -162,7 +183,8 @@ class MCX:
 				for r_idx, r in enumerate(results):
 					fig = plt.figure()
 					for d_idx, d in enumerate(r):
-						plt.plot(self.wavelength, np.log(d), label="detector %d" % d_idx)
+						if d_idx in [0, 5, 11]:
+							plt.plot(self.wavelength, np.log(d), label="detector %d" % d_idx)
 					
 					path = os.path.join(self.plot, "Scv_%d.png" % r_idx)
 					plt.title('Scv_%d' % r_idx)
@@ -183,6 +205,7 @@ class MCX:
 			plt.xlabel('wavelength [nm]')
 			plt.ylabel('pathlength portion')
 			plt.savefig(path)
+			plt.close()
 
 		if save:
 			result_path = os.path.join(self.result, "result.pkl")
@@ -192,6 +215,8 @@ class MCX:
 			portion_path = os.path.join(self.result, "portion.csv")
 			df = pd.DataFrame(portions)
 			df.to_csv(portion_path, index=False)
+
+
 
 
 	def reload_result(self, path):
@@ -204,7 +229,7 @@ class MCX:
 	def _convert_unit(self, length_mm):
 		# convert mm to number of grid
 		num_grid = length_mm//self.config["voxel_size"]
-		return num_grid
+		return int(num_grid)
 
 	def _make_mcx_input_white(self, idx):
 		mcx_input = self.mcx_input
@@ -300,12 +325,12 @@ class MCX:
 		# ijv 
 		mcx_input["Shapes"][3]["Cylinder"]["C0"] = [100, 50, self.parameters["geometry"]["ijv_depth"]]
 		mcx_input["Shapes"][3]["Cylinder"]["C1"] = [0, 50, self.parameters["geometry"]["ijv_depth"]]
-		mcx_input["Shapes"][3]["Cylinder"]["R"] = [self.parameters["geometry"]["ijv_radius"]]
+		mcx_input["Shapes"][3]["Cylinder"]["R"] = self.parameters["geometry"]["ijv_radius"]
 
 		# cca 
 		mcx_input["Shapes"][4]["Cylinder"]["C0"] = [100, 50-self.parameters["geometry"]["ijv_cca_distance"], self.parameters["geometry"]["cca_depth"]]
 		mcx_input["Shapes"][4]["Cylinder"]["C1"] = [0, 50-self.parameters["geometry"]["ijv_cca_distance"], self.parameters["geometry"]["cca_depth"]]
-		mcx_input["Shapes"][4]["Cylinder"]["R"] = [self.parameters["geometry"]["cca_radius"]]
+		mcx_input["Shapes"][4]["Cylinder"]["R"] = self.parameters["geometry"]["cca_radius"]
 
 
 		# save the .json file in the output folder

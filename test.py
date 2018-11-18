@@ -18,8 +18,8 @@ line = LineBot()
 def main():
 	test_whiteMC()
 	line.print("test white done")
-	test_smooth()
-	line.print("test smooth done")
+	# test_smooth()
+	# line.print("test smooth done")
 
 def test_whiteMC():
 	"""
@@ -29,28 +29,30 @@ def test_whiteMC():
 
 	# white
 	mcx = MCX("test/test_white.json")
-	mcx.run()
-	mcx.calculate_reflectance(plot=False)
+	# mcx.run()
+	mcx.calculate_reflectance(plot=True)
 
-	reflec_white = mcx.reflectance[70][-1]
+	reflec_white = mcx.reflectance[70]
 
 	# normal
 	mcx2 = MCX("test/test_normal.json")
-	mcx2.run(white=False)
+	# mcx2.run(white=False)
 	mcx2.calculate_reflectance(white=False, plot=False)
 
-	reflec = mcx2.reflectance[-1]
+	reflec = mcx2.reflectance
 
 
-	plt.plot(reflec, label='normal')
-	plt.plot(reflec_white, label='white')
-	plt.legend()
-	plt.savefig("test/whiteMC.png")
-	plt.close()
+	for idx, (r_w, r) in enumerate(zip(reflec_white, reflec)):
+		plt.plot(r, label='normal')
+		plt.plot(r_w, label='white')
+		plt.title('on sds %d' % idx)
+		plt.legend()
+		plt.savefig("test/whiteMC_sds_%d.png" % idx)
+		plt.close()
 
 	print(rmse(reflec_white, reflec))
 
-	df = pd.DataFrame({"white": reflec_white, "normal": reflec})
+	df = pd.DataFrame({"white": reflec_white[-1], "normal": reflec[-1]})
 	df.to_csv("test/result_whiteMC.csv", index=False)
 
 
@@ -84,7 +86,7 @@ def rmse(x, y):
 
 
 if __name__ == "__main__":
-	# main()
-	# os.system("sudo shutdown")
-	df = pd.read_csv("test/result_whiteMC.csv")
-	print (rmse(df["normal"], df["white"]))
+	main()
+	os.system("sudo shutdown")
+	# df = pd.read_csv("test/result_whiteMC.csv")
+	# print (rmse(df["normal"], df["white"]))

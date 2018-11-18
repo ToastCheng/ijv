@@ -23,7 +23,7 @@
 
 	"IJV":{
 		"blood_volume_fraction": 1.0,
-		"ScvO2": 70,
+		"ScvO2": 0.70,
 		"water_volume": 0.95,
 		"n": 1.40,
 		"g": 0.94,
@@ -45,7 +45,7 @@
 
 	"geometry":{
 		"skin_thickness": 1,
-		"ijv_radius": 10,
+		"ijv_radius": 7,
 		"ijv_depth": 10,
 		"cca_radius": 4,
 		"cca_depth": 20,

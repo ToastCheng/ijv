@@ -202,17 +202,6 @@ class MCHHandler:
 		df = df.reset_index(drop=True)
 
 
-		# test speed
-		if False:
-			num_photon = int(1e6)
-			idx = np.random.randint(4, size=(num_photon, 1)) + 1
-			path = np.random.rand(num_photon, 3)
-			angle = np.random.rand(num_photon, 1)
-			data = np.concatenate([idx, path, angle], 1)
-
-			df = pd.DataFrame(data, columns=['detector_idx', 'media_0', 'media_1', 'media_2', 'angle'])
-
-
 		# [photon, medium]
 		path_length = df.iloc[:, 1:-1].values
 
