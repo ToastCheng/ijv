@@ -2,7 +2,7 @@
     "session_id": "test_whiteMC",
     "train": false,
     "num_photon": 2000000000.0,
-    "photon_batch": 50000000.0,
+    "photon_batch": 500000000.0,
     "voxel_size": 0.25,
     "binary_path": "mcx/bin/mcx",
     "medium_n": 1.457,

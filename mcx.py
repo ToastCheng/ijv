@@ -436,12 +436,12 @@ class MCX:
 		# ijv 
 		mcx_input["Shapes"][3]["Cylinder"]["C0"] = [100, 50, self.parameters["geometry"]["ijv_depth"]]
 		mcx_input["Shapes"][3]["Cylinder"]["C1"] = [0, 50, self.parameters["geometry"]["ijv_depth"]]
-		mcx_input["Shapes"][3]["Cylinder"]["R"] = [self.parameters["geometry"]["ijv_radius"]]
+		mcx_input["Shapes"][3]["Cylinder"]["R"] = self.parameters["geometry"]["ijv_radius"]
 
 		# cca 
 		mcx_input["Shapes"][4]["Cylinder"]["C0"] = [100, 50-self.parameters["geometry"]["ijv_cca_distance"], self.parameters["geometry"]["cca_depth"]]
 		mcx_input["Shapes"][4]["Cylinder"]["C1"] = [0, 50-self.parameters["geometry"]["ijv_cca_distance"], self.parameters["geometry"]["cca_depth"]]
-		mcx_input["Shapes"][4]["Cylinder"]["R"] = [self.parameters["geometry"]["cca_radius"]]
+		mcx_input["Shapes"][4]["Cylinder"]["R"] = self.parameters["geometry"]["cca_radius"]
 
 
 		# save the .json file in the output folder
@@ -476,7 +476,7 @@ class MCX:
 		unitmm = "%f " % self.config["voxel_size"]
 		photon = "%d " % self.config["photon_batch"]
 		num_batch = "%d " % (self.config["num_photon"]//self.config["photon_batch"])
-		maxdetphoton = "100000000"
+		maxdetphoton = "10000000"
 		# maxdetphoton = "%d" % (self.config["num_photon"]//5)
 		save_mc2 = "0 " if self.config["train"] else "1 "
 
