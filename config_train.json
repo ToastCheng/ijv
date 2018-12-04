@@ -1,8 +1,8 @@
 {
     "session_id": "train_0",
     "train": true,
-    "num_photon": 1000000.0,
-    "photon_batch": 1000000.0,
+    "num_photon": 500000000.0,
+    "photon_batch": 50000000.0,
     "voxel_size": 0.25,
     "binary_path": "mcx/bin/mcx",
     "medium_n": 1.457,
