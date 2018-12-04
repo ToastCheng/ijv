@@ -495,7 +495,7 @@ class MCX:
 		"--saveexit 1 " +\
 		"--unitinmm " + unitmm +\
 		"--saveseed 0 " +\
-		"--seed '1648335518' " +\
+		# "--seed '1648335518' " +\
 		"--skipradius -2 " +\
 		"--array 0 " +\
 		"--dumpmask 0 " +\

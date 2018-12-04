@@ -16,8 +16,8 @@ line = LineBot()
 
 
 def main():
-	test_whiteMC()
-	line.print("test white done")
+	#test_whiteMC()
+	#line.print("test white done")
 	test_smooth()
 	line.print("test smooth done")
 
@@ -62,7 +62,7 @@ def test_smooth():
 	to lower the number of photon and maintain the spectrum shape,
 	in that, we can speed up the simulation
 	"""
-	mcx = MCX('test/test_smooth_2e8.json')
+	mcx = MCX('test/test_smooth_6e8.json')
 	mcx.run()
 	mcx.calculate_reflectance()
 
