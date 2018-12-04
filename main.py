@@ -74,7 +74,7 @@ def train(generate_new_input):
 			gen.run(idx=idx)
 
 	for idx, parameter in enumerate(train_list[check_point:]):
-		with open('config_train.json', 'rb') as f:
+		with open('config_train.json') as f:
 			config = json.load(f)
 			config["session_id"] = "train_%d" % idx
 			config["input_file"] = parameter

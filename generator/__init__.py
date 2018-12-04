@@ -31,7 +31,7 @@ class Generator:
 
 		assert len(self.parameters) > 0, "no parameter is set in the Generator"
 
-		with open(os.path.join("generator", "parameters_gen.json"), "rb") as f:
+		with open(os.path.join("generator", "parameters_gen.json")) as f:
 			parameters = json.load(f)
 
 
@@ -132,7 +132,7 @@ class Generator:
 		self.parameters[tissue_name][parameter_name] = self.Parameter(min, max)
 
 	def _load(self, config_file):
-		with open(config_file, 'rb') as f:
+		with open(config_file) as f:
 			config = json.load(f)
 
 		for tissue_name, parameter_dict in config.items():
