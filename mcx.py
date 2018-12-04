@@ -217,8 +217,6 @@ class MCX:
 			df.to_csv(portion_path, index=False)
 
 
-
-
 	def reload_result(self, path):
 		with open(path, 'rb') as f:
 			results = pickle.load(f)

@@ -3,10 +3,12 @@ import json
 from glob import glob
 from argparse import ArgumentParser
 
-import utils
+from utils.line import LineBot
 from mcx import MCX
 from generator import Generator
 
+
+line = LineBot()
 
 
 def get_args():
@@ -56,7 +58,14 @@ def train(generate_new_input):
 
 	train_list = glob(os.path.join('generator', 'parameter', '*'))
 	train_list.sort()
+
 	config_train = "config_train.json"
+
+	if os.path.isfile("train_log.txt"):
+		with open('train_log.txt', 'r') as f:
+			check_point = int(f.read())
+	else:
+		check_point = 0
 
 	gen = Generator()
 
@@ -64,13 +73,17 @@ def train(generate_new_input):
 		for idx in range(generate_new_input):
 			gen.run(idx=idx)
 
-	for idx, parameter in enumerate(train_list):
+	for idx, parameter in enumerate(train_list[check_point:]):
 		with open('config_train.json', 'rb') as f:
 			config = json.load(f)
 			config["session_id"] = "train_%d" % idx
 			config["input_file"] = parameter
 		with open('config_train.json', 'w') as f:
 			json.dump(config, f, indent=4)
+
+		line.print('training %d/%d' % (idx, len(train_list)))
+		with open('train_log.txt', 'w+') as f:
+			f.write("%d" % idx)
 
 		mcx = MCX("config_train.json")
 		mcx.run()

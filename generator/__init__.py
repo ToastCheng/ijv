@@ -98,11 +98,23 @@ class Generator:
 		with open(os.path.join("generator", "parameter", "parameter_%d.json" % file_count), 'w+') as f:
 			json.dump(parameters, f, indent=4)
 
+		# save the geometry vector to geometry/
+		with open(os.path.join("generator", "geometry", "geometry.csv"), 'a+') as f:
+			f.write("%d,%f,%f,%f,%f,%f,%f\n" % \
+				(file_count,\
+					parameters["geometry"]["skin_thickness"],\
+					parameters["geometry"]["ijv_radius"],\
+					parameters["geometry"]["ijv_depth"],\
+					parameters["geometry"]["cca_radius"],\
+					parameters["geometry"]["cca_depth"],\
+					parameters["geometry"]["ijv_cca_distance"]))
+
 		# plot figure
 		skin = plt.Rectangle((0, 0), 100, self._convert_unit(parameters["geometry"]["skin_thickness"]), fc="#d1a16e")
 		muscle = plt.Rectangle((0, self._convert_unit(parameters["geometry"]["skin_thickness"])), 100, 300-self._convert_unit(parameters["geometry"]["skin_thickness"]), fc="#ea6935")
 		ijv = plt.Circle((50, self._convert_unit(parameters["geometry"]["ijv_depth"])), radius=self._convert_unit(parameters["geometry"]["ijv_radius"]), fc="#437ddb")
 		cca = plt.Circle((50-self._convert_unit(parameters["geometry"]["ijv_cca_distance"]), self._convert_unit(parameters["geometry"]["cca_depth"])), radius=self._convert_unit(parameters["geometry"]["cca_radius"]), fc="#c61f28")
+		
 		plt.axis([0, 100, 100, 0])
 		plt.gca().add_patch(skin)
 		plt.gca().add_patch(muscle)
