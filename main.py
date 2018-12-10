@@ -36,7 +36,7 @@ def main():
 
 		inverse()
 
-	if args.train:
+	if args.train and args.forward:
 
 		generate_new_input = args.generate
 		train(generate_new_input)
