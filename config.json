@@ -10,12 +10,13 @@
 	"binary_path": "mcx/bin/mcx",
 
 	"medium_n": 1.457,
+	"detector_na": 0.12,
 
 	"absorb_file": "input/coefficients.csv",
 	"fiber_file": "input/fiber.csv",
 	"input_file": "input/parameters.json",
 	"wavelength_file": "input/wavelength.csv",
-	"geometry_file": "input_mcx/case3.json"
+	"geometry_file": "input_mcx/case4.json"
 
 
 

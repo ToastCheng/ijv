@@ -33,8 +33,8 @@ class MCHHandler:
 		with open(self.config["input_file"]) as f: 
 			self.input = json.loads(f.read())
 
-		self.detector_na = 0.22
-		self.detector_n = 1.457
+		self.detector_na = self.config["detector_na"]
+		self.detector_n = self.config["medium_n"]
 		self.critical_angle = np.arcsin(self.detector_na/self.detector_n)
 		# self.critical_angle = 12
 

@@ -28,13 +28,13 @@ class SCVNet(nn.Module):
 		)
 
 		self.fc = nn.Sequential(
-			nn.Linear(150, 300),
-			nn.BatchNorm1d(300),
+			nn.Linear(150, 500),
+			nn.BatchNorm1d(500),
 			nn.ReLU(),
-			nn.Linear(300, 300),
-			nn.BatchNorm1d(300),
+			nn.Linear(500, 500),
+			nn.BatchNorm1d(500),
 			nn.ReLU(), 
-			nn.Linear(300, 1)
+			nn.Linear(500, 1)
 		)
 
 

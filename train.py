@@ -1,4 +1,5 @@
 
+import os 
 from argparse import ArgumentParser
 
 import torch
@@ -8,6 +9,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 import numpy as np 
+import pandas as pd 
 import matplotlib.pyplot as plt
 
 from inverse.model import SCVNet
@@ -20,16 +22,33 @@ def get_args():
 	parser = ArgumentParser()
 
 	parser.add_argument("-l", "--learning_rate", type=float, default=1e-4)
-	parser.add_argument("-e", "--epoch", type=int, default=300)
+	parser.add_argument("-e", "--epoch", type=int, default=1000)
 	parser.add_argument("-p", "--pretrain", action="store_true")
 	parser.add_argument("-m", "--model", type=str, default="")
 	parser.add_argument("-b", "--batch_size", type=int, default=32)
 
+	parser.add_argument("--log", type=str, default="log/log2.csv")
+
 	return parser.parse_args()
+
+
+def get_log(args):
+
+	if os.path.isfile(args.log):
+		log = pd.read_csv(args.log)
+		return log
+	else:
+		log = pd.DataFrame({
+			"train_error": [],
+			"valid_error": []
+		})
+		return log
+
 
 
 def train():
 	args = get_args()
+	log = get_log(args)
 
 	net = SCVNet()
 
@@ -100,6 +119,9 @@ def train():
 			_pred = net(s, g, p)
 
 			_loss = loss_func(_pred, _scv)
+		
+		log.loc[len(log)] = {"train_error": float(loss), "valid_error": float(_loss)}
+		log.to_csv(args.log, index=False)
 
 		train_losses.append(loss)
 		valid_losses.append(_loss)
