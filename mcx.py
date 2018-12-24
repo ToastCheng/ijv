@@ -30,7 +30,7 @@ class MCX:
 		self.wavelength = pd.read_csv(self.config["wavelength_file"])["wavelength"]
 		self.mua = pd.read_csv(self.config["absorb_file"])
 
-		self.handler = MCHHandler()
+		self.handler = MCHHandler(config=config_file)
 
 		# handle the situation that batch > total
 		if self.config["photon_batch"] > self.config["num_photon"]:

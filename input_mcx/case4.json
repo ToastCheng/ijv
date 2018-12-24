@@ -166,11 +166,11 @@
             }
         ],
         "Source": {
-            "Type": "disk",
+            "Type": "cone",
             "Pos": [
                 50,
                 2,
-                0
+                -60
             ],
             "Dir": [
                 0,
@@ -178,7 +178,7 @@
                 1
             ],
             "Param1": [
-                3,
+                0.082,
                 0,
                 0,
                 0
@@ -194,6 +194,6 @@
         "DoSaveRef": 0,
         "Photons": 10000000.0,
         "DoSaveSeed": 0,
-        "ID": "test_smooth_2e9_1000"
+        "ID": "test_cone_1000"
     }
 }

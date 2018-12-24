@@ -1,10 +1,10 @@
 {
 
-	"session_id": "test",
+	"session_id": "test_cone",
 	"train": false,
 
-	"num_photon": 1e7,
-	"photon_batch": 1e6,
+	"num_photon": 5e6,
+	"photon_batch": 5e7,
 	"voxel_size": 0.25,	
 
 	"binary_path": "mcx/bin/mcx",

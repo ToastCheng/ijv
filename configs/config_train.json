@@ -5,7 +5,6 @@
     "num_photon": 500000000.0,
     "wavelength_file": "input/wavelength.csv",
     "geometry_file": "input_mcx/train.json",
-    "fiber_file": "input/fiber.csv",
     "medium_n": 1.457,
     "voxel_size": 0.25,
     "input_file": "generator/parameter/parameter_0.json",

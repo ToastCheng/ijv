@@ -29,7 +29,8 @@ def main():
 	args = get_args()
 	if args.forward:
 
-		config_file = args.config
+		config_file = os.path.join('configs', args.config)
+		print(config_file)
 		forward(config_file)
 	
 	if args.inverse:
