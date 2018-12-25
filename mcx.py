@@ -183,8 +183,7 @@ class MCX:
 				for r_idx, r in enumerate(results):
 					fig = plt.figure()
 					for d_idx, d in enumerate(r):
-						if d_idx in [0, 5, 11]:
-							plt.plot(self.wavelength, np.log(d), label="detector %d" % d_idx)
+						plt.plot(self.wavelength, np.log(d), label="detector %d" % d_idx)
 					
 					path = os.path.join(self.plot, "Scv_%d.png" % r_idx)
 					plt.title('Scv_%d' % r_idx)
