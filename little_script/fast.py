@@ -2,13 +2,16 @@ import matplotlib.pyplot as plt
 import pickle
 import pandas as pd 
 from collections import defaultdict
+import sys
 
-path = 'output/test_new_fiber/result/result.pkl'
+name = 'test_new_fiber'
+name = sys.argv[1]
+path = 'output/' + name + '/result/result.pkl'
 with open(path, 'rb') as f:
     data = pickle.load(f)
 
 # (101, 5, 36)
-"""
+
 wl = [i for i in range(650, 1001, 10)]
 for idx, d in enumerate(data):
     for idxx, dd in enumerate(d):
@@ -17,9 +20,9 @@ for idx, d in enumerate(data):
     plt.xlabel('wavelength[nm]')
     plt.ylabel('reflectance')
     plt.title('ScvO2: %d' % idx)
-    plt.savefig('output/fig/%d.png' % idx)
+    plt.savefig('output/' + name + '/plot/Scv_%d.png' % idx)
     plt.clf()
-"""
+
 
 # sensitivity
 record = defaultdict(list)
@@ -30,6 +33,6 @@ for i in range(0, 100, 10):
         record["%d-%d" % (i,i+10)].append(sens)
 
 df = pd.DataFrame(record)
-df.to_csv('output/result.csv')
+df.to_csv('output/' + name + '_result.csv')
 
 
