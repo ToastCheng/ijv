@@ -99,5 +99,7 @@ def train(generate_new_input):
 
 
 if __name__ == "__main__":
+	l = LineBot()
 	main()
-	os.system("sudo shutdown")
+	l.print("finish!")
+	# os.system("sudo shutdown")

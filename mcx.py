@@ -2,6 +2,7 @@ import os
 import json
 import pickle
 from glob import glob 
+from random import randint
 from datetime import datetime
 from collections import defaultdict
 
@@ -329,6 +330,8 @@ class MCX:
 		mcx_input["Shapes"][4]["Cylinder"]["C1"] = [0, 50-self.parameters["geometry"]["ijv_cca_distance"], self.parameters["geometry"]["cca_depth"]]
 		mcx_input["Shapes"][4]["Cylinder"]["R"] = self.parameters["geometry"]["cca_radius"]
 
+		# set seed
+		mcx_input["Session"]["RNGSeed"] = randint(0, 1000000000)
 
 		# save the .json file in the output folder
 		with open(self.config["geometry_file"], 'w+') as f:
