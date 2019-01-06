@@ -1,10 +1,10 @@
 {
 
-	"session_id": "test_seed_2",
+	"session_id": "test_cv_6",
 	"train": false,
 
-	"num_photon": 5e6,
-	"photon_batch": 1e7,
+	"num_photon": 5e8,
+	"photon_batch": 5e7,
 	"voxel_size": 0.25,	
 
 	"binary_path": "mcx/bin/mcx",
