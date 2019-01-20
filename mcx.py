@@ -159,7 +159,7 @@ class MCX:
 			plt.savefig(os.path.join(self.plot_mc2, name + ".png"))
 			plt.close()
 
-	def run_phantom(self):
+	def run_phantom(self, phantom_idx):
 		# session name
 		if not os.path.isdir(self.session):
 			os.mkdir(self.session)
@@ -181,13 +181,13 @@ class MCX:
 
 		for idx, wl in enumerate(self.wavelength):
 
-			for phantom_id in ["C", "H", "I", "K"]:
-				self._make_phantom_mcx_input(idx, phantom_id)
+			for pid in phantom_idx:
+				self._make_phantom_mcx_input(idx, pid)
 
-				command = self._get_command(wl, phantom_id)
+				command = self._get_command(wl, pid)
 
 				print("wavelength: ", wl)
-				print("phantom: ", phantom_id)
+				print("phantom: ", pid)
 				print(command)
 				os.chdir("mcx/bin")
 				os.system(command)
@@ -379,22 +379,22 @@ class MCX:
 			df = pd.DataFrame(portions)
 			df.to_csv(portion_path, index=False)
 
-	def calculate_reflectance_phantom(self, plot=True, verbose=True, save=True):
+	def calculate_reflectance_phantom(self, phantom_idx, plot=True, verbose=True, save=True):
 		
 		results = {"C": [], "H": [], "I": [], "K": []}
 		
 		for wl_idx, wl in enumerate(self.wavelength):
-			for phantom_idx in ["C", "H", "I", "K"]:
+			for pid in phantom_idx:
 				# [1]
 				result = self.handler.compute_reflectance_phantom(
 					wl_idx = wl_idx,
-					phantom_idx=phantom_idx,
-					mch_file=os.path.join(self.mcx_output, "%s_%d_%d.mch" % (self.config["session_id"], wl, phantom_idx))
+					phantom_idx=pid,
+					mch_file=os.path.join(self.mcx_output, "%s_%d_%d.mch" % (self.config["session_id"], wl, pid))
 					)
 				if result is None:
 					continue
 
-				results[phantom_idx].append(result)
+				results[pid].append(result)
 
 
 

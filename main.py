@@ -18,6 +18,7 @@ def get_args():
 	parser.add_argument("-i", "--inverse", action="store_true")
 	parser.add_argument("-t", "--train", action="store_true")
 	parser.add_argument("-p", "--phantom", action="store_true")
+	parser.add_argument("--pid", type=str, default="CHIK")
 
 	parser.add_argument("-g", "--generate", type=int, default=0)
 
@@ -46,7 +47,7 @@ def main():
 	if args.phantom:
 
 		config_file = os.path.join('configs', args.config)
-		calibrate(config_file)
+		calibrate(config_file, args.pid)
 
 
 def forward(config):
@@ -101,11 +102,11 @@ def train(generate_new_input):
 	# pp = PrettyPrinter()
 	# pp.pprint(train_list)
 
-def calibrate(config_file):
+def calibrate(config_file, phantom_idx):
 	
 	mcx = MCX(config_file)
-	mcx.run_phantom()
-	mcx.calculate_reflectance_phantom()
+	mcx.run_phantom(phantom_idx)
+	mcx.calculate_reflectance_phantom(phantom_idx)
 
 
 
