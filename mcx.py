@@ -113,17 +113,18 @@ class MCX:
 		z_size = self.parameters["boundary"]["z_size"]
 
 
-		skin = plt.Rectangle((0, 0), y_size, skin_th, fc="#FFDDAA")
-		fat = plt.Rectangle((0, skin_th), y_size, fat_th, fc="#FF8800")
-		muscle = plt.Rectangle((0, skin_th+fat_th), y_size, z_size-skin_th-fat_th, fc="#E63F00")
-		ijv = plt.Circle((y_size//2, ijv_d), radius=ijv_r, fc="#5599FF")
-		cca = plt.Circle((y_size//2 - ic_dist, cca_d), radius=cca_r, fc="#880000")
+		skin = plt.Rectangle((0, 0), y_size, skin_th, fc="#FF8800", label="skin")
+		fat = plt.Rectangle((0, skin_th), y_size, fat_th, fc="#BB5500", label="fat")
+		muscle = plt.Rectangle((0, skin_th+fat_th), y_size, z_size-skin_th-fat_th, fc="#C63300", label="muscle")
+		ijv = plt.Circle((y_size//2, ijv_d), radius=ijv_r, fc="#4169E1", label="IJV")
+		cca = plt.Circle((y_size//2 - ic_dist, cca_d), radius=cca_r, fc="#800000", label="CCA")
 		plt.axis([0, y_size, z_size, 0])
 		plt.gca().add_patch(skin)
 		plt.gca().add_patch(fat)
 		plt.gca().add_patch(muscle)
 		plt.gca().add_patch(ijv)
 		plt.gca().add_patch(cca)
+		plt.legend()
 		plt.savefig(os.path.join(self.plot, self.config["session_id"] + "_geometry.png"))
 		plt.close()
 
