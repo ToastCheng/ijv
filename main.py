@@ -115,4 +115,4 @@ if __name__ == "__main__":
 	l = LineBot()
 	main()
 	l.print("finish!")
-	# os.system("sudo shutdown")
+	os.system("sudo shutdown")
