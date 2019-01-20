@@ -886,7 +886,7 @@ class MCX:
 
 
 		# load fiber
-		sds, r = self.fiber.values[sds_idx]
+		sds, r = self.fiber.values[0]
 		sds = self._convert_unit(sds)
 		r = self._convert_unit(r)
 
