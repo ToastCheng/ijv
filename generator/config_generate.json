@@ -11,7 +11,7 @@
 	},
 
 	"muscle":{
-		"blood_volume_fraction": [0, 20],
+		"blood_volume_fraction": [0, 1],
 		"ScvO2": [0, 1],
 		"water_volume": [0, 1],
 		"n": [1.4, 1.4],
@@ -22,7 +22,7 @@
 	},
 
 	"IJV":{
-		"blood_volume_fraction": [0, 20],
+		"blood_volume_fraction": [0, 1],
 		"ScvO2": [0, 1],
 		"water_volume": [0, 1],
 		"n": [1.4, 1.4],
@@ -33,7 +33,7 @@
 	},
 
 	"CCA":{
-		"blood_volume_fraction": [0, 20],
+		"blood_volume_fraction": [0, 1],
 		"ScvO2": [0, 1],
 		"water_volume": [0, 1],
 		"n": [1.4, 1.4],

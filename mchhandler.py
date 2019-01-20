@@ -69,9 +69,10 @@ class MCHHandler:
 
 		# calculate percentage
 		skin_portion = path_length.sum(0)[0]/path_length.sum()
-		muscle_portion = path_length.sum(0)[1]/path_length.sum()
-		ijv_portion = path_length.sum(0)[2]/path_length.sum()
-		cca_portion = path_length.sum(0)[3]/path_length.sum()
+		fat_portion = path_length.sum(0)[1]/path_length.sum()
+		muscle_portion = path_length.sum(0)[2]/path_length.sum()
+		ijv_portion = path_length.sum(0)[3]/path_length.sum()
+		cca_portion = path_length.sum(0)[4]/path_length.sum()
 
 		path_length = torch.tensor(path_length).float().to(device)
 
@@ -108,7 +109,7 @@ class MCHHandler:
 		# [SDS, ScvO2]
 		result = result[1:]
 
-		return result.cpu().numpy()/self.header["total_photon"], (skin_portion, muscle_portion, ijv_portion, cca_portion)
+		return result.cpu().numpy()/self.header["total_photon"], (skin_portion, fat_portion, muscle_portion, ijv_portion, cca_portion)
 		
 	def _make_tissue_white(self, wl):
 
@@ -120,6 +121,8 @@ class MCHHandler:
 		deoxy = self.mua['deoxy'].values
 		water = self.mua['water'].values
 		collagen = self.mua['collagen'].values
+		fat = self.mua['fat'].values
+		melanin = self.mua['mel'].values
 		wavelength = self.mua['wavelength'].values
 
 		# interpolation
@@ -127,12 +130,16 @@ class MCHHandler:
 		deoxy = np.interp(wl, wavelength, deoxy)
 		water = np.interp(wl, wavelength, water)
 		collagen = np.interp(wl, wavelength, collagen)
+		fat = np.interp(wl, wavelength, fat)
+		melanin = np.interp(wl, wavelength, melanin)
 
 		# turn the unit 1/cm --> 1/mm
 		oxy *= 0.1
 		deoxy *= 0.1
 		water *= 0.1
 		collagen *= 0.1
+		fat *= 0.1
+		melanin *= 0.1
 
 		# [medium, 1]
 		mua = np.zeros((self.header["maxmedia"], 1))
@@ -146,7 +153,22 @@ class MCHHandler:
 				self.input["skin"]["water_volume"],
 				oxy, 
 				deoxy, 
-				water
+				water,
+				fat,
+				melanin
+				)
+
+			fat = self._calculate_mua(
+				self.input["fat"]["blood_volume_fraction"],
+				self.input["fat"]["ScvO2"],
+				self.input["fat"]["water_volume"],
+				self.input["fat"]["fat_volume"],
+				self.input["fat"]["melanin_volume"],
+				oxy, 
+				deoxy, 
+				water,
+				fat,
+				melanin
 				)
 
 			muscle = self._calculate_muscle_mua(
@@ -161,7 +183,9 @@ class MCHHandler:
 				self.input["IJV"]["water_volume"],
 				oxy, 
 				deoxy, 
-				water
+				water,
+				fat,
+				melanin
 				)
 			CCA = self._calculate_mua(
 				self.input["CCA"]["blood_volume_fraction"],
@@ -169,11 +193,14 @@ class MCHHandler:
 				self.input["CCA"]["water_volume"],
 				oxy, 
 				deoxy, 
-				water
+				water,
+				fat,
+				melanin
 				)
 
 			_mua = np.concatenate(
 				[np.expand_dims(skin, 0),
+				np.expand_dims(fat, 0),
 				 np.expand_dims(muscle, 0), 
 				 np.expand_dims(IJV, 0), 
 				 np.expand_dims(CCA, 0)], 0
@@ -336,8 +363,8 @@ class MCHHandler:
 		return df
 
 	@staticmethod
-	def _calculate_mua(b, s, w, oxy, deoxy, water):
-		mua = b * (s * oxy + (1-s) * deoxy) + w * water
+	def _calculate_mua(b, s, w, f, m, oxy, deoxy, water, fat, melanin):
+		mua = b * (s * oxy + (1-s) * deoxy) + w * water + f * fat + m * melanin
 		return mua
 
 	@staticmethod
