@@ -885,6 +885,11 @@ class MCX:
 		mcx_input["Domain"]["Media"][1]["n"] = self.parameters["phantom"]["n"]
 
 
+
+		x_size = self.parameters["boundary"]["x_size"]
+		y_size = self.parameters["boundary"]["y_size"]
+		z_size = self.parameters["boundary"]["z_size"]
+
 		# load fiber
 		sds, r = self.fiber.values[0]
 		sds = self._convert_unit(sds)
