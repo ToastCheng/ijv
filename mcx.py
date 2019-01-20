@@ -936,7 +936,7 @@ class MCX:
 
 	def _get_command(self, wl, idx):
 		# dummy function create the command for mcx
-		session_name = "\"%s_%d_%d\" " % (self.config["session_id"], wl, idx)
+		session_name = "\"%s_%d_%s\" " % (self.config["session_id"], wl, str(idx))
 		geometry_file = "\"%s\" " % os.path.abspath(self.config["geometry_file"])
 		root = "\"%s\" " % os.path.join(os.path.abspath(self.session), "mcx_output")
 		unitmm = "%f " % self.config["voxel_size"]
