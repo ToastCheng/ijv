@@ -839,7 +839,7 @@ class MCX:
 	def _make_phantom_mcx_input(self, wl_idx, phantom_idx):
 		mcx_input = self.mcx_input
 
-		mcx_input["Session"]["ID"] = self.config["session_id"] + "_%d" % self.wavelength[idx]
+		mcx_input["Session"]["ID"] = self.config["session_id"] + "_%d" % self.wavelength[wl_idx]
 
 		mua = pd.read_csv("CHIK/mua_in_mm.csv")
 		musp = pd.read_csv("CHIK/musp_in_mm.csv")
