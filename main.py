@@ -102,7 +102,6 @@ def train(generate_new_input):
 	# pp.pprint(train_list)
 
 def calibrate(config_file):
-	from utils.calibrate import Calibrator
 	
 	mcx = MCX(config_file)
 	mcx.run_phantom()
