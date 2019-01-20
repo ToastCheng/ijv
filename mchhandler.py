@@ -342,6 +342,76 @@ class MCHHandler:
 		# [medium]
 		return mua
 
+	def compute_reflectance_phantom(self, wl_idx, phantom_idx, mch_file=None):
+		# reload a .mch file
+		if mch_file is not None:
+			self.df, self.header, self.photon = self._load_mch(mch_file)
+
+		df = self._parse_mch()
+		# filter the photon that not been detected(due to critical angle)
+		df = df[np.arccos(df.angle.abs()) <= self.critical_angle]
+		if len(df) == 0:
+			print('no photon detected at %d' % wl)
+			return None, None
+		df = df.reset_index(drop=True)
+
+
+		# [photon, medium]
+		path_length = df.iloc[:, 1:-1].values
+
+
+		path_length = torch.tensor(path_length).float().to(device)
+
+		# [medium]
+		mua = pd.read_csv("CHIK/mua_in_mm.csv")
+
+		mua_C = np.interp(self.wavelength, mua["wl"], mua["C"])
+		mua_H = np.interp(self.wavelength, mua["wl"], mua["H"])
+		mua_I = np.interp(self.wavelength, mua["wl"], mua["I"])
+		mua_K = np.interp(self.wavelength, mua["wl"], mua["K"])
+		mua = {
+			"C": mua_C, 
+			"H": mua_H, 
+			"I": mua_I, 
+			"K": mua_K
+			}
+
+		mua = mua[phantom_idx][wl_idx]
+		mua = torch.tensor(mua).float().to(device)
+
+		# [photon]
+		weight = torch.exp(-torch.matmul(path_length, mua) *self.header["unitmm"]) 
+		
+		# [1]
+		result = torch.zeros(1).float().to(device)
+
+		# seperate photon with different detector
+		for idx in range(1, self.header["detnum"]+1):
+
+			# get the index of specific index
+			detector_list = df.index[df["detector_idx"] == idx].tolist()
+			if len(detector_list) == 0:
+				# print("detector #%d detected no photon" % idx)
+				result = torch.cat((result, torch.zeros(1).float().to(device)), 0)
+				continue
+			# pick the photon that detected by specific detector
+			
+			# [photon]
+			_weight = weight[detector_list]
+			# print(_weight.shape)
+			_weight = _weight.sum(0)
+			_weight = _weight.unsqueeze(0)
+			# print(_weight.shape)
+			# print(result.shape)
+			result = torch.cat((result, _weight), 0)
+
+		# [SDS, ScvO2]
+		result = result[1:]
+
+		return result.cpu().numpy()/self.header["total_photon"]
+		
+
+
 	def _convert_unit(self, length_mm):
 		# convert mm to number of grid
 		num_grid = length_mm//self.header["unitmm"]

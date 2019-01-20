@@ -1,0 +1,19 @@
+{
+	"phantom":{
+		"help": "no need",
+		"g": 0,
+		"n": 1.4
+	},
+
+	"geometry":{
+		"help": "no geometry"
+
+	},
+
+	"boundary":{
+		"x_size": 150,
+		"y_size": 70,
+		"z_size": 200
+	}
+
+}
