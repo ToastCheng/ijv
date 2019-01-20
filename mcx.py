@@ -113,12 +113,12 @@ class MCX:
 		z_size = self.parameters["boundary"]["z_size"]
 
 
-		skin = plt.Rectangle((0, 0), y_size, skin_th, fc="#d1a16e")
-		fat = plt.Rectangle((0, skin_th), y_size, 100-skin_th, fc="#ea6935")
-		muscle = plt.Rectangle((0, skin_th), y_size, 100-skin_th, fc="#ea6935")
-		ijv = plt.Circle((y_size, ijv_d), radius=ijv_r, fc="#437ddb")
-		cca = plt.Circle((y_size//2 - ic_dist, cca_d), radius=cca_d, fc="#c61f28")
-		plt.axis([0, y_size, 100, 0])
+		skin = plt.Rectangle((0, 0), y_size, skin_th, fc="#FFDDAA")
+		fat = plt.Rectangle((0, skin_th), y_size, fat_th, fc="#FF8800")
+		muscle = plt.Rectangle((0, skin_th+fat_th), y_size, z_size-skin_th-fat_th, fc="#E63F00")
+		ijv = plt.Circle((y_size//2, ijv_d), radius=ijv_r, fc="#5599FF")
+		cca = plt.Circle((y_size//2 - ic_dist, cca_d), radius=cca_r, fc="#880000")
+		plt.axis([0, y_size, z_size, 0])
 		plt.gca().add_patch(skin)
 		plt.gca().add_patch(fat)
 		plt.gca().add_patch(muscle)
@@ -421,7 +421,7 @@ class MCX:
 		num_grid = length_mm//self.config["voxel_size"]
 		return int(num_grid)
 
-	def _make_ijv_mcx_input_white(self, idx):
+	def _make_ijv_mcx_input_white(self, idx, sds_idx):
 		mcx_input = self.mcx_input
 
 		mcx_input["Session"]["ID"] = self.config["session_id"] + "_%d" % self.wavelength[idx]
@@ -526,18 +526,19 @@ class MCX:
 
 		# geometry
 		skin_th = self.parameters["geometry"]["skin_thickness"]
+		fat_th = self.parameters["geometry"]["fat_thickness"]
 		ijv_r = self.parameters["geometry"]["ijv_radius"]
 		ijv_d = self.parameters["geometry"]["ijv_depth"]
 		ic_dist = self.parameters["geometry"]["ijv_cca_distance"]
 		cca_r = self.parameters["geometry"]["cca_radius"]
 		cca_d = self.parameters["geometry"]["cca_depth"]
 
-		mcx_input["Domain"]["Dim"] = [x_size, y_size, z_size]
 
 		x_size = self.parameters["boundary"]["x_size"]
 		y_size = self.parameters["boundary"]["y_size"]
 		z_size = self.parameters["boundary"]["z_size"]
 
+		mcx_input["Domain"]["Dim"] = [x_size, y_size, z_size]
 
 		# skin
 		mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]

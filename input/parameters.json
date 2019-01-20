@@ -66,6 +66,7 @@
 
 	"geometry":{
 		"skin_thickness": 1,
+		"fat_thickness": 1,
 		"ijv_radius": 7,
 		"ijv_depth": 10,
 		"cca_radius": 4,
