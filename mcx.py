@@ -390,7 +390,7 @@ class MCX:
 				result = self.handler.compute_reflectance_phantom(
 					wl_idx = wl_idx,
 					phantom_idx=pid,
-					mch_file=os.path.join(self.mcx_output, "%s_%d_%d.mch" % (self.config["session_id"], wl, pid))
+					mch_file=os.path.join(self.mcx_output, "%s_%d_%s.mch" % (self.config["session_id"], wl, pid))
 					)
 				if result is None:
 					continue
