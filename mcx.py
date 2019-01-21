@@ -635,6 +635,8 @@ class MCX:
 		mcx_input["Domain"]["Dim"] = [x_size, y_size, z_size]
 
 		# skin
+		mcx_input["Shapes"][0]["Grid"]["Size"] = [x_size, y_size, skin_th]
+
 		mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]
 		mcx_input["Shapes"][1]["Subgrid"]["Size"] = [x_size, y_size, skin_th]
 
