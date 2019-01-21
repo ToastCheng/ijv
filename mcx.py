@@ -70,6 +70,7 @@ class MCX:
 		self.plot_mc2 = os.path.join(self.session, 'plot_mc2')
 		self.result = os.path.join(self.session, 'result')
 		self.mcx_output = os.path.join(self.session, 'mcx_output')
+		self.json_output = os.path.join(self.session, 'json_output')
 
 		self.reflectance = None
 
@@ -98,6 +99,9 @@ class MCX:
 
 		if not os.path.isdir(self.mcx_output):
 			os.mkdir(self.mcx_output)
+		
+		if not os.path.isdir(self.json_output):
+			os.mkdir(self.json_output)
 
 		# plot figure
 		skin_th = self.parameters["geometry"]["skin_thickness"]
@@ -193,7 +197,6 @@ class MCX:
 				os.chdir("mcx/bin")
 				os.system(command)
 				os.chdir("../..")
-
 
 	def calculate_reflectance(self, white=True, plot=True, verbose=True, save=True):
 		# This function should called after 
@@ -314,11 +317,14 @@ class MCX:
 
 			print(np.asarray(resultss).shape)
 			print(np.asarray(results).shape)
-			# [wl, SDS, ScvO2]
-			# -> [ScvO2, SDS, wl]
+			# [wl, SDS, 1, ScvO2]
+			# -> [1, ScvO2, SDS, wl]
 			results = np.asarray(results).transpose(2, 3, 1, 0)
 			self.reflectance = results
 			# print(results.shape)
+
+			self.calculate_sens(results[0])
+
 
 		# else:
 		# 	for wl in self.wavelength:
@@ -409,11 +415,93 @@ class MCX:
 			with open(result_path, 'wb') as f:
 				pickle.dump(results, f)
 
-
 	def reload_result(self, path):
 		with open(path, 'rb') as f:
 			results = pickle.load(f)
 		return results
+
+	def calculate_sens(self, data):
+		# data -> [ScvO2, SDS, wl]
+
+		# 1
+		percentage = [i for i in range(100)]
+		wl = [str(i) for i in range(650, 1001, 10)]
+
+		sensitivity = []
+		num_sds = data.shape[1]
+		num_wl = data.shape[2]
+
+		plt.figure(figsize=(12,8))
+		for s in range(num_sds):
+			sen = []
+			for i in range(100):
+				ss = cal_sen(data[i, s, :], data[i+1, s, :])/1
+				sen.append(ss)
+
+			sensitivity.append(sen)
+			plt.plot(percentage, sen, label="sds %d" % s)
+
+		plt.grid()
+		plt.legend()
+		plt.title("sensitivity on SDS #%d" % s)
+		plt.ylabel("sensitivity")
+		plt.xlabel("ScvO2")
+
+		plt.savefig(os.path.join(self.plot, "sens_%d.png" % s))
+		plt.clf()
+
+		# 2
+		plt.figure(figsize=(12,8))
+		sens = np.asarray(sensitivity)
+
+		plt.imshow(sens, aspect='auto')
+		plt.xlabel("ScvO2")
+		plt.ylabel("SDS")
+		plt.colorbar()
+		plt.savefig(os.path.join(self.plot, "hm.png"))
+		plt.clf()
+
+		# 3
+
+
+		for s in range(num_sds):
+			sww = []
+			for p in range(100):
+				sw = []
+				for w in range(36):
+					sw.append(cal_sen2(data[0i, s, w], data[i+1, s, w]))
+				sww.append(sw)
+			sww = np.asarray(sww)
+			plt.figure(figsize=(18, 10))
+			plt.imshow(sww, aspect='auto')
+			plt.xticks([i for i in range(36)], labels=wl)
+			plt.colorbar()
+			plt.xlabel("wavelength")
+			plt.ylabel("ScvO2")
+			plt.title("SDS #%d" % s)
+			plt.savefig(os.path.join(self.plot, "wl_hm_%d.png" % s))
+			plt.clf()
+	    
+
+		# 4
+
+		plt.figure(figsize=(16, 6))
+
+		for s in range(num_sds):
+			sww = []
+			for p in range(100):
+				sw = []
+				for w in range(36):
+					sw.append(cal_sen2(data[i, s, w], data[i+1, s, w]))
+				sww.append(sw)
+			sww = np.asarray(sww)
+			plt.plot(sww.mean(0), label="SDS #%d" % s)
+		plt.legend()
+		plt.grid()
+		plt.xlabel("wavelength")
+		plt.xticks([i for i in range(35)], [str(i) for i in range(650, 1001, 10)])
+		plt.ylabel("sensitivity")
+		plt.savefig(os.path.join(self.plot, "sens_wl.png"))
 
 	# private functions
 
@@ -584,6 +672,9 @@ class MCX:
 		# save the .json file in the output folder
 		with open(self.config["geometry_file"], 'w+') as f:
 			json.dump(mcx_input, f, indent=4)
+
+		with open(os.path.join(self.json_output, "input_%d.json" % idx), 'w+') as f:
+			json.dump(mux_input, f, indent=4)
 
 	def _make_ijv_mcx_input(self, idx):
 		mcx_input = self.mcx_input
@@ -946,7 +1037,9 @@ class MCX:
 		num_batch = "%d " % (self.config["num_photon"]//self.config["photon_batch"])
 		maxdetphoton = "10000000"
 		# maxdetphoton = "%d" % (self.config["num_photon"]//5)
-		save_mc2 = "0 " if self.config["train"] else "1 "
+		# save_mc2 = "0 " if self.config["train"] else "1 "
+		# mc2 is seldom used
+		save_mc2 = "0 "
 
 		command = \
 		"./mcx --session " + session_name +\

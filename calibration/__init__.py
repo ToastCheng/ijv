@@ -28,7 +28,7 @@ class Calibrator:
 			1. reload the data for calibration
 
 	"""
-	def __init__(self, config_path="config.json"):
+	def __init__(self, config_path="calibration/config.json"):
 
 		with open(config_path, 'rb') as f:
 			config = json.load(f)
@@ -40,9 +40,15 @@ class Calibrator:
 
 		# data
 		# [num_experience/simulation, wavelength]
-		self.exp_phantom_data = self._load(config["exp_phantom_path"])
-		self.exp_live_data = self._load(config["exp_live_path"])
-		self.sim_data = self._load(config["sim_phantom_path"])
+		if False:
+			self.exp_phantom_data = self._load(config["exp_phantom_path"])
+			self.exp_live_data = self._load(config["exp_live_path"])
+			self.sim_data = self._load(config["sim_phantom_path"])
+		else:
+			self.exp_phantom_data = []
+			self.exp_live_data = []
+			self.sim_data = []
+
 
 		assert len(self.exp_phantom_data) == len(self.sim_data),\
 		"The simulated data and experience data has to matched!"
@@ -53,6 +59,29 @@ class Calibrator:
 		self.b = None
 		self.r_square = None
 		self.calibrated = None
+
+	def get_a_b(self, sim, exp, exp_wl):
+		# sim: [num_phantom, num_wl]
+		# exp: [num_phantom, num_wl]
+		assert sim.shape[0] == exp.shape[0]
+
+		_exp = []
+		for i in range(exp.shape[0]):
+			_exp.append(np.interp([i for i in range(650, 1001, 10)], exp_wl, exp[i]))
+		exp = np.asarray(_exp)
+
+		print(sim.shape)
+		print(exp.shape)
+		coeff = []
+		for s, e in zip(sim.T, exp.T):
+			c = np.polyfit(e, s, 1)
+			coeff.append(c)
+		coeff = np.asarray(coeff)
+
+		return coeff, exp
+
+
+
 
 	def run(self, plot=True, cross_validate=True):
 
