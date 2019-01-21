@@ -295,7 +295,7 @@ class MCX:
 					# [1, ScvO2]
 					result, portion = self.handler.compute_reflectance_white(
 						wl=wl, 
-						mch_file=os.path.join(self.mcx_output, "%s_%d_%d.mch" % (self.config["session_id"], wl, sds))
+						mch_file=os.path.join(self.mcx_output, "%s_%d_%d.mch" % (self.config["session_id"], wl, str(sds)))
 						)
 					if result is None:
 						continue
@@ -422,6 +422,11 @@ class MCX:
 
 	def calculate_sens(self, data):
 		# data -> [ScvO2, SDS, wl]
+		def cal_sen(x1, x2):
+			return np.abs(x2 - x1).mean()/(x1).mean()
+
+		def cal_sen2(x1, x2):
+			return np.abs(x2 - x1)/x1
 
 		# 1
 		percentage = [i for i in range(100)]
@@ -443,11 +448,10 @@ class MCX:
 
 		plt.grid()
 		plt.legend()
-		plt.title("sensitivity on SDS #%d" % s)
 		plt.ylabel("sensitivity")
 		plt.xlabel("ScvO2")
 
-		plt.savefig(os.path.join(self.plot, "sens_%d.png" % s))
+		plt.savefig(os.path.join(self.plot, "sens_scvo2.png" % s))
 		plt.clf()
 
 		# 2
@@ -455,10 +459,11 @@ class MCX:
 		sens = np.asarray(sensitivity)
 
 		plt.imshow(sens, aspect='auto')
+		plt.title("")
 		plt.xlabel("ScvO2")
 		plt.ylabel("SDS")
 		plt.colorbar()
-		plt.savefig(os.path.join(self.plot, "hm.png"))
+		plt.savefig(os.path.join(self.plot, "sens_heatmap.png"))
 		plt.clf()
 
 		# 3
@@ -469,7 +474,7 @@ class MCX:
 			for p in range(100):
 				sw = []
 				for w in range(36):
-					sw.append(cal_sen2(data[0i, s, w], data[i+1, s, w]))
+					sw.append(cal_sen2(data[i, s, w], data[i+1, s, w]))
 				sww.append(sw)
 			sww = np.asarray(sww)
 			plt.figure(figsize=(18, 10))
@@ -674,7 +679,7 @@ class MCX:
 			json.dump(mcx_input, f, indent=4)
 
 		with open(os.path.join(self.json_output, "input_%d.json" % idx), 'w+') as f:
-			json.dump(mux_input, f, indent=4)
+			json.dump(mcx_input, f, indent=4)
 
 	def _make_ijv_mcx_input(self, idx):
 		mcx_input = self.mcx_input
