@@ -451,7 +451,7 @@ class MCX:
 		plt.ylabel("sensitivity")
 		plt.xlabel("ScvO2")
 
-		plt.savefig(os.path.join(self.plot, "sens_scvo2.png" % s))
+		plt.savefig(os.path.join(self.plot, "sens_scvo2.png"))
 		plt.clf()
 
 		# 2
