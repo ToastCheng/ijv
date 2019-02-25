@@ -44,6 +44,20 @@ class Calibrator:
 
 		return self.a, self.b, r_square
 
+	def calibrate(self, measured, simulated):
+
+		r_square = []
+		for x, y in zip(measured, simulated):
+			y_fit = x * self.a + self.b
+			residual = ((y-y_fit)**2).sum()
+			SS_total = ((y.mean()-y_fit)**2).sum()
+
+			r_square.append(1 - residual/SS_total)
+
+		r_square = np.mean(r_square)
+
+		return y_fit, r_square
+
 	def read_tiff(self, path):
 		from PIL import Image		
 		img = Image.open(path)
