@@ -3,7 +3,7 @@
     "session_id": "20190225_small",
     "train": false,
 
-    "num_photon": 5e8,
+    "num_photon": 2e9,
     "photon_batch": 5e7,
     "voxel_size": 0.25, 
 
