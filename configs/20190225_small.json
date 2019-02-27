@@ -4,7 +4,7 @@
     "train": false,
 
     "num_photon": 2e9,
-    "photon_batch": 5e7,
+    "photon_batch": 5e9,
     "voxel_size": 0.25, 
 
     "binary_path": "mcx/bin/mcx",
