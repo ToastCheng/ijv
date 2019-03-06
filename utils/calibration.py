@@ -14,10 +14,10 @@ class Calibrator:
 		[input]
 		measured: 
 			2D array of measured spectrum
-			shape: [num_sds, num_wavelength]
+			shape: [num_phantom, num_wavelength]
 		simulated:
 			2D array of simulated spectrum
-			shape: [num_sds, num_wavelength]
+			shape: [num_phantom, num_wavelength]
 		[output]
 		a, b:
 			in each wavelength
@@ -27,20 +27,26 @@ class Calibrator:
 		self.a = []
 		self.b = []
 		
+		# iter wavelength
 		for m, s in zip(measured.T, simulated.T):
 			aa, bb = np.polyfit(m, s, 1)
 			self.a.append(aa)
 			self.b.append(bb)
 
 		r_square = []
-		for x, y in zip(measured, simulated):
-			y_fit = x * self.a + self.b
-			residual = ((y-y_fit)**2).sum()
-			SS_total = ((y.mean()-y_fit)**2).sum()
+		for idx, (x, y) in enumerate(zip(measured.T, simulated.T)):
 
+			y_fit = x * self.a[idx] + self.b[idx]
+			residual = ((y-y_fit)**2).sum()
+			SS_total = ((y.mean()-y)**2).sum()
+
+			print("COMPUTE!")
+			print(residual)
+			print(SS_total)
+			print(residual/SS_total)
 			r_square.append(1 - residual/SS_total)
 
-		r_square = np.mean(r_square)
+		# r_square = np.mean(r_square)
 
 		return self.a, self.b, r_square
 
