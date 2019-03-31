@@ -3,7 +3,7 @@
 	"session_id": "phantom",
 	"train": false,
 
-	"num_photon": 5e8,
+	"num_photon": 1e8,
 	"photon_batch": 5e7,
 	"voxel_size": 0.25,	
 
@@ -14,7 +14,7 @@
 
 	"absorb_file": "input/coefficients.csv",
 	"input_file": "input/parameters_phantom.json",
-	"wavelength_file": "input/wavelength.csv",
+	"wavelength_file": "input/wavelength_phantom.csv",
 	"fiber_file": "input/fiber_phantom.csv",
 	"geometry_file": "input_mcx/phantom.json"
 

@@ -941,8 +941,8 @@ class MCX:
 
 		mcx_input["Session"]["ID"] = self.config["session_id"] + "_%d" % self.wavelength[wl_idx]
 
-		mua = pd.read_csv("CHIK/mua_in_mm.csv")
-		musp = pd.read_csv("CHIK/musp_in_mm.csv")
+		mua = pd.read_csv("CHIK/mua_in_mm_test.csv")
+		musp = pd.read_csv("CHIK/musp_in_mm_test.csv")
 
 		mua_C = np.interp(self.wavelength, mua["wl"], mua["C"])
 		mua_H = np.interp(self.wavelength, mua["wl"], mua["H"])
