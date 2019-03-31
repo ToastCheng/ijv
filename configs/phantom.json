@@ -3,7 +3,7 @@
 	"session_id": "phantom",
 	"train": false,
 
-	"num_photon": 1e8,
+	"num_photon": 5e7,
 	"photon_batch": 5e9,
 	"voxel_size": 0.25,	
 
