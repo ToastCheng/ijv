@@ -105,7 +105,7 @@ def train(generate_new_input):
 def calibrate(config_file, phantom_idx):
 	
 	mcx = MCX(config_file)
-	# mcx.run_phantom(phantom_idx)
+	mcx.run_phantom(phantom_idx)
 	mcx.calculate_reflectance_phantom(phantom_idx)
 
 
