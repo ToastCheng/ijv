@@ -1,22 +1,26 @@
 {
 
-	"session_id": "ijv",
-	"train": false,
+    "session_id": "ijv",
+    "type": "ijv",
 
-	"num_photon": 5e6,
-	"photon_batch": 1e7,
-	"voxel_size": 0.25,	
+    "num_photon": 5e7,
+    "photon_batch": 1e7,
+    "voxel_size": 0.25, 
 
-	"binary_path": "mcx/bin/mcx",
+    "binary_path": "mcx/bin/mcx",
 
-	"medium_n": 1.457,
-	"detector_na": 0.12,
+    "medium_n": 1.457,
+    "detector_na": 0.12,
 
-	"absorb_file": "input/coefficients.csv",
-	"input_file": "input/parameters.json",
-	"wavelength_file": "input/wavelength.csv",
-	"fiber_file": "input/fiber.csv",
-	"geometry_file": "input_mcx/ijv.json"
+    "coefficients": "input/coefficients.csv",
+    "parameters": "input/parameters.json",
+    "wavelength": "input/wavelength.csv",
+    "fiber": "input/fiber.csv",
+    "mcx_input": "input_mcx/ijv.json",
+
+    "phantom_idx": "CHIK",
+    "phantom_mua": "",
+    "phantom_musp": ""
 
 
 
