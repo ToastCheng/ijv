@@ -4,7 +4,7 @@
     "type": "ijv",
 
     "num_photon": 5e7,
-    "photon_batch": 1e7,
+    "photon_batch": 2e9,
     "voxel_size": 0.25, 
 
     "binary_path": "mcx/bin/mcx",

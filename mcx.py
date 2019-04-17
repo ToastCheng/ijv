@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import pickle
 from glob import glob 
@@ -142,6 +143,7 @@ class MCX:
                     print("wavelength: ", wl)
                     print("sds: ", self.fiber.values[sds_idx][0])
                     print(command)
+                    sys.stdout.flush()
                     os.chdir("mcx/bin")
                     os.system(command)
                     os.chdir("../..")
@@ -149,7 +151,11 @@ class MCX:
             mc2_list = glob(os.path.join(self.mcx_output, "*.mc2"))
             for mc2 in mc2_list:
                 fig = plt.figure(figsize=(10,16))
-                d = load_mc2(mc2, [x_size, y_size, z_size])
+                d = load_mc2(mc2, [
+                    self.parameters["boundary"]["x_size"], 
+                    self.parameters["boundary"]["y_size"],
+                    self.parameters["boundary"]["z_size"]
+                    ])
                 plt.imshow(d[x_size//2,:,:100].T)
                 name = mc2.split('/')[-1].split('.')[0]
                 plt.title(name)
@@ -356,10 +362,9 @@ class MCX:
         mcx_input["Session"]["RNGSeed"] = randint(0, 1000000000)
 
         # save the .json file in the output folder
-        with open(self.config["mcx_input"], 'w+') as f:
-            json.dump(mcx_input, f, indent=4)
-
-        with open(os.path.join(self.json_output, "input_%d.json" % wl_idx), 'w+') as f:
+        with open(os.path.join(self.json_output, "input_%d_%d.json" % (
+            self.wavelength[wl_idx], self.fiber["sds"][sds_idx]
+            )), 'w+') as f:
             json.dump(mcx_input, f, indent=4)
 
     def _make_input_artery(self, wl_idx):
@@ -417,7 +422,9 @@ class MCX:
     def _get_command(self, wl_idx, idx):
         # create the command for mcx
         session_name = "\"%s_%d_%s\" " % (self.config["session_id"], wl_idx, str(idx))
-        geometry_file = "\"%s\" " % os.path.abspath(self.config["mcx_input"])
+        geometry_file = "\"%s\" " % os.path.abspath(
+            os.path.join(self.json_output, "input_%d_%d.json" % (wl_idx, idx))
+            )
         root = "\"%s\" " % os.path.join(os.path.abspath(self.session), "mcx_output")
         unitmm = "%f " % self.config["voxel_size"]
         photon = "%d " % self.config["photon_batch"]
@@ -446,9 +453,8 @@ class MCX:
         "--skipradius -2 " +\
         "--array 0 " +\
         "--dumpmask 0 " +\
-        "--maxdetphoton " + maxdetphoton +\
-        " >> %s 2>>&1" % os.path.join("log", self.config["session"] + ".txt")
-        print(command)
+        "--maxdetphoton " + maxdetphoton
+        
         return command
 
     def _calculate_mua(self, idx, b, s, w, f, m):
