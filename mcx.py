@@ -29,14 +29,14 @@ class MCX:
         # load config
         with open(config_file) as f:
             self.config = json.load(f)
-        with open(config["parameters"]) as f:
+        with open(self.config["parameters"]) as f:
             self.parameters = json.load(f)
 
             # convert unit
-            for key in parameter["geometry"].keys():
+            for key in self.parameters["geometry"].keys():
                 self.parameters["geometry"][key] = self._convert_unit(self.parameters["geometry"][key])
 
-        with open(config["mcx_input"]) as f:
+        with open(self.config["mcx_input"]) as f:
             self.mcx_input = json.load(f)
 
         self.wavelength = pd.read_csv(self.config["wavelength"])["wavelength"]
@@ -106,16 +106,16 @@ class MCX:
 
         # check if the directory exist, if not make one.
 
-        if not os.path.isdir(self.self.session):
-            os.mkdir(self.self.session)
+        if not os.path.isdir(self.session):
+            os.mkdir(self.session)
 
         # directory for saving plot
-        if not os.path.isdir(self.self.plot):
-            os.mkdir(self.self.plot)
+        if not os.path.isdir(self.plot):
+            os.mkdir(self.plot)
 
         # directory for saving mc2 plot
-        if not os.path.isdir(self.self.plot_mc2):
-            os.mkdir(self.self.plot_mc2)
+        if not os.path.isdir(self.plot_mc2):
+            os.mkdir(self.plot_mc2)
 
 
         # directory for saving result
@@ -137,7 +137,7 @@ class MCX:
         if self.config["type"] == "ijv":
             for idx, wl in enumerate(self.wavelength):
                 for sds_idx in range(len(self.fiber)):
-                    self._make_input_ijv(idx)
+                    self._make_input_ijv(idx, sds_idx)
                     command = self._get_command(wl, self.fiber.values[sds_idx][0])
                     print("wavelength: ", wl)
                     print("sds: ", self.fiber.values[sds_idx][0])
@@ -446,7 +446,8 @@ class MCX:
         "--skipradius -2 " +\
         "--array 0 " +\
         "--dumpmask 0 " +\
-        "--maxdetphoton " + maxdetphoton
+        "--maxdetphoton " + maxdetphoton +\
+        " >> %s 2>>&1" % os.path.join("log", self.config["session"] + ".txt")
         print(command)
         return command
 
