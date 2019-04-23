@@ -14,17 +14,24 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 class MCHHandler:
     # This class is a .mch file handler.
 
-    def __init__(
-        self,
-        config="config.json"
-        ):
+    def __init__(self, config=None):
+        
+        if config is not None:
+            self.load_config(config)
+        else:
+            self.config = None
 
+
+    def load_config(self):
         with open(config) as f:
             self.config = json.loads(f.read())
 
         mch_file_path = os.path.join("output", self.config["session_id"], "mcx_output")
         self.mch_list = glob(os.path.join(mch_file_path, "*.mch"))
-        self.mch_list.sort(key=lambda x: int(x.split("_")[-2]))
+        if self.config["type"] == "ijv":
+            self.mch_list.sort(key=lambda x: int(x.split("_")[-2]))
+        elif self.config["type"] == "muscle":
+            self.mch_list.sort(key=lambda x: int(x.split("_")[-1].strip('.mch')))
 
         self.mua = pd.read_csv(self.config["coefficients"])
         self.wavelength = pd.read_csv(self.config["wavelength"])
@@ -33,15 +40,24 @@ class MCHHandler:
 
         self.detector_na = self.config["detector_na"]
         self.detector_n = self.config["medium_n"]
-        self.critical_angle = np.arcsin(self.detector_na/self.detector_n)
+        self.critical_angle = np.arcsin(self.detector_na/self.detector_n)     
+
 
     def calculate_reflectance_white(self, args):
+
+        if not self.config:
+            raise Exception("Should specify the config file first!")
 
         spectra = []
         portions = []
 
+
         for f in self.mch_list:
-            wl = int(f[-12:-9])
+            if self.config["type"] == "ijv":
+                wl = int(f.split('_')[-2])
+            elif self.config["type"] == "muscle":
+                wl = int(f.split('_')[-1].strip('.mch'))
+
             df, header, photon = self._load_mch(f)
 
             df = df[np.arccos(df.angle.abs()) <= self.critical_angle]
@@ -71,8 +87,9 @@ class MCHHandler:
             skin_portion = (path_length.mean(0)[0] ).tolist()
             fat_portion = (path_length.mean(0)[1]).tolist()
             muscle_portion = (path_length.mean(0)[2]).tolist()
-            ijv_portion = (path_length.mean(0)[3]).tolist()
-            cca_portion = (path_length.mean(0)[4]).tolist()
+            if self.config["type"] == "ijv":
+                ijv_portion = (path_length.mean(0)[3]).tolist()
+                cca_portion = (path_length.mean(0)[4]).tolist()
 
 
             # [1, ScvO2]
@@ -104,9 +121,16 @@ class MCHHandler:
             s = float(result.cpu().numpy()/header["total_photon"])
             
             spectra.append(s)
-            portions.append(
-                (skin_portion, fat_portion, muscle_portion, ijv_portion, cca_portion)
+            if self.config["type"] == "ijv":
+                portions.append(
+                    (skin_portion, fat_portion, muscle_portion, ijv_portion, cca_portion)
                 )
+            elif self.config["type"] == "muscle":
+                portions.append(
+                    (skin_portion, fat_portion, muscle_portion)
+                )
+            else:
+                raise Exception("tissue type does not supported yet")
 
         return spectra, portions
             
@@ -200,14 +224,24 @@ class MCHHandler:
             melanin
             )
 
-        _mua = np.concatenate(
-            [np.expand_dims(skin, 0),
-            np.expand_dims(fat, 0),
-             np.expand_dims(muscle, 0), 
-             np.expand_dims(IJV, 0), 
-             np.expand_dims(CCA, 0)], 0
-             )
-
+        if self.config["type"] == "ijv":
+            _mua = np.concatenate(
+                [np.expand_dims(skin, 0),
+                np.expand_dims(fat, 0),
+                 np.expand_dims(muscle, 0), 
+                 np.expand_dims(IJV, 0), 
+                 np.expand_dims(CCA, 0)], 0
+                 )
+        elif self.config["type"] == "muscle":
+            _mua = np.concatenate(
+                [np.expand_dims(skin, 0),
+                 np.expand_dims(fat, 0),
+                 np.expand_dims(muscle, 0)
+                ], 0
+                 )
+        else:
+            raise Exception("tissue type does not supported yet")
+            
         return _mua
 
 
@@ -232,7 +266,6 @@ class MCHHandler:
         
 
         return df, header, photon_seed
-
 
 
     @staticmethod
