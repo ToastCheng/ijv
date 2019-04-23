@@ -186,16 +186,15 @@ class MCX:
 
         elif self.config["type"] == "muscle":
             for idx, wl in enumerate(self.wavelength):
-                for sds_idx in range(len(self.fiber)):
-                    self._make_input_muscle(idx, sds_idx)
-                    command = self._get_command(wl, self.fiber.values[sds_idx][0])
-                    print("wavelength: ", wl)
-                    print("sds: ", self.fiber.values[sds_idx][0])
-                    print(command)
-                    sys.stdout.flush()
-                    os.chdir("mcx/bin")
-                    os.system(command)
-                    os.chdir("../..")
+                # for sds_idx in range(len(self.fiber)):
+                self._make_input_muscle(idx)
+                command = self._get_command(wl)
+                print("wavelength: ", wl)
+                print(command)
+                sys.stdout.flush()
+                os.chdir("mcx/bin")
+                os.system(command)
+                os.chdir("../..")
 
 
         else:
@@ -381,7 +380,7 @@ class MCX:
             )), 'w+') as f:
             json.dump(mcx_input, f, indent=4)
 
-    def _make_input_muscle(self, wl_idx, sds_idx):
+    def _make_input_muscle(self, wl_idx):
 
         mcx_input = self.mcx_input
         mcx_input["Session"]["ID"] = self.config["session_id"] + "_%d" % self.wavelength[wl_idx]
@@ -460,27 +459,25 @@ class MCX:
         mcx_input["Shapes"][3]["Subgrid"]["Size"] = [x_size, y_size, z_size-skin_th-fat_th]
 
         # load fiber
-        sds, r = self.fiber.values[sds_idx]
-        sds = self._convert_unit(sds)
-        r = self._convert_unit(r)
-
         mcx_input["Optode"]["Source"]["Pos"][0] = x_size//2
-        mcx_input["Optode"]["Source"]["Pos"][1] = y_size//2 - sds//2
+        mcx_input["Optode"]["Source"]["Pos"][1] = 30
 
-        det = {
-            "R": r,
-            "Pos": [x_size//2, y_size//2 + sds//2, 0.0]
-        }
+        
         mcx_input["Optode"]["Detector"] = []
-        mcx_input["Optode"]["Detector"].append(det)
+        for sds, r in self.fiber.values:
+            sds = self._convert_unit(sds)
+            r = self._convert_unit(r)
+            det = {
+                "R": r,
+                "Pos": [x_size//2, 30 + sds, 0.0]
+            }
+            mcx_input["Optode"]["Detector"].append(det)
 
         # set seed
         mcx_input["Session"]["RNGSeed"] = randint(0, 1000000000)
 
         # save the .json file in the output folder
-        with open(os.path.join(self.json_output, "input_%d_%d.json" % (
-            self.wavelength[wl_idx], self.fiber["sds"][sds_idx]
-            )), 'w+') as f:
+        with open(os.path.join(self.json_output, "input_%d.json" % (self.wavelength[wl_idx])), 'w+') as f:
             json.dump(mcx_input, f, indent=4)
 
     def _make_input_artery(self, wl_idx):
@@ -536,12 +533,18 @@ class MCX:
         with open(self.config["geometry_file"], 'w+') as f:
             json.dump(mcx_input, f, indent=4)
 
-    def _get_command(self, wl_idx, idx):
+    def _get_command(self, wl_idx, idx=None):
         # create the command for mcx
-        session_name = "\"%s_%d_%s\" " % (self.config["session_id"], wl_idx, str(idx))
-        geometry_file = "\"%s\" " % os.path.abspath(
-            os.path.join(self.json_output, "input_%d_%d.json" % (wl_idx, idx))
-            )
+        if idx:
+            session_name = "\"%s_%d_%s\" " % (self.config["session_id"], wl_idx, str(idx))
+            geometry_file = "\"%s\" " % os.path.abspath(
+                os.path.join(self.json_output, "input_%d_%d.json" % (wl_idx, idx))
+                )
+        else:
+            session_name = "\"%s_%d\" " % (self.config["session_id"], wl_idx)
+            geometry_file = "\"%s\" " % os.path.abspath(
+                os.path.join(self.json_output, "input_%d.json" % (wl_idx))
+                )
         root = "\"%s\" " % os.path.join(os.path.abspath(self.session), "mcx_output")
         unitmm = "%f " % self.config["voxel_size"]
         photon = "%d " % self.config["photon_batch"]
