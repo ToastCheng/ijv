@@ -167,7 +167,7 @@ class MCX:
 
             # self.calculate_reflectance()
 
-        elif self.config["artery"] == "artery":
+        elif self.config["type"] == "artery":
             self._make_input_artery(idx)
 
         elif self.config["type"] == "phantom":
