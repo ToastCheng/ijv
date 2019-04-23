@@ -459,16 +459,6 @@ class MCX:
         mcx_input["Shapes"][3]["Subgrid"]["O"] = [1, 1, 1+skin_th+fat_th]
         mcx_input["Shapes"][3]["Subgrid"]["Size"] = [x_size, y_size, z_size-skin_th-fat_th]
 
-        # ijv 
-        mcx_input["Shapes"][4]["Cylinder"]["C0"] = [x_size, y_size//2, ijv_d]
-        mcx_input["Shapes"][4]["Cylinder"]["C1"] = [0, y_size//2, ijv_d]
-        mcx_input["Shapes"][4]["Cylinder"]["R"] = ijv_r
-
-        # cca 
-        mcx_input["Shapes"][5]["Cylinder"]["C0"] = [x_size, y_size//2- ic_dist, cca_d]
-        mcx_input["Shapes"][5]["Cylinder"]["C1"] = [0, y_size//2- ic_dist, cca_d]
-        mcx_input["Shapes"][5]["Cylinder"]["R"] = cca_r
-
         # load fiber
         sds, r = self.fiber.values[sds_idx]
         sds = self._convert_unit(sds)
