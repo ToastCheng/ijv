@@ -60,20 +60,24 @@ class Calibrator:
         return self.a, self.b, r_square
 
     def calibrate(self, measured):
-        shape = measured.shape
-        measured = measured.reshape(-1)
-        return (measured * self.a + self.b).reshape(shape)
+
+        measured = np.asarray(measured)
+        for idx, m in enumerate(measured):
+            assert m.shape == self.a.shape, "input shape does not match!"
+            measured[idx] = self.a * m + self.b
+
+        return measured
 
 if __name__ == "__main__":
 
     c = Calibrator()
 
-    x1 = np.expand_dims(np.arange(0, 10, 1), 1)
-    y1 = x1 * 4 + 1
+    x1 = np.expand_dims(np.arange(0, 5, 1), 1)
+    y1 = x1 * 3 + 1
     y1[4] = x1[4] * 3 + 2
 
-    x2 = np.expand_dims(np.arange(10, 20, 1), 1)
-    y2 = x2 * 6 + 2
+    x2 = np.expand_dims(np.arange(10, 15, 1), 1)
+    y2 = x2 * 7 + 2
     y2[4] = x2[4] * 2 + 1
 
     x = np.concatenate([x1, x2], 1)
@@ -83,4 +87,5 @@ if __name__ == "__main__":
 
     c.fit(x, y)
 
+    # exec(open('utils/calibration.py').read())
     # exec(open('calibration.py').read())

@@ -156,7 +156,7 @@ class MCX:
                     self.parameters["boundary"]["y_size"],
                     self.parameters["boundary"]["z_size"]
                     ])
-                plt.imshow(d[x_size//2,:,:100].T)
+                plt.imshow(d[self.parameters["boundary"]["x_size"]//2,:,:100].T)
                 name = mc2.split('/')[-1].split('.')[0]
                 plt.title(name)
                 plt.xlabel('y axis')
@@ -183,6 +183,20 @@ class MCX:
                     os.chdir("../..")
 
             # self.calculate_reflectance_phantom()
+
+        elif self.config["type"] == "muscle":
+            for idx, wl in enumerate(self.wavelength):
+                for sds_idx in range(len(self.fiber)):
+                    self._make_input_muscle(idx, sds_idx)
+                    command = self._get_command(wl, self.fiber.values[sds_idx][0])
+                    print("wavelength: ", wl)
+                    print("sds: ", self.fiber.values[sds_idx][0])
+                    print(command)
+                    sys.stdout.flush()
+                    os.chdir("mcx/bin")
+                    os.system(command)
+                    os.chdir("../..")
+
 
         else:
             raise Exception("'type' in %s is invalid!\ntry 'ijv', 'artery' or 'phantom'." % config_file)
@@ -367,8 +381,121 @@ class MCX:
             )), 'w+') as f:
             json.dump(mcx_input, f, indent=4)
 
+    def _make_input_muscle(self, wl_idx, sds_idx):
+
+        mcx_input = self.mcx_input
+        mcx_input["Session"]["ID"] = self.config["session_id"] + "_%d" % self.wavelength[wl_idx]
+
+        # optical parameter
+
+        # 
+        mcx_input["Domain"]["Media"][0]["mua"] = 0
+        mcx_input["Domain"]["Media"][0]["mus"] = 0
+        mcx_input["Domain"]["Media"][0]["g"] = 1
+        mcx_input["Domain"]["Media"][0]["n"] = 1
+
+        # skin
+        mcx_input["Domain"]["Media"][1]["name"] = "skin"
+        mcx_input["Domain"]["Media"][1]["mua"] = 0
+        mcx_input["Domain"]["Media"][1]["mus"] = self._calculate_mus(
+            wl_idx,
+            self.parameters["skin"]["muspx"], 
+            self.parameters["skin"]["fray"], 
+            self.parameters["skin"]["bmie"],
+            self.parameters["skin"]["g"]
+            )
+        mcx_input["Domain"]["Media"][1]["g"] = self.parameters["skin"]["g"]
+        mcx_input["Domain"]["Media"][1]["n"] = self.parameters["skin"]["n"]
+
+        # fat
+        mcx_input["Domain"]["Media"][2]["name"] = "fat"
+        mcx_input["Domain"]["Media"][2]["mua"] = 0
+        mcx_input["Domain"]["Media"][2]["mus"] = self._calculate_mus(
+            wl_idx,
+            self.parameters["fat"]["muspx"], 
+            self.parameters["fat"]["fray"], 
+            self.parameters["fat"]["bmie"],
+            self.parameters["fat"]["g"]
+            )
+        mcx_input["Domain"]["Media"][2]["g"] = self.parameters["fat"]["g"]
+        mcx_input["Domain"]["Media"][2]["n"] = self.parameters["fat"]["n"]
+
+        # muscle
+        mcx_input["Domain"]["Media"][3]["name"] = "muscle"
+        mcx_input["Domain"]["Media"][3]["mua"] = 0
+        mcx_input["Domain"]["Media"][3]["mus"] = self._calculate_mus(
+            wl_idx,
+            self.parameters["muscle"]["muspx"], 
+            self.parameters["muscle"]["fray"], 
+            self.parameters["muscle"]["bmie"],
+            self.parameters["muscle"]["g"]
+            )
+        mcx_input["Domain"]["Media"][3]["g"] = self.parameters["muscle"]["g"]
+        mcx_input["Domain"]["Media"][3]["n"] = self.parameters["muscle"]["n"]
+        
+
+        # geometry
+        skin_th = self.parameters["geometry"]["skin_thickness"]
+        fat_th = self.parameters["geometry"]["fat_thickness"]
+
+
+        x_size = self.parameters["boundary"]["x_size"]
+        y_size = self.parameters["boundary"]["y_size"]
+        z_size = self.parameters["boundary"]["z_size"]
+
+        mcx_input["Domain"]["Dim"] = [x_size, y_size, z_size]
+
+        # skin
+        mcx_input["Shapes"][0]["Grid"]["Size"] = [x_size, y_size, z_size]
+
+        mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]
+        mcx_input["Shapes"][1]["Subgrid"]["Size"] = [x_size, y_size, skin_th]
+
+        # fat
+        mcx_input["Shapes"][2]["Subgrid"]["O"] = [1, 1, 1+skin_th]
+        mcx_input["Shapes"][2]["Subgrid"]["Size"] = [x_size, y_size, fat_th]
+
+        # muscle
+        mcx_input["Shapes"][3]["Subgrid"]["O"] = [1, 1, 1+skin_th+fat_th]
+        mcx_input["Shapes"][3]["Subgrid"]["Size"] = [x_size, y_size, z_size-skin_th-fat_th]
+
+        # ijv 
+        mcx_input["Shapes"][4]["Cylinder"]["C0"] = [x_size, y_size//2, ijv_d]
+        mcx_input["Shapes"][4]["Cylinder"]["C1"] = [0, y_size//2, ijv_d]
+        mcx_input["Shapes"][4]["Cylinder"]["R"] = ijv_r
+
+        # cca 
+        mcx_input["Shapes"][5]["Cylinder"]["C0"] = [x_size, y_size//2- ic_dist, cca_d]
+        mcx_input["Shapes"][5]["Cylinder"]["C1"] = [0, y_size//2- ic_dist, cca_d]
+        mcx_input["Shapes"][5]["Cylinder"]["R"] = cca_r
+
+        # load fiber
+        sds, r = self.fiber.values[sds_idx]
+        sds = self._convert_unit(sds)
+        r = self._convert_unit(r)
+
+        mcx_input["Optode"]["Source"]["Pos"][0] = x_size//2
+        mcx_input["Optode"]["Source"]["Pos"][1] = y_size//2 - sds//2
+
+        det = {
+            "R": r,
+            "Pos": [x_size//2, y_size//2 + sds//2, 0.0]
+        }
+        mcx_input["Optode"]["Detector"] = []
+        mcx_input["Optode"]["Detector"].append(det)
+
+        # set seed
+        mcx_input["Session"]["RNGSeed"] = randint(0, 1000000000)
+
+        # save the .json file in the output folder
+        with open(os.path.join(self.json_output, "input_%d_%d.json" % (
+            self.wavelength[wl_idx], self.fiber["sds"][sds_idx]
+            )), 'w+') as f:
+            json.dump(mcx_input, f, indent=4)
+
     def _make_input_artery(self, wl_idx):
-        pass
+        
+        raise NotImplementedError
 
     def _make_input_phantom(self, wl_idx, phantom_idx):
         mcx_input = self.mcx_input

@@ -1,0 +1,27 @@
+{
+
+    "session_id": "muscle",
+    "type": "muscle",
+
+    "num_photon": 5e7,
+    "photon_batch": 2e9,
+    "voxel_size": 0.25, 
+
+    "binary_path": "mcx/bin/mcx",
+
+    "medium_n": 1.457,
+    "detector_na": 0.12,
+
+    "coefficients": "input/coefficients.csv",
+    "parameters": "input/parameters.json",
+    "wavelength": "input/wavelength.csv",
+    "fiber": "input/fiber.csv",
+    "mcx_input": "input_mcx/muscle.json",
+
+    "phantom_idx": "",
+    "phantom_mua": "",
+    "phantom_musp": ""
+
+
+
+}
