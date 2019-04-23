@@ -13,9 +13,9 @@
     "detector_na": 0.12,
 
     "coefficients": "input/coefficients.csv",
-    "parameters": "input/parameters.json",
+    "parameters": "input/parameters_muscle.json",
     "wavelength": "input/wavelength.csv",
-    "fiber": "input/fiber.csv",
+    "fiber": "input/fiber_muscle.csv",
     "mcx_input": "input_mcx/muscle.json",
 
     "phantom_idx": "",
