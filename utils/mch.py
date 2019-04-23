@@ -22,7 +22,7 @@ class MCHHandler:
             self.config = None
 
 
-    def load_config(self):
+    def load_config(self, config):
         with open(config) as f:
             self.config = json.loads(f.read())
 
@@ -117,8 +117,8 @@ class MCHHandler:
 
             # [SDS, ScvO2]
             result = result[1:]
-
-            s = float(result.cpu().numpy()/header["total_photon"])
+            print(result)
+            s = result.cpu().numpy()/header["total_photon"]
             
             spectra.append(s)
             if self.config["type"] == "ijv":
@@ -198,31 +198,31 @@ class MCHHandler:
             water,
             collagen
             )
-
-        IJV = self._calculate_mua(
-            args["IJV"]["blood_volume_fraction"],
-            args["IJV"]["ScvO2"],
-            args["IJV"]["water_volume"],
-            args["IJV"]["fat_volume"],
-            args["IJV"]["melanin_volume"],
-            oxy, 
-            deoxy, 
-            water,
-            fat,
-            melanin
-            )
-        CCA = self._calculate_mua(
-            args["CCA"]["blood_volume_fraction"],
-            args["CCA"]["ScvO2"],
-            args["CCA"]["water_volume"],
-            args["CCA"]["fat_volume"],
-            args["CCA"]["melanin_volume"],
-            oxy, 
-            deoxy, 
-            water,
-            fat,
-            melanin
-            )
+        if self.config["type"] == "ijv":
+            IJV = self._calculate_mua(
+                args["IJV"]["blood_volume_fraction"],
+                args["IJV"]["ScvO2"],
+                args["IJV"]["water_volume"],
+                args["IJV"]["fat_volume"],
+                args["IJV"]["melanin_volume"],
+                oxy, 
+                deoxy, 
+                water,
+                fat,
+                melanin
+                )
+            CCA = self._calculate_mua(
+                args["CCA"]["blood_volume_fraction"],
+                args["CCA"]["ScvO2"],
+                args["CCA"]["water_volume"],
+                args["CCA"]["fat_volume"],
+                args["CCA"]["melanin_volume"],
+                oxy, 
+                deoxy, 
+                water,
+                fat,
+                melanin
+                )
 
         if self.config["type"] == "ijv":
             _mua = np.concatenate(

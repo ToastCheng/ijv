@@ -234,7 +234,7 @@ class MCX:
 
     def _convert_unit(self, length_mm):
         # convert mm to number of grid
-        num_grid = length_mm//self.config["voxel_size"]
+        num_grid = round(length_mm/self.config["voxel_size"])
         return round(num_grid)
 
     def _make_input_ijv(self, wl_idx, sds_idx):
