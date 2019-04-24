@@ -499,8 +499,8 @@ class MCX:
 
         # phantom
         mcx_input["Domain"]["Media"][1]["name"] = "phantom"
-        mcx_input["Domain"]["Media"][1]["mua"] = mua[phantom_idx][wl_idx]
-        mcx_input["Domain"]["Media"][1]["mus"] = mus[phantom_idx][wl_idx]
+        mcx_input["Domain"]["Media"][1]["mua"] = self.mua[phantom_idx][wl_idx]
+        mcx_input["Domain"]["Media"][1]["mus"] = self.mus[phantom_idx][wl_idx]
         mcx_input["Domain"]["Media"][1]["g"] = self.parameters["phantom"]["g"]
         mcx_input["Domain"]["Media"][1]["n"] = self.parameters["phantom"]["n"]
 
@@ -543,7 +543,9 @@ class MCX:
 
 
         # save the .json file in the output folder
-        with open(self.config["geometry_file"], 'w+') as f:
+        with open(os.path.join(self.json_output, "input_{}_{}.json".format(
+            self.wavelength[wl_idx], phantom_idx
+            )), 'w+') as f:
             json.dump(mcx_input, f, indent=4)
 
     def _get_command(self, wl_idx, idx=None):
@@ -551,7 +553,7 @@ class MCX:
         if idx:
             session_name = "\"%s_%d_%s\" " % (self.config["session_id"], wl_idx, str(idx))
             geometry_file = "\"%s\" " % os.path.abspath(
-                os.path.join(self.json_output, "input_%d_%d.json" % (wl_idx, idx))
+                os.path.join(self.json_output, "input_{}_{}.json".format(wl_idx, idx))
                 )
         else:
             session_name = "\"%s_%d\" " % (self.config["session_id"], wl_idx)

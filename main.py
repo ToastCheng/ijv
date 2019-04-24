@@ -47,7 +47,8 @@ def main():
     if args.phantom:
 
         config_file = os.path.join('configs', args.config)
-        calibrate(config_file, args.pid)
+        mcx = MCX()
+        mcx.run(config_file)
 
 
 def forward(config):

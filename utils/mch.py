@@ -117,22 +117,21 @@ class MCHHandler:
 
             # [SDS, ScvO2]
             result = result[1:]
-            print(result)
             s = result.cpu().numpy()/header["total_photon"]
             
             spectra.append(s)
             if self.config["type"] == "ijv":
                 portions.append(
-                    (skin_portion, fat_portion, muscle_portion, ijv_portion, cca_portion)
+                    [skin_portion, fat_portion, muscle_portion, ijv_portion, cca_portion]
                 )
             elif self.config["type"] == "muscle":
                 portions.append(
-                    (skin_portion, fat_portion, muscle_portion)
+                    [skin_portion, fat_portion, muscle_portion]
                 )
             else:
                 raise Exception("tissue type does not supported yet")
 
-        return spectra, portions
+        return np.asarray(spectra).T, np.asarray(portions).T
             
 
     def _make_tissue_white(self, wl, header, args):
@@ -194,9 +193,13 @@ class MCHHandler:
             )
 
         muscle = self._calculate_muscle_mua(
+            args["muscle"]["blood_volume_fraction"],
+            args["muscle"]["ScvO2"],
             args["muscle"]["water_volume"],
+            oxy,
+            deoxy,
             water,
-            collagen
+            collagen,
             )
         if self.config["type"] == "ijv":
             IJV = self._calculate_mua(
@@ -274,8 +277,9 @@ class MCHHandler:
         return mua
 
     @staticmethod
-    def _calculate_muscle_mua(w, water, collagen):
-        mua = w * water + (1-w) * collagen
+    def _calculate_muscle_mua(b, s, w, oxy, deoxy, water, collagen):
+        mua = w * water + (1-w-b) * collagen + b * (s * oxy + (1-s) * deoxy)
+
         return mua 
 
 
