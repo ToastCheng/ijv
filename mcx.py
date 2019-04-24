@@ -75,6 +75,7 @@ class MCX:
             self.collagen = collagen * 0.1
             self.fat = fat * 0.1
             self.melanin = melanin * 0.1
+
         elif self.config["type"] == "phantom":
             mua = pd.read_csv(self.config["phantom_mua"])
             musp = pd.read_csv(self.config["phantom_musp"])
@@ -510,19 +511,31 @@ class MCX:
         z_size = self.parameters["boundary"]["z_size"]
 
         # load fiber
+        mcx_input["Optode"]["Source"]["Pos"][0] = x_size//2
+        mcx_input["Optode"]["Source"]["Pos"][1] = 30
+
+        mcx_input["Optode"]["Detector"] = []
+        for sds, r in self.fiber.values:
+            sds = self._convert_unit(sds)
+            r = self._convert_unit(r)
+            det = {
+                "R": r,
+                "Pos": [x_size//2, 30 + sds, 0.0]
+            }
+            mcx_input["Optode"]["Detector"].append(det)
+
         sds, r = self.fiber.values[0]
         sds = self._convert_unit(sds)
         r = self._convert_unit(r)
 
-        mcx_input["Optode"]["Source"]["Pos"][0] = x_size//2
-        mcx_input["Optode"]["Source"]["Pos"][1] = y_size//2 - sds//2
 
-        det = {
-            "R": r,
-            "Pos": [x_size//2, y_size//2 + sds//2, 0.0]
-        }
-        mcx_input["Optode"]["Detector"] = []
-        mcx_input["Optode"]["Detector"].append(det)
+
+        # det = {
+        #     "R": r,
+        #     "Pos": [x_size//2, y_size//2 + sds//2, 0.0]
+        # }
+        # mcx_input["Optode"]["Detector"] = []
+        # mcx_input["Optode"]["Detector"].append(det)
 
 
         # set seed

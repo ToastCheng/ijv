@@ -1,0 +1,27 @@
+{
+
+    "session_id": "phantom_muscle",
+    "type": "phatom",
+
+    "num_photon": 5e8,
+    "photon_batch": 2e9,
+    "voxel_size": 0.25, 
+
+    "binary_path": "mcx/bin/mcx",
+
+    "medium_n": 1.457,
+    "detector_na": 0.12,
+
+    "coefficients": "input/coefficients.csv",
+    "parameters": "input/parameters.json",
+    "wavelength": "input/wavelength.csv",
+    "fiber": "input/fiber_muscle.csv",
+    "mcx_input": "input_mcx/phantom.json",
+
+    "phantom_idx": "CHIK",
+    "phantom_mua": "CHIKEN/mua_in_mm.csv",
+    "phantom_musp": "CHIKEN/musp_in_mm.csv"
+
+
+
+}

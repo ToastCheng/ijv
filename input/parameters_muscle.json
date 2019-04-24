@@ -2,7 +2,7 @@
     "skin":{
         "blood_volume_fraction": 0.5,
         "ScvO2": 0.7,
-        "water_volume": 0,
+        "water_volume": 0.49,
         "fat_volume": 0,
         "melanin_volume": 0.01,
         "n": 1.40,
