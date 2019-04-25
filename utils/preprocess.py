@@ -4,12 +4,21 @@ import numpy as np
 from glob import glob
 import matplotlib.pyplot as plt 
 from scipy.signal import find_peaks_cwt
-from calibration import Calibrator
 
 
-def preprocess_phantom(input_path, result_path="result"):
+def preprocess_phantom(input_date, result_path="result"):
     
     # setting
+    input_path = os.path.join("data", input_date)
+    output_path = os.path.join(result_path, input_date)
+
+
+    if not os.path.isdir(output_path):
+        os.mkdir(output_path)
+    if not os.path.isdir(os.path.join(output_path, "phantom")):
+        os.mkdir(os.path.join(output_path, "phantom"))
+
+
     bg_path = os.path.join(input_path, "background.csv")
     calib_wl_path = os.path.join(input_path, "calib_wl.csv")
     phantom_path = os.path.join(input_path, "phantom")
@@ -46,18 +55,25 @@ def preprocess_phantom(input_path, result_path="result"):
     plt.legend()
     plt.xlabel("wavelength[nm]")
     plt.ylabel("reflectance[-]")
-    plt.savefig(os.path.join(result_path, "phantom_" + input_path + ".png"))
+    plt.savefig(os.path.join(output_path, "phantom", input_date + ".png"))
     plt.clf()
 
     df = pd.DataFrame(df_dict)
-    df.to_csv(os.path.join(result_path, "phantom_" + input_path + ".csv"), index=None)
+    df.to_csv(os.path.join(output_path, "phantom", input_date + ".csv"), index=None)
 
     return data_interp
 
 
-def preprocess_live(input_path, result_path="result", calibrate=True):
+def preprocess_live(input_date, result_path="result"):
 
     # setting
+    input_path = os.path.join("data", input_date)
+    output_path = os.path.join(result_path, input_date)
+    if not os.path.isdir(output_path):
+        os.mkdir(output_path)
+    if not os.path.isdir(os.path.join(output_path, "live")):
+        os.mkdir(os.path.join(output_path, "live"))
+
     bg_path = os.path.join(input_path, "background.csv")
     calib_wl_path = os.path.join(input_path, "calib_wl.csv")
     live_path = os.path.join(input_path, "live")
@@ -71,9 +87,6 @@ def preprocess_live(input_path, result_path="result", calibrate=True):
     live_list.sort(key=lambda x: (x.split('_')[1], x.split('_')[2].strip(".csv")))
     live_idx = [i.split("/")[-1].strip("live_").strip(".csv") for i in live_list]
 
-    if calibrate:
-        calib = Calibrator()
-        calib.fit(measured=0, simulated=0)
         
     for l, n in zip(live_list, live_idx):
         live = np.loadtxt(l, delimiter=",")
@@ -100,7 +113,7 @@ def preprocess_live(input_path, result_path="result", calibrate=True):
         plt.grid()
         plt.xlabel("time[frame]")
         plt.ylabel("reflectance[-]")
-        plt.savefig(os.path.join(result_path, "live_" + input_path + "_" + n + "_peak.png"))
+        plt.savefig(os.path.join(output_path, "live", input_date + "_" + n + "_peak.png"))
         plt.clf()
 
         live_max = live[max_index].mean(0)
@@ -109,9 +122,6 @@ def preprocess_live(input_path, result_path="result", calibrate=True):
         live_max_interp = np.interp(wl, calib_wl, live_max)
         live_min_interp = np.interp(wl, calib_wl, live_min)
 
-        if calibrate:
-            live_max_interp = calib.calibrate(live_max_interp)
-            live_min_interp = calib.calibrate(live_min_interp)
 
         plt.figure()
         plt.plot(wl, live_max_interp, label="max")
@@ -120,7 +130,7 @@ def preprocess_live(input_path, result_path="result", calibrate=True):
         plt.grid()
         plt.xlabel("wavelength[nm]")
         plt.ylabel("reflectance[-]")
-        plt.savefig(os.path.join(result_path, "live_" + input_path + "_" + n + ".png"))
+        plt.savefig(os.path.join(output_path, "live", input_date + "_" + n + ".png"))
         plt.clf()
 
         df_dict = {}
@@ -130,10 +140,34 @@ def preprocess_live(input_path, result_path="result", calibrate=True):
 
         df = pd.DataFrame(df_dict)
 
-        df.to_csv(os.path.join(result_path, "live_" + input_path + "_" + n + ".csv"))
+        df.to_csv(os.path.join(output_path, "live", input_date + "_" + n + ".csv"))
+
+
+def calibrate(input_date, result_path, sim_path=""):
+    calib = Calibrator()
+
+    input_path = os.path.join("result", input_date)
+    live_path = os.path.join(input_path, "live")
+    phantom_path = os.path.join(input_path, "phantom", input_date + ".csv")
 
 
 
+    # fit
+    phantom = pd.read_csv(phantom_path)
+    sim_phantom = pd.read_csv(sim_path)
+
+    phantom = phantom.iloc[:, 1:].values.T
+    sim_phantom = sim_phantom.iloc[:, 1:].values.T
+
+    calib.fit(phantom, sim_phantom)
+
+    live_list = glob(os.path.join(live_path, input_date + "*.csv"))
+    for l in live_list:
+        df = pd.read_csv(l)
+        df["max"] = calib.calibrate(df["max"])
+        df["min"] = calib.calibrate(df["min"])
+        df.to_csv(l.strip(".csv") + "_calib.csv")
+        
 
 
 
