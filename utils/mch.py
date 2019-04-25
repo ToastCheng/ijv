@@ -9,7 +9,8 @@ import os
 
 from utils import load_mch
 
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+# device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+device = torch.device('cpu')
 
 class MCHHandler:
     # This class is a .mch file handler.
@@ -32,8 +33,17 @@ class MCHHandler:
             self.mch_list.sort(key=lambda x: int(x.split("_")[-2]))
         elif self.config["type"] == "muscle":
             self.mch_list.sort(key=lambda x: int(x.split("_")[-1].strip('.mch')))
+        elif self.config["type"] == "phantom":
+            pid = { c: i for i, c in enumerate("CHIKEN")}
+            self.mch_list.sort(
+                key=lambda x: (int(x.split("_")[-2]), pid[x.split('_')[-1].strip('.mch')])
+            )
 
-        self.mua = pd.read_csv(self.config["coefficients"])
+        if self.config["type"] != "phantom":
+            self.mua = pd.read_csv(self.config["coefficients"])
+        else:
+            self.mua = pd.read_csv(self.config["phantom_mua"])
+
         self.wavelength = pd.read_csv(self.config["wavelength"])
         with open(self.config["parameters"]) as f: 
             self.input = json.loads(f.read())
@@ -43,7 +53,7 @@ class MCHHandler:
         self.critical_angle = np.arcsin(self.detector_na/self.detector_n)     
 
 
-    def calculate_reflectance_white(self, args):
+    def calculate_reflectance_white(self, args=None):
 
         if not self.config:
             raise Exception("Should specify the config file first!")
@@ -57,6 +67,10 @@ class MCHHandler:
                 wl = int(f.split('_')[-2])
             elif self.config["type"] == "muscle":
                 wl = int(f.split('_')[-1].strip('.mch'))
+            elif self.config["type"] == "phantom":
+                wl = int(f.split('_')[-2])
+            else:
+                raise Exception("Tissue type error!")
 
             df, header, photon = self._load_mch(f)
 
@@ -72,7 +86,12 @@ class MCHHandler:
             path_length = torch.tensor(path_length).float().to(device)
 
             # [medium, ScvO2]
-            mua = self._make_tissue_white(wl, header, args)
+            if self.config["type"] != "phantom":
+                mua = self._make_tissue_white(wl, header, args)
+            else:
+                phantom_id = f.split('_')[-1].strip('.mch')
+                mua = self._make_tissue_phantom(wl, header, phantom_id)
+
             mua = torch.tensor(mua).float().to(device)
 
             # [photon, ScvO2]
@@ -84,13 +103,20 @@ class MCHHandler:
             # print(path_length.shape)
             # print(weight[:, 96].shape)
             path_length = (path_length * weight[:].unsqueeze(1))
-            skin_portion = (path_length.mean(0)[0] ).tolist()
-            fat_portion = (path_length.mean(0)[1]).tolist()
-            muscle_portion = (path_length.mean(0)[2]).tolist()
             if self.config["type"] == "ijv":
+                skin_portion = (path_length.mean(0)[0] ).tolist()
+                fat_portion = (path_length.mean(0)[1]).tolist()
+                muscle_portion = (path_length.mean(0)[2]).tolist()
                 ijv_portion = (path_length.mean(0)[3]).tolist()
                 cca_portion = (path_length.mean(0)[4]).tolist()
 
+            elif self.config["type"] == "muscle":
+                skin_portion = (path_length.mean(0)[0] ).tolist()
+                fat_portion = (path_length.mean(0)[1]).tolist()
+                muscle_portion = (path_length.mean(0)[2]).tolist()
+
+            elif self.config["type"] == "phantom":
+                phantom_portion = (path_length.mean(0)[0] ).tolist()
 
             # [1, ScvO2]
             result = torch.zeros(1).float().to(device)
@@ -120,6 +146,7 @@ class MCHHandler:
             s = result.cpu().numpy()/header["total_photon"]
             
             spectra.append(s)
+
             if self.config["type"] == "ijv":
                 portions.append(
                     [skin_portion, fat_portion, muscle_portion, ijv_portion, cca_portion]
@@ -128,11 +155,28 @@ class MCHHandler:
                 portions.append(
                     [skin_portion, fat_portion, muscle_portion]
                 )
+            elif self.config["type"] == "phantom":
+                portions.append([phantom_portion])
             else:
                 raise Exception("tissue type does not supported yet")
 
         return np.asarray(spectra).T, np.asarray(portions).T
             
+    def _make_tissue_phantom(self, wl, header, phantom_id):
+
+        phantom = self.mua[phantom_id].values
+        wavelength = self.mua['wl'].values
+
+        phantom = np.interp(wl, wavelength, phantom)
+
+        # if the mua is 1/cm, you need to change the unit into 1/mm
+        # mua *= 0.1
+
+        return np.expand_dims(phantom, 0)
+
+
+
+
 
     def _make_tissue_white(self, wl, header, args):
         
@@ -162,7 +206,7 @@ class MCHHandler:
         melanin *= 0.1
 
         # [medium, 1]
-        mua = np.zeros((header["maxmedia"], 1))
+        # mua = np.zeros((header["maxmedia"], 1))
 
 
 
@@ -242,6 +286,7 @@ class MCHHandler:
                  np.expand_dims(muscle, 0)
                 ], 0
                  )
+
         else:
             raise Exception("tissue type does not supported yet")
             
