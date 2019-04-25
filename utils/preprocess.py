@@ -4,7 +4,7 @@ import numpy as np
 from glob import glob
 import matplotlib.pyplot as plt 
 from scipy.signal import find_peaks_cwt
-
+from PyEMD import EMD
 
 class Calibrator:
     def __init__(self):
@@ -160,10 +160,6 @@ def preprocess_live(input_date):
 
         live -= bg.mean(0)
 
-        live_interp = []
-        for l in live:
-            live_interp.append(np.interp(wl, calib_wl, l))
-        live_interp = np.asarray(live_interp)
 
         live_crop = live[:, (calib_wl > 600) & (calib_wl < 950)]
         live_crop = live_crop.mean(1)
@@ -183,8 +179,29 @@ def preprocess_live(input_date):
         plt.savefig(os.path.join(output_path, "live", input_date + "_" + n + "_peak.png"))
         plt.clf()
 
-        live_max = live[max_index].mean(0)
-        live_min = live[min_index].mean(0)
+        # remove artifact
+        imf = EMD().emd(live_crop, np.arange(len(live_crop)))
+        artifact = imf[-1] - imf[-1].mean()
+        live_crop = live_crop - artifact
+
+
+
+        max_index = find_peaks_cwt(live_crop, np.arange(1, 20))
+        min_index = find_peaks_cwt(1-live_crop, np.arange(1, 20))
+
+        plt.figure()
+        plt.plot(live_crop)
+        plt.scatter(max_index, live_crop[max_index], label='max')
+        plt.scatter(min_index, live_crop[min_index], label='min')
+        plt.legend()
+        plt.grid()
+        plt.xlabel("time[frame]")
+        plt.ylabel("reflectance[-]")
+        plt.savefig(os.path.join(output_path, "live", input_date + "_" + n + "_peak_emd.png"))
+        plt.clf()
+
+        live_max = (live[max_index] - artifact[max_index].reshape(-1, 1)).mean(0)
+        live_min = (live[min_index] - artifact[min_index].reshape(-1, 1)).mean(0)
 
         live_max_interp = np.interp(wl, calib_wl, live_max)
         live_min_interp = np.interp(wl, calib_wl, live_min)
