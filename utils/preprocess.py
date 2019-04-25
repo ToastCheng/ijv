@@ -71,13 +71,13 @@ class Calibrator:
             measured[idx] = self.a * m + self.b
 
         return measured
-        
 
-def preprocess_phantom(input_date, result_path="result"):
+
+def preprocess_phantom(input_date):
     
     # setting
-    input_path = os.path.join("data", input_date)
-    output_path = os.path.join(result_path, input_date)
+    input_path = os.path.join("data", "raw", input_date)
+    output_path = os.path.join("data", "processed", input_date)
 
 
     if not os.path.isdir(output_path):
@@ -131,11 +131,11 @@ def preprocess_phantom(input_date, result_path="result"):
     return data_interp
 
 
-def preprocess_live(input_date, result_path="result"):
+def preprocess_live(input_date):
 
     # setting
-    input_path = os.path.join("data", input_date)
-    output_path = os.path.join(result_path, input_date)
+    input_path = os.path.join("data", "raw", input_date)
+    output_path = os.path.join("data", "processed", input_date)
     if not os.path.isdir(output_path):
         os.mkdir(output_path)
     if not os.path.isdir(os.path.join(output_path, "live")):
@@ -210,13 +210,14 @@ def preprocess_live(input_date, result_path="result"):
         df.to_csv(os.path.join(output_path, "live", input_date + "_" + n + ".csv"))
 
 
-def calibrate(input_date, result_path, sim_path=""):
+def calibrate(input_date, sim_path=""):
     calib = Calibrator()
 
-    input_path = os.path.join("result", input_date)
+    input_path = os.path.join("data", "processed", input_date)
     live_path = os.path.join(input_path, "live")
     phantom_path = os.path.join(input_path, "phantom", input_date + ".csv")
 
+    output_path = os.path.join("data", "calibrated")
 
 
     # fit
@@ -230,10 +231,13 @@ def calibrate(input_date, result_path, sim_path=""):
 
     live_list = glob(os.path.join(live_path, input_date + "*.csv"))
     for l in live_list:
+        idx = l.split(input_date)[-1]
         df = pd.read_csv(l)
         df["max"] = calib.calibrate(df["max"])
         df["min"] = calib.calibrate(df["min"])
-        df.to_csv(l.strip(".csv") + "_calib.csv")
+
+        df.to_csv(os.path.join(output_path, idx))
+
 
 
 
