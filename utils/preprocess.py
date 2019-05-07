@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from scipy.signal import find_peaks_cwt
 from PyEMD import EMD
 
+
 class Calibrator:
     def __init__(self):
         self.a = []
@@ -79,9 +80,12 @@ def preprocess_phantom(input_date):
     input_path = os.path.join("data", "raw", input_date)
     output_path = os.path.join("data", "processed", input_date)
 
+    if not os.path.isdir(input_path):
+        raise Exception("There is no raw data with id: {}".format(input_date))
 
     if not os.path.isdir(output_path):
         os.mkdir(output_path)
+
     if not os.path.isdir(os.path.join(output_path, "phantom")):
         os.mkdir(os.path.join(output_path, "phantom"))
 
@@ -89,15 +93,23 @@ def preprocess_phantom(input_date):
     bg_path = os.path.join(input_path, "background.csv")
     calib_wl_path = os.path.join(input_path, "calib_wl.csv")
     phantom_path = os.path.join(input_path, "phantom")
+
+    if not os.path.isfile(bg_path):
+        raise Exception("background.csv does not exist!")
+
+    if not os.path.isfile(calib_wl_path):
+        raise Exception("calib_wl.csv does not exist!")
+
+    if not os.path.isdir(phantom_path):
+        raise Exception("Folder phantom does not exist!")
+
     wl = [i for i in range(650, 1001, 10)]
-
-
 
     bg = np.loadtxt(bg_path, delimiter=",")
     calib_wl = np.loadtxt(calib_wl_path, delimiter=',')
 
     phantom_list = glob(os.path.join(phantom_path, "phantom_*.csv"))
-    phantom_list.sort(key=lambda x: x[-5])
+    phantom_list.sort(key=lambda x: x.split('_')[-1].strip('.csv'))
 
     data = []
     for p in phantom_list:
@@ -185,7 +197,8 @@ def preprocess_live(input_date):
         live_crop = live_crop - artifact
 
 
-
+        # 1 frame = 0.05sec
+        # So there would be 20 frame for 1 sec!
         max_index = find_peaks_cwt(live_crop, np.arange(1, 20))
         min_index = find_peaks_cwt(1-live_crop, np.arange(1, 20))
 
@@ -227,6 +240,134 @@ def preprocess_live(input_date):
         df.to_csv(os.path.join(output_path, "live", input_date + "_" + n + ".csv"))
 
 
+def preprocess_phantom_muscle(input_date):
+    
+    # setting
+    input_path = os.path.join("data", "raw", input_date, "muscle")
+    output_path = os.path.join("data", "processed", input_date, "muscle")
+
+    if not os.path.isdir(input_path):
+        raise Exception("There is no raw data with id: {}".format(input_date))
+
+    if not os.path.isdir(output_path):
+        os.mkdir(output_path)
+
+    if not os.path.isdir(os.path.join(output_path, "muscle")):
+        os.mkdir(os.path.join(output_path, "muscle"))
+
+
+    bg_path = os.path.join(input_path, "background")
+    calib_wl_path = os.path.join("data", "raw", input_date, "calib_wl.csv")
+    phantom_path = os.path.join(input_path, "phantom")
+    
+    if not os.path.isdir(bg_path):
+        raise Exception("background.csv does not exist!")
+
+    if not os.path.isfile(calib_wl_path):
+        raise Exception("calib_wl.csv does not exist!")
+
+    if not os.path.isdir(phantom_path):
+        raise Exception("Folder phantom_muscle does not exist!")
+
+    wl = [i for i in range(650, 1001, 10)]
+
+    # load background
+    bg = []
+    for b in glob(os.path.join(bg_path, "*.csv")):
+        bg.append(np.loadtxt(b, delimiter=","))
+
+    # shape: [拍攝張數, 長, 寬]
+    bg = np.asarray(bg)
+
+    # load calibration wavelength
+    calib_wl = np.loadtxt(calib_wl_path, delimiter=',')
+
+    phantom_list = glob(os.path.join(phantom_path, "*"))
+    chiken = {pid: i for i, pid in enumerate("chiken")}
+    phantom_list.sort(key=lambda x: chiken[x])
+
+    data = []
+    for pl in phantom_list:
+        _data = []
+        for p in glob(os.path.join(pl, "*")):
+            # 這裡每一筆data是2維的影像！
+            _data.append(np.loadtxt(p, delimiter=","))
+        data.append(_data)
+
+    # shape: [phantom數, 拍攝數, 長, 寬]
+    data = np.asarray(data)
+
+    # shape: [phantom數, 長=1600, 寬=200]
+    data_sub_bg = data.mean(1) - bg.mean(0)
+
+    # 取中間波長
+    data_middle = data_sub_bg[:, data_sub_bg.shape[1]//2, :]
+
+    data = []
+    for pid, dm in enumerate(data_middle):
+        # 先找peaks
+        pks = find_peaks_cwt(dm, np.arange(1, 30))
+        assert len(pks) == 5, "peak number incorrect!"
+
+        _data = []        
+        for p in pks:
+   
+            peak_value = data_middle[p]
+            left_found = False
+            right_found = False
+            left_idx = 0
+            right_idx = 0
+            for i in range(30):
+
+                if not left_found and data_middle[p-i] < peak_value/2:
+                    left_found = True
+                    left_idx = i
+                if not right_found and data_middle[p+i] < peak_value/2:
+                    right_found = True
+                    right_idx = i
+                if left_found and right_found:
+                    break
+
+            # 其中一個仿體的其中一個SDS
+            _data.append(data_sub_bg[pid, :, left_idx:right_idx].mean(1))
+
+        data.append(_data)
+
+    # shape: [phantom數, SDS數, 波長數]
+    data = np.asarray(data)
+
+
+
+    data_interp = []
+    for d in data:
+        data_interp.append(np.interp(wl, calib_wl, d[1]))
+
+    # shape: [phantom數, SDS數, 校正後波長數(36)]
+    data_interp = np.asarray(data_interp)
+
+    # # plot and
+    # # save
+    # df_dict = {}
+    # df_dict['wavelength'] = wl
+    # for p, d in zip(phantom_list, data_interp):
+    #     df_dict[p[-5]] = d
+    #     plt.plot(wl, d, label=p[-5])
+    # plt.grid()
+    # plt.legend()
+    # plt.xlabel("wavelength[nm]")
+    # plt.ylabel("reflectance[-]")
+    # plt.savefig(os.path.join(output_path, "phantom", input_date + ".png"))
+    # plt.clf()
+
+    # df = pd.DataFrame(df_dict)
+    # df.to_csv(os.path.join(output_path, "phantom", input_date + ".csv"), index=None)
+
+    # return data_interp
+
+def preprocess_live_muscle(input_date):
+    pass
+
+
 def calibrate(input_date, sim_path=""):
     calib = Calibrator()
 
@@ -234,8 +375,10 @@ def calibrate(input_date, sim_path=""):
     live_path = os.path.join(input_path, "live")
     phantom_path = os.path.join(input_path, "phantom", input_date + ".csv")
 
-    output_path = os.path.join("data", "calibrated")
+    output_path = os.path.join("data", "calibrated", input_date)
 
+    if not os.path.isdir(output_path):
+        os.mkdir(output_path)
 
     # fit
     phantom = pd.read_csv(phantom_path)
