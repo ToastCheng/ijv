@@ -67,8 +67,13 @@ class Calibrator:
     def calibrate(self, measured):
 
         measured = np.asarray(measured)
+        if len(measured.shape) == 1:
+            measured = np.expand_dims(measured, 0)
         for idx, m in enumerate(measured):
-            assert m.shape == self.a.shape, "input shape does not match!"
+            if not m.shape == self.a.shape:
+                print("measured shape: ", m.shape)
+                print("calibrate shape: ", self.a.shape)
+                raise Exception("input shape does not match!")
             measured[idx] = self.a * m + self.b
 
         return measured
@@ -237,7 +242,7 @@ def preprocess_live(input_date):
 
         df = pd.DataFrame(df_dict)
 
-        df.to_csv(os.path.join(output_path, "live", input_date + "_" + n + ".csv"))
+        df.to_csv(os.path.join(output_path, "live", input_date + "_" + n + ".csv"), index=None)
 
 
 def preprocess_phantom_muscle(input_date):
@@ -368,8 +373,9 @@ def preprocess_live_muscle(input_date):
     pass
 
 
-def calibrate(input_date, sim_path=""):
+def calibrate(input_date, sim_path="CHIKEN/sim_chik.csv", p_index="chik"):
     calib = Calibrator()
+    p_index = list(p_index)
 
     input_path = os.path.join("data", "processed", input_date)
     live_path = os.path.join(input_path, "live")
@@ -384,8 +390,8 @@ def calibrate(input_date, sim_path=""):
     phantom = pd.read_csv(phantom_path)
     sim_phantom = pd.read_csv(sim_path)
 
-    phantom = phantom.iloc[:, 1:].values.T
-    sim_phantom = sim_phantom.iloc[:, 1:].values.T
+    phantom = phantom[p_index].values.T
+    sim_phantom = sim_phantom[p_index].values.T
 
     calib.fit(phantom, sim_phantom)
 
@@ -393,11 +399,20 @@ def calibrate(input_date, sim_path=""):
     for l in live_list:
         idx = l.split(input_date)[-1]
         df = pd.read_csv(l)
-        df["max"] = calib.calibrate(df["max"])
-        df["min"] = calib.calibrate(df["min"])
 
-        df.to_csv(os.path.join(output_path, idx))
+        df["max"] = calib.calibrate(df["max"].values)[0]
+        df["min"] = calib.calibrate(df["min"].values)[0]
 
+        df.to_csv(os.path.join(output_path, input_date + idx), index=None)
+
+
+if __name__ == "__main__":
+    import sys
+    date = sys.argv[1]
+    print(date)
+    preprocess_phantom(date)
+    preprocess_live(date)
+    calibrate(date)
 
 
 
