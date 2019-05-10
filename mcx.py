@@ -138,16 +138,14 @@ class MCX:
 
         if self.config["type"] == "ijv":
             for idx, wl in enumerate(self.wavelength):
-                for sds_idx in range(len(self.fiber)):
-                    self._make_input_ijv(idx, sds_idx)
-                    command = self._get_command(wl, self.fiber.values[sds_idx][0])
-                    print("wavelength: ", wl)
-                    print("sds: ", self.fiber.values[sds_idx][0])
-                    print(command)
-                    sys.stdout.flush()
-                    os.chdir("mcx/bin")
-                    os.system(command)
-                    os.chdir("../..")
+                self._make_input_ijv(idx)
+                command = self._get_command(wl)
+                print("wavelength: ", wl)
+                print(command)
+                sys.stdout.flush()
+                os.chdir("mcx/bin")
+                os.system(command)
+                os.chdir("../..")
 
             mc2_list = glob(os.path.join(self.mcx_output, "*.mc2"))
             for mc2 in mc2_list:
