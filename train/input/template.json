@@ -46,7 +46,7 @@
     },
 
     "boundary":{
-        "x_size": 70,
+        "x_size": 150,
         "y_size": 150,
         "z_size": 200
     }
