@@ -238,7 +238,7 @@ class MCX:
         num_grid = round(length_mm/self.config["voxel_size"])
         return round(num_grid)
 
-    def _make_input_ijv(self, wl_idx, sds_idx):
+    def _make_input_ijv(self, wl_idx):
 
         mcx_input = self.mcx_input
         mcx_input["Session"]["ID"] = self.config["session_id"] + "_%d" % self.wavelength[wl_idx]
@@ -352,28 +352,39 @@ class MCX:
         mcx_input["Shapes"][5]["Cylinder"]["C1"] = [0, y_size//2- ic_dist, cca_d]
         mcx_input["Shapes"][5]["Cylinder"]["R"] = cca_r
 
-        # load fiber
-        sds, r = self.fiber.values[sds_idx]
-        sds = self._convert_unit(sds)
-        r = self._convert_unit(r)
 
-        mcx_input["Optode"]["Source"]["Pos"][0] = x_size//2
-        mcx_input["Optode"]["Source"]["Pos"][1] = y_size//2 - sds//2
+        # 改成水平！ 20190511
+        src_x = 10
+        mcx_input["Optode"]["Source"]["Pos"][0] = src_x
+        mcx_input["Optode"]["Source"]["Pos"][1] = y_size//2
 
-        det = {
-            "R": r,
-            "Pos": [x_size//2, y_size//2 + sds//2, 0.0]
-        }
         mcx_input["Optode"]["Detector"] = []
-        mcx_input["Optode"]["Detector"].append(det)
+        # 肌肉
+        for sds, r in self.fiber.values[:5]:
+            sds = self._convert_unit(sds)
+            r = self._convert_unit(r)
+            det = {
+                "R": r,
+                "Pos": [src_x, y_size//2 + sds, 0.0]
+            }
+            mcx_input["Optode"]["Detector"].append(det)
+        # IJV
+        for sds, r in self.fiber.values[5:]:
+            sds = self._convert_unit(sds)
+            r = self._convert_unit(r)
+            det = {
+                "R": r,
+                "Pos": [src_x + sds, y_size//2, 0.0]
+            }
+            mcx_input["Optode"]["Detector"].append(det)
+
 
         # set seed
         mcx_input["Session"]["RNGSeed"] = randint(0, 1000000000)
 
         # save the .json file in the output folder
-        with open(os.path.join(self.json_output, "input_%d_%d.json" % (
-            self.wavelength[wl_idx], self.fiber["sds"][sds_idx]
-            )), 'w+') as f:
+        with open(os.path.join(self.json_output, "input_%d.json" % 
+            self.wavelength[wl_idx]), 'w+') as f:
             json.dump(mcx_input, f, indent=4)
 
     def _make_input_muscle(self, wl_idx):
