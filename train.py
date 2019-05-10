@@ -15,7 +15,7 @@ for i, idx in enumerate(train_list["idx"]):
     config["session_id"] = idx
     config["parameters"] = os.path.join("train", "input", idx + ".json")
 
-    with open("configs/train.json") as f:
+    with open("configs/train.json", "w+") as f:
         json.dump(config, f, indent=4)
 
     print("run: ", i)
