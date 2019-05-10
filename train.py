@@ -4,7 +4,7 @@ import json
 import os 
 from mcx import MCX
 
-train_list = pd.read_csv("data_list.csv")
+train_list = pd.read_csv("train/data_list.csv")
 
 mcx = MCX()
 
