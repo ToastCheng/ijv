@@ -1,0 +1,27 @@
+{
+
+    "session_id": "",
+    "type": "ijv",
+
+    "num_photon": 2e9,
+    "photon_batch": 2e9,
+    "voxel_size": 0.25, 
+
+    "binary_path": "mcx/bin/mcx",
+
+    "medium_n": 1.457,
+    "detector_na": 0.12,
+
+    "coefficients": "input/coefficients.csv",
+    "parameters": "train/.json",
+    "wavelength": "input/wavelength.csv",
+    "fiber": "input/fiber_20190511.csv",
+    "mcx_input": "input_mcx/ijv.json",
+
+    "phantom_idx": "CHIK",
+    "phantom_mua": "",
+    "phantom_musp": ""
+
+
+
+}

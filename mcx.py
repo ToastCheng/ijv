@@ -257,7 +257,6 @@ class MCX:
         mcx_input["Domain"]["Media"][1]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["skin"]["muspx"], 
-            self.parameters["skin"]["fray"], 
             self.parameters["skin"]["bmie"],
             self.parameters["skin"]["g"]
             )
@@ -270,7 +269,6 @@ class MCX:
         mcx_input["Domain"]["Media"][2]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["fat"]["muspx"], 
-            self.parameters["fat"]["fray"], 
             self.parameters["fat"]["bmie"],
             self.parameters["fat"]["g"]
             )
@@ -283,7 +281,6 @@ class MCX:
         mcx_input["Domain"]["Media"][3]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["muscle"]["muspx"], 
-            self.parameters["muscle"]["fray"], 
             self.parameters["muscle"]["bmie"],
             self.parameters["muscle"]["g"]
             )
@@ -296,7 +293,6 @@ class MCX:
         mcx_input["Domain"]["Media"][4]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["IJV"]["muspx"], 
-            self.parameters["IJV"]["fray"], 
             self.parameters["IJV"]["bmie"],
             self.parameters["IJV"]["g"]
             )
@@ -309,7 +305,6 @@ class MCX:
         mcx_input["Domain"]["Media"][5]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["CCA"]["muspx"], 
-            self.parameters["CCA"]["fray"], 
             self.parameters["CCA"]["bmie"],
             self.parameters["CCA"]["g"]
             )
@@ -400,7 +395,6 @@ class MCX:
         mcx_input["Domain"]["Media"][1]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["skin"]["muspx"], 
-            self.parameters["skin"]["fray"], 
             self.parameters["skin"]["bmie"],
             self.parameters["skin"]["g"]
             )
@@ -413,7 +407,6 @@ class MCX:
         mcx_input["Domain"]["Media"][2]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["fat"]["muspx"], 
-            self.parameters["fat"]["fray"], 
             self.parameters["fat"]["bmie"],
             self.parameters["fat"]["g"]
             )
@@ -426,7 +419,6 @@ class MCX:
         mcx_input["Domain"]["Media"][3]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["muscle"]["muspx"], 
-            self.parameters["muscle"]["fray"], 
             self.parameters["muscle"]["bmie"],
             self.parameters["muscle"]["g"]
             )
@@ -606,9 +598,11 @@ class MCX:
         mua = w * self.water[idx] + (1-w) * self.collagen[idx]
         return mua
 
-    def _calculate_mus(self, idx, mus500, fray, bmie, g):
+    def _calculate_mus(self, idx, mus500, bmie, g):
         wl = self.wavelength[idx]
-        mus_p = mus500 * (fray * (wl/500)**(-4) + (1-fray) * (wl/500) ** (-bmie))
+        # mus_p = mus500 * (fray * (wl/500)**(-4) + (1-fray) * (wl/500) ** (-bmie))
+        mus_p = mus500 * (wl/500) ** (-bmie)
+
         mus = mus_p/g * 0.1
         return mus 
 

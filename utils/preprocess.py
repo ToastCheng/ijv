@@ -373,7 +373,7 @@ def preprocess_live_muscle(input_date):
     pass
 
 
-def calibrate(input_date, sim_path="CHIKEN/sim_chik.csv", p_index="chik"):
+def calibrate(input_date, sim_path="CHIKEN/20190509_sim_chik.csv", p_index="chik"):
     calib = Calibrator()
     p_index = list(p_index)
 

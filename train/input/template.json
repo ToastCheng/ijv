@@ -1,0 +1,54 @@
+{
+    "skin":{
+        "n": 1.40,
+        "g": 0.94,
+        "muspx": 5.17,
+        "bmie": 1.0
+    },
+
+    "fat":{
+        "n": 1.40,
+        "g": 0.94,
+        "muspx": 5.17,
+        "bmie": 1.0
+    },
+
+    "muscle":{
+        "n": 1.40,
+        "g": 0.94,
+        "muspx": 5.17,
+        "bmie": 1.0
+    },
+
+    "IJV":{
+        "n": 1.40,
+        "g": 0.94,
+        "muspx": 10.0,
+        "bmie": 1.0
+    },
+
+    "CCA":{
+        "n": 1.40,
+        "g": 0.94,
+        "muspx": 10.0,
+        "bmie": 1.0
+    },
+
+    "geometry":{
+        "skin_thickness": 1.75,
+        "fat_thickness": 1,
+        "ijv_radius": 5.25,
+        "ijv_depth": 14.25,
+        "cca_radius": 3.75,
+        "cca_depth": 22,
+        "ijv_cca_distance": 8.25
+
+    },
+
+    "boundary":{
+        "x_size": 70,
+        "y_size": 150,
+        "z_size": 200
+    }
+
+}
