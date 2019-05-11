@@ -78,7 +78,7 @@ for i in range(100):
 df = pd.DataFrame(x)
 df.to_csv("train/data_list.csv", index=None)
 
-with open("train/input/template.json") as f:
+with open("train/template.json") as f:
     inp = json.load(f)
 
 for i in range(len(df)):
