@@ -574,7 +574,7 @@ class MCX:
         # maxdetphoton = "%d" % (self.config["num_photon"]//5)
         # save_mc2 = "0 " if self.config["train"] else "1 "
         # mc2 is seldom used
-        save_mc2 = "1 "
+        save_mc2 = "0 "
 
         if os.name == "posix":
             # linux
