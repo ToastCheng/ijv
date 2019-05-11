@@ -576,8 +576,15 @@ class MCX:
         # mc2 is seldom used
         save_mc2 = "1 "
 
-        command = \
-        "./mcx --session " + session_name +\
+        if os.name == "posix":
+            # linux
+            command = "./mcx"
+        elif os.name == "nt":
+            # windows
+            command = "mcx.exe"
+        else:
+            command = "./mcx"
+        command += " --session " + session_name +\
         "--input " + geometry_file +\
         "--root " + root +\
         "--gpu 1 " +\
