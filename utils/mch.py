@@ -30,7 +30,7 @@ class MCHHandler:
         mch_file_path = os.path.join("output", self.config["session_id"], "mcx_output")
         self.mch_list = glob(os.path.join(mch_file_path, "*.mch"))
         if self.config["type"] == "ijv":
-            self.mch_list.sort(key=lambda x: int(x.split("_")[-2]))
+            self.mch_list.sort(key=lambda x: int(x.split("_")[-1].strip('.mch')))
         elif self.config["type"] == "muscle":
             self.mch_list.sort(key=lambda x: int(x.split("_")[-1].strip('.mch')))
         elif self.config["type"] == "phantom":
@@ -53,7 +53,7 @@ class MCHHandler:
         self.critical_angle = np.arcsin(self.detector_na/self.detector_n)     
 
 
-    def calculate_reflectance_white(self, args=None):
+    def run_wmc(self, args=None):
 
         if not self.config:
             raise Exception("Should specify the config file first!")
@@ -64,7 +64,7 @@ class MCHHandler:
 
         for f in self.mch_list:
             if self.config["type"] == "ijv":
-                wl = int(f.split('_')[-2])
+                wl = int(f.split('_')[-1].strip('.mch'))
             elif self.config["type"] == "muscle":
                 wl = int(f.split('_')[-1].strip('.mch'))
             elif self.config["type"] == "phantom":
@@ -81,7 +81,9 @@ class MCHHandler:
             df = df.reset_index(drop=True)
 
             # [photon, medium]
-            path_length = df.iloc[:, 1:-1].values
+            # 0: detector index
+            # 1: prism
+            path_length = df.iloc[:, 2:-1].values
 
             path_length = torch.tensor(path_length).float().to(device)
 
@@ -220,55 +222,63 @@ class MCHHandler:
             deoxy, 
             water,
             fat,
-            melanin
+            melanin,
+            collagen
             )
 
         fat = self._calculate_mua(
-            args["fat"]["blood_volume_fraction"],
-            args["fat"]["ScvO2"],
-            args["fat"]["water_volume"],
+            0,
+            0,
+            0,
             args["fat"]["fat_volume"],
-            args["fat"]["melanin_volume"],
+            0,
             oxy, 
             deoxy, 
             water,
             fat,
-            melanin
+            melanin,
+            collagen
             )
 
-        muscle = self._calculate_muscle_mua(
+        muscle = self._calculate_mua(
             args["muscle"]["blood_volume_fraction"],
             args["muscle"]["ScvO2"],
             args["muscle"]["water_volume"],
+            args["muscle"]["fat_volume"],
+            args["muscle"]["melanin_volume"],
             oxy,
             deoxy,
             water,
+            fat,
+            melanin,
             collagen,
             )
         if self.config["type"] == "ijv":
             IJV = self._calculate_mua(
-                args["IJV"]["blood_volume_fraction"],
-                args["IJV"]["ScvO2"],
-                args["IJV"]["water_volume"],
-                args["IJV"]["fat_volume"],
-                args["IJV"]["melanin_volume"],
+                args["ijv"]["blood_volume_fraction"],
+                args["ijv"]["ScvO2"],
+                args["ijv"]["water_volume"],
+                args["ijv"]["fat_volume"],
+                args["ijv"]["melanin_volume"],
                 oxy, 
                 deoxy, 
                 water,
                 fat,
-                melanin
+                melanin,
+                collagen
                 )
             CCA = self._calculate_mua(
-                args["CCA"]["blood_volume_fraction"],
-                args["CCA"]["ScvO2"],
-                args["CCA"]["water_volume"],
-                args["CCA"]["fat_volume"],
-                args["CCA"]["melanin_volume"],
+                args["cca"]["blood_volume_fraction"],
+                args["cca"]["ScvO2"],
+                args["cca"]["water_volume"],
+                args["cca"]["fat_volume"],
+                args["cca"]["melanin_volume"],
                 oxy, 
                 deoxy, 
                 water,
                 fat,
-                melanin
+                melanin,
+                collagen
                 )
 
         if self.config["type"] == "ijv":
@@ -317,12 +327,13 @@ class MCHHandler:
 
 
     @staticmethod
-    def _calculate_mua(b, s, w, f, m, oxy, deoxy, water, fat, melanin):
-        mua = b * (s * oxy + (1-s) * deoxy) + w * water + f * fat + m * melanin
+    def _calculate_mua(b, s, w, f, m, oxy, deoxy, water, fat, melanin, collagen):
+        mua = b * (s * oxy + (1-s) * deoxy) + w * water + f * fat + m * melanin + (1-w-f-m-b) * collagen
         return mua
 
     @staticmethod
     def _calculate_muscle_mua(b, s, w, oxy, deoxy, water, collagen):
+        # to be deprecate
         mua = w * water + (1-w-b) * collagen + b * (s * oxy + (1-s) * deoxy)
 
         return mua 

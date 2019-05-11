@@ -326,29 +326,34 @@ class MCX:
 
         mcx_input["Domain"]["Dim"] = [x_size, y_size, z_size]
 
-        # skin
         mcx_input["Shapes"][0]["Grid"]["Size"] = [x_size, y_size, z_size]
 
+        # prism
+        prism_th = 20 # changed to num of grid
         mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]
-        mcx_input["Shapes"][1]["Subgrid"]["Size"] = [x_size, y_size, skin_th]
+        mcx_input["Shapes"][1]["Subgrid"]["Size"] = [x_size, y_size, prism_th]
+
+        # skin
+        mcx_input["Shapes"][2]["Subgrid"]["O"] = [1, 1, 1+prism_th]
+        mcx_input["Shapes"][2]["Subgrid"]["Size"] = [x_size, y_size, skin_th]
 
         # fat
-        mcx_input["Shapes"][2]["Subgrid"]["O"] = [1, 1, 1+skin_th]
-        mcx_input["Shapes"][2]["Subgrid"]["Size"] = [x_size, y_size, fat_th]
+        mcx_input["Shapes"][3]["Subgrid"]["O"] = [1, 1, 1+skin_th+prism_th]
+        mcx_input["Shapes"][3]["Subgrid"]["Size"] = [x_size, y_size, fat_th]
 
         # muscle
-        mcx_input["Shapes"][3]["Subgrid"]["O"] = [1, 1, 1+skin_th+fat_th]
-        mcx_input["Shapes"][3]["Subgrid"]["Size"] = [x_size, y_size, z_size-skin_th-fat_th]
+        mcx_input["Shapes"][4]["Subgrid"]["O"] = [1, 1, 1+skin_th+fat_th+prism_th]
+        mcx_input["Shapes"][4]["Subgrid"]["Size"] = [x_size, y_size, z_size-skin_th-fat_th]
 
         # ijv 
-        mcx_input["Shapes"][4]["Cylinder"]["C0"] = [x_size, y_size//2, ijv_d]
-        mcx_input["Shapes"][4]["Cylinder"]["C1"] = [0, y_size//2, ijv_d]
-        mcx_input["Shapes"][4]["Cylinder"]["R"] = ijv_r
+        mcx_input["Shapes"][5]["Cylinder"]["C0"] = [x_size, y_size//2, ijv_d+prism_th]
+        mcx_input["Shapes"][5]["Cylinder"]["C1"] = [0, y_size//2, ijv_d+prism_th]
+        mcx_input["Shapes"][5]["Cylinder"]["R"] = ijv_r
 
         # cca 
-        mcx_input["Shapes"][5]["Cylinder"]["C0"] = [x_size, y_size//2- ic_dist, cca_d]
-        mcx_input["Shapes"][5]["Cylinder"]["C1"] = [0, y_size//2- ic_dist, cca_d]
-        mcx_input["Shapes"][5]["Cylinder"]["R"] = cca_r
+        mcx_input["Shapes"][6]["Cylinder"]["C0"] = [x_size, y_size//2- ic_dist, cca_d+prism_th]
+        mcx_input["Shapes"][6]["Cylinder"]["C1"] = [0, y_size//2- ic_dist, cca_d+prism_th]
+        mcx_input["Shapes"][6]["Cylinder"]["R"] = cca_r
 
 
         # 改成水平！ 20190511

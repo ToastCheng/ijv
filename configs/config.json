@@ -1,6 +1,6 @@
 {
 
-    "session_id": "ijv",
+    "session_id": "quicktest",
     "type": "ijv",
 
     "num_photon": 5e7,
@@ -14,8 +14,8 @@
 
     "coefficients": "input/coefficients.csv",
     "parameters": "input/parameters.json",
-    "wavelength": "input/wavelength.csv",
-    "fiber": "input/fiber.csv",
+    "wavelength": "input/wavelength_quicktest.csv",
+    "fiber": "input/fiber_quicktest.csv",
     "mcx_input": "input_mcx/ijv.json",
 
     "phantom_idx": "CHIK",

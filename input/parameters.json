@@ -43,7 +43,7 @@
         "melanin_volume": 0,
         "n": 1.40,
         "g": 0.94,
-        "fray": 0.0,
+        "muspx": 15.0,
         "bmie": 1.0
     },
 
@@ -71,7 +71,7 @@
     },
 
     "boundary":{
-        "x_size": 70,
+        "x_size": 150,
         "y_size": 150,
         "z_size": 200
     }
