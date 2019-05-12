@@ -41,7 +41,7 @@ def get_idx(n=10):
 
 
 
-df = pd.read_csv("train/data_list.csv")
+df = pd.read_csv(os.path.join("train", "data_list.csv"))
 # x = {i: [] for i in x_range.keys()}
 x = defaultdict(list)
 mch = MCHHandler()
@@ -49,14 +49,14 @@ mch = MCHHandler()
 for step_one_idx in range(1):
     
     ### 準備好mch的結果
-    with open("configs/train.json", "r") as f:
+    with open(os.path.join("configs", "train.json"), "r") as f:
         config = json.load(f)
     wl = pd.read_csv(config["wavelength"])["wavelength"].values
     session_id = df["idx"][0]
     config["session_id"] = session_id
-    config["parameters"] = "train/input/" + session_id + ".json"
+    config["parameters"] = os.path.join("train", "input", session_id + ".json")
 
-    path = "configs/train/" + session_id + ".json"
+    path = os.path.join("configs", "train", session_id + ".json")
     with open(path, "w+") as f:
         json.dump(config, f, indent=4)
         
