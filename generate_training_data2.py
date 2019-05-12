@@ -78,8 +78,11 @@ for step_one_idx in range(1):
                 x[xx] += [get_idx()]            
             else:
                 x[xx] += [random.uniform(x_range[xx][0], x_range[xx][1])]
-        for xx in df.columns[1:]:
-            x[xx] += [df[xx][step_one_idx]]
+        for xx in df.columns:
+            if xx == "idx":
+                pass
+            else:
+                x[xx] += [df[xx][step_one_idx]]
         
         sql = "INSERT INTO ijv_sim_spec(idx, skin_b, skin_s, skin_w, skin_f, skin_m, \
         fat_f,muscle_b, muscle_s, muscle_w, \
