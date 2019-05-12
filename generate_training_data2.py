@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from MySQLdb import connect
 
 import os 
 import json
@@ -65,6 +66,12 @@ for step_one_idx in range(1):
     ###
     
     ### random生產100組吸收係數，並存下來
+    conn = connect(
+        host="140.112.174.26",
+        user="md703",
+        passwd=os.getenv("PASSWD"),
+        db="ijv"
+    )
     for i in tqdm(range(100)):
         for xx in x_range.keys():
             if xx == "idx":
@@ -74,6 +81,24 @@ for step_one_idx in range(1):
         for xx in df.columns[1:]:
             x[xx] += [df[xx][step_one_idx]]
         
+        sql = "INSERT INTO ijv_sim_spec('idx', 'skin_b', 'skin_s', 'skin_w', 'skin_f', 'skin_m', \
+        'fat_f','muscle_b', 'muscle_s', 'muscle_w', \
+        'ijv_s', 'cca_s', \
+        'skin_musp','skin_bmie', 'fat_musp', 'fat_bmie', \
+        'muscle_musp', 'muscle_bmie','ijv_musp', 'cca_musp', \
+        'geo_skin', 'geo_fat', 'geo_ijvr', 'geo_ijvd',\
+        'geo_ccar', 'geo_ccad', 'geo_ijvcca') \
+        VALUES('%s', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', \
+        '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', \
+        '%f', '%f', '%f', '%f')" % \
+        (x["idx"][i], x["skin_b"][i], x["skin_s"][i], x["skin_w"][i], x["skin_f"][i], x["skin_m"][i],\
+         x["fat_f"][i], x["muscle_b"][i], x["muscle_s"][i], x["muscle_w"][i], \
+         x["ijv_s"][i], x["cca_s"][i], \
+         x["skin_musp"][i], x["skin_bmie"][i], x["fat_musp"][i], x["fat_bmie"][i], \
+         x["muscle_musp"][i], x["muscle_bmie"][i], x["ijv_musp"][i], x["cca_musp"][i], \
+         x["geo_skin"][i], x["geo_fat"][i], x["geo_ijvr"][i], x["geo_ijvd"][i], \
+         x["geo_ccar"][i], x["geo_ccad"][i], x["geo_ijvcca"][i])
+
         ijv_args = {
             "skin":{
                 "blood_volume_fraction": x["skin_b"][i],
@@ -123,6 +148,10 @@ for step_one_idx in range(1):
             os.mkdir(os.path.join("train", "spec", x["idx"][i]))
         np.save(os.path.join("train", "spec", x["idx"][i], x["idx"][i]), s)
         
+        cursor = conn.cursor()
+        cursor.execute(sql)
+        conn.commit()
+
         plt.figure()
         for n, ss in enumerate(s[5:]):
             plt.plot(wl, ss, label="SDS: %d" % n)

@@ -177,9 +177,6 @@ class MCHHandler:
         return np.expand_dims(phantom, 0)
 
 
-
-
-
     def _make_tissue_white(self, wl, header, args):
         
         # mua
@@ -253,6 +250,7 @@ class MCHHandler:
             melanin,
             collagen,
             )
+
         if self.config["type"] == "ijv":
             IJV = self._calculate_mua(
                 args["ijv"]["blood_volume_fraction"],
@@ -289,6 +287,7 @@ class MCHHandler:
                  np.expand_dims(IJV, 0), 
                  np.expand_dims(CCA, 0)], 0
                  )
+
         elif self.config["type"] == "muscle":
             _mua = np.concatenate(
                 [np.expand_dims(skin, 0),
