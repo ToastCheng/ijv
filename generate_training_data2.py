@@ -81,13 +81,13 @@ for step_one_idx in range(1):
         for xx in df.columns[1:]:
             x[xx] += [df[xx][step_one_idx]]
         
-        sql = "INSERT INTO ijv_sim_spec('idx', 'skin_b', 'skin_s', 'skin_w', 'skin_f', 'skin_m', \
-        'fat_f','muscle_b', 'muscle_s', 'muscle_w', \
-        'ijv_s', 'cca_s', \
-        'skin_musp','skin_bmie', 'fat_musp', 'fat_bmie', \
-        'muscle_musp', 'muscle_bmie','ijv_musp', 'cca_musp', \
-        'geo_skin', 'geo_fat', 'geo_ijvr', 'geo_ijvd',\
-        'geo_ccar', 'geo_ccad', 'geo_ijvcca') \
+        sql = "INSERT INTO ijv_sim_spec(idx, skin_b, skin_s, skin_w, skin_f, skin_m, \
+        fat_f,muscle_b, muscle_s, muscle_w, \
+        ijv_s, cca_s, \
+        skin_musp, skin_bmie, fat_musp, fat_bmie, \
+        muscle_musp, muscle_bmie,ijv_musp', cca_musp, \
+        geo_skin, geo_fat, geo_ijvr, geo_ijvd,\
+        geo_ccar, geo_ccad, geo_ijvcca) \
         VALUES('%s', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', \
         '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', '%f', \
         '%f', '%f', '%f', '%f')" % \
