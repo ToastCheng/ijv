@@ -1,5 +1,5 @@
 {
-    "session_id": "rR4JNhcrnH",
+    "session_id": "CEk1s0KFHz",
     "type": "ijv",
     "num_photon": 2000000000.0,
     "photon_batch": 2000000000.0,
@@ -8,7 +8,7 @@
     "medium_n": 1.457,
     "detector_na": 0.12,
     "coefficients": "input/coefficients.csv",
-    "parameters": "train/input/rR4JNhcrnH.json",
+    "parameters": "train/input/CEk1s0KFHz.json",
     "wavelength": "input/wavelength.csv",
     "fiber": "input/fiber_20190511.csv",
     "mcx_input": "input_mcx/ijv.json",

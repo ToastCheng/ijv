@@ -9,8 +9,8 @@ import os
 
 from utils import load_mch
 
-# device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-device = torch.device('cpu')
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+# device = torch.device('cpu')
 
 class MCHHandler:
     # This class is a .mch file handler.

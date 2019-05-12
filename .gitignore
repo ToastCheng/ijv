@@ -1,3 +1,6 @@
+train/input/*
+train/data_list.csv
+train/spec/*
 data/*
 *.rar
 clinic_data/*
