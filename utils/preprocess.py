@@ -627,11 +627,14 @@ if __name__ == "__main__":
     # calibrate(date)
 
     print("process ijv..")
-    preprocess_phantom(date)
-    preprocess_live(date)
+    # preprocess_phantom(date)
+    # preprocess_live(date)
+
+    print("calibrate ijv")
+    calibrate_ijv(date)
 
     print("process muscle..")
-    preprocess_phantom_muscle(date)
-    preprocess_live_muscle(date)
+    # preprocess_phantom_muscle(date)
+    # preprocess_live_muscle(date)
 
 

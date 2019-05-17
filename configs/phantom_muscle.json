@@ -16,7 +16,7 @@
     "parameters": "input/parameters_phantom.json",
     "wavelength": "input/wavelength.csv",
     "fiber": "input/fiber_muscle.csv",
-    "mcx_input": "input_mcx/phantom.json",
+    "mcx_input": "input_mcx/phantom_muscle.json",
 
     "phantom_idx": "CHIK",
     "phantom_mua": "CHIKEN/mua_in_mm.csv",
