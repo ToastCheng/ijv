@@ -575,6 +575,29 @@ def calibrate_ijv(input_date, sim_path="CHIKEN/20190509_sim_chik.csv", p_index="
 
 def calibrate_muscle(input_date, sim_path="", p_index="chik"):
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     calib = Calibrator()
     p_index = list(p_index)
 
