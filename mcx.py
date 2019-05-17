@@ -370,14 +370,15 @@ class MCX:
 
         mcx_input["Optode"]["Detector"] = []
         # 肌肉
-        for sds, r in self.fiber.values[:5]:
-            sds = self._convert_unit(sds)
-            r = self._convert_unit(r)
-            det = {
-                "R": r,
-                "Pos": [src_x, y_size//2 + sds, 0.0]
-            }
-            mcx_input["Optode"]["Detector"].append(det)
+        # for sds, r in self.fiber.values[:5]:
+        #     sds = self._convert_unit(sds)
+        #     r = self._convert_unit(r)
+        #     det = {
+        #         "R": r,
+        #         "Pos": [src_x, y_size//2 + sds, 0.0]
+        #     }
+        #     mcx_input["Optode"]["Detector"].append(det)
+        
         # IJV
         for sds, r in self.fiber.values[5:]:
             sds = self._convert_unit(sds)
@@ -458,34 +459,44 @@ class MCX:
 
         mcx_input["Domain"]["Dim"] = [x_size, y_size, z_size]
 
-        # skin
         mcx_input["Shapes"][0]["Grid"]["Size"] = [x_size, y_size, z_size]
 
+        # prism
+        prism_th = 20
         mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]
-        mcx_input["Shapes"][1]["Subgrid"]["Size"] = [x_size, y_size, skin_th]
+        mcx_input["Shapes"][1]["Subgrid"]["Size"] = [x_size, y_size, prism_th]
+
+
+        # skin
+        mcx_input["Shapes"][2]["Subgrid"]["O"] = [1, 1, 1+prism_th]
+        mcx_input["Shapes"][2]["Subgrid"]["Size"] = [x_size, y_size, skin_th]
 
         # fat
-        mcx_input["Shapes"][2]["Subgrid"]["O"] = [1, 1, 1+skin_th]
-        mcx_input["Shapes"][2]["Subgrid"]["Size"] = [x_size, y_size, fat_th]
+        mcx_input["Shapes"][3]["Subgrid"]["O"] = [1, 1, 1+skin_th+prism_th]
+        mcx_input["Shapes"][3]["Subgrid"]["Size"] = [x_size, y_size, fat_th]
 
         # muscle
-        mcx_input["Shapes"][3]["Subgrid"]["O"] = [1, 1, 1+skin_th+fat_th]
-        mcx_input["Shapes"][3]["Subgrid"]["Size"] = [x_size, y_size, z_size-skin_th-fat_th]
+        mcx_input["Shapes"][4]["Subgrid"]["O"] = [1, 1, 1+skin_th+fat_th+prism_th]
+        mcx_input["Shapes"][4]["Subgrid"]["Size"] = [x_size, y_size, z_size-skin_th-fat_th]
 
         # load fiber
-        mcx_input["Optode"]["Source"]["Pos"][0] = x_size//2
-        mcx_input["Optode"]["Source"]["Pos"][1] = 30
+        # 改成水平！ 20190517
+        src_x = 10
+        mcx_input["Optode"]["Source"]["Pos"][0] = src_x
+        mcx_input["Optode"]["Source"]["Pos"][1] = y_size//2
+
+        mcx_input["Optode"]["Detector"] = []
 
         
-        mcx_input["Optode"]["Detector"] = []
-        for sds, r in self.fiber.values:
+        for sds, r in self.fiber.values[5:]:
             sds = self._convert_unit(sds)
             r = self._convert_unit(r)
             det = {
                 "R": r,
-                "Pos": [x_size//2, 30 + sds, 0.0]
+                "Pos": [src_x + sds, y_size//2, 0.0]
             }
             mcx_input["Optode"]["Detector"].append(det)
+
 
         # set seed
         mcx_input["Session"]["RNGSeed"] = randint(0, 1000000000)
@@ -510,12 +521,20 @@ class MCX:
         mcx_input["Domain"]["Media"][0]["g"] = 1
         mcx_input["Domain"]["Media"][0]["n"] = 1
 
+        # prism
+        mcx_input["Domain"]["Media"][1]["name"] = "prism"
+        mcx_input["Domain"]["Media"][1]["mua"] = 0
+        mcx_input["Domain"]["Media"][1]["mus"] = 0
+        mcx_input["Domain"]["Media"][1]["g"] = 1
+        mcx_input["Domain"]["Media"][1]["n"] = 1.515
+
+
         # phantom
-        mcx_input["Domain"]["Media"][1]["name"] = "phantom"
-        mcx_input["Domain"]["Media"][1]["mua"] = self.mua[phantom_idx][wl_idx]
-        mcx_input["Domain"]["Media"][1]["mus"] = self.mus[phantom_idx][wl_idx]
-        mcx_input["Domain"]["Media"][1]["g"] = self.parameters["phantom"]["g"]
-        mcx_input["Domain"]["Media"][1]["n"] = self.parameters["phantom"]["n"]
+        mcx_input["Domain"]["Media"][2]["name"] = "phantom"
+        mcx_input["Domain"]["Media"][2]["mua"] = self.mua[phantom_idx][wl_idx]
+        mcx_input["Domain"]["Media"][2]["mus"] = self.mus[phantom_idx][wl_idx]
+        mcx_input["Domain"]["Media"][2]["g"] = self.parameters["phantom"]["g"]
+        mcx_input["Domain"]["Media"][2]["n"] = self.parameters["phantom"]["n"]
 
 
 
@@ -523,9 +542,24 @@ class MCX:
         y_size = self.parameters["boundary"]["y_size"]
         z_size = self.parameters["boundary"]["z_size"]
 
+        mcx_input["Domain"]["Dim"] = [x_size, y_size, z_size]
+
+
+        mcx_input["Shapes"][0]["Grid"]["Size"] = [x_size, y_size, z_size]
+        
+        # prism
+        mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]
+        mcx_input["Shapes"][1]["Subgrid"]["Size"] = [x_size, y_size, prism_th]
+
+        # phantom
+        mcx_input["Shapes"][2]["Subgrid"]["O"] = [1, 1, 1+prism_th]
+        mcx_input["Shapes"][2]["Subgrid"]["Size"] = [x_size, y_size, 100+prism_th]
+
+
         # load fiber
-        mcx_input["Optode"]["Source"]["Pos"][0] = x_size//2
-        mcx_input["Optode"]["Source"]["Pos"][1] = 30
+        src_x = 10
+        mcx_input["Optode"]["Source"]["Pos"][0] = src_x
+        mcx_input["Optode"]["Source"]["Pos"][1] = y_size//2
 
         mcx_input["Optode"]["Detector"] = []
         for sds, r in self.fiber.values:
@@ -533,22 +567,9 @@ class MCX:
             r = self._convert_unit(r)
             det = {
                 "R": r,
-                "Pos": [x_size//2, 30 + sds, 0.0]
+                "Pos": [src_x + sds, y_size//2, 0.0]
             }
             mcx_input["Optode"]["Detector"].append(det)
-
-        sds, r = self.fiber.values[0]
-        sds = self._convert_unit(sds)
-        r = self._convert_unit(r)
-
-
-
-        # det = {
-        #     "R": r,
-        #     "Pos": [x_size//2, y_size//2 + sds//2, 0.0]
-        # }
-        # mcx_input["Optode"]["Detector"] = []
-        # mcx_input["Optode"]["Detector"].append(det)
 
 
         # set seed
