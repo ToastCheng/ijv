@@ -548,6 +548,7 @@ class MCX:
         mcx_input["Shapes"][0]["Grid"]["Size"] = [x_size, y_size, z_size]
         
         # prism
+        prism_th = 20
         mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]
         mcx_input["Shapes"][1]["Subgrid"]["Size"] = [x_size, y_size, prism_th]
 
