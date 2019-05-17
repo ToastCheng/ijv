@@ -60,13 +60,13 @@
     },
 
     "geometry":{
-        "skin_thickness": 1.23,
-        "fat_thickness": 1.64,
-        "ijv_radius": 5.96,
-        "ijv_depth": 12.98,
-        "cca_radius": 2.75,
-        "cca_depth": 21.98,
-        "ijv_cca_distance": 0.91
+        "skin_thickness": 1.00,
+        "fat_thickness": 1.00,
+        "ijv_radius": 7.33,
+        "ijv_depth": 11.86,
+        "cca_radius": 3.74,
+        "cca_depth": 20.32,
+        "ijv_cca_distance": 7.23
     },
 
     "boundary":{
