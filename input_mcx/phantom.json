@@ -8,6 +8,13 @@
                 "mus": 0
             },
             {
+                "mua": 0,
+                "g": 1,
+                "name": "prism",
+                "n": 1.515,
+                "mus": 0
+            },
+            {
                 "mua": 0.0433638558627089,
                 "g": 0,
                 "name": "phantom",
@@ -38,14 +45,31 @@
                 "Size": [
                     150,
                     150,
-                    200
+                    20
                 ],
                 "O": [
                     1,
                     1,
                     1
                 ],
-                "Tag": 1
+                "Tag": 1,
+                "name": "prism"
+            }
+        },
+                {
+            "Subgrid": {
+                "Size": [
+                    150,
+                    150,
+                    200
+                ],
+                "O": [
+                    1,
+                    1,
+                    21
+                ],
+                "Tag": 2,
+                "name": "phantom"
             }
         }
     ],
@@ -126,6 +150,6 @@
         "DoSaveRef": 0,
         "Photons": 10000000.0,
         "DoSaveSeed": 0,
-        "ID": "phantom_muscle_1000"
+        "ID": "phantom_1000"
     }
 }
