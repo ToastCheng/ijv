@@ -1,5 +1,5 @@
 {
-    "session_id": "20190510_max",
+    "session_id": "20190507_max",
     "type": "ijv",
     "num_photon": 2000000000.0,
     "photon_batch": 2000000000.0,
@@ -8,7 +8,7 @@
     "medium_n": 1.457,
     "detector_na": 0.12,
     "coefficients": "input/coefficients.csv",
-    "parameters": "input/parameters/20190510_max.json",
+    "parameters": "input/parameters/20190507_max.json",
     "wavelength": "input/wavelength.csv",
     "fiber": "input/fiber.csv",
     "mcx_input": "input_mcx/ijv.json",
