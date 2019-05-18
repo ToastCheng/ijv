@@ -240,7 +240,7 @@ class MCX:
 
         mcx_input = self.mcx_input
         mcx_input["Session"]["ID"] = self.config["session_id"] + "_%d" % self.wavelength[wl_idx]
-
+        mcx_input["Session"]["Photons"] = self.config["num_photon"]
         # optical parameter
 
         # 
@@ -380,7 +380,7 @@ class MCX:
         #     mcx_input["Optode"]["Detector"].append(det)
         
         # IJV
-        for sds, r in self.fiber.values[5:]:
+        for sds, r in self.fiber.values:
             sds = self._convert_unit(sds)
             r = self._convert_unit(r)
             det = {
@@ -488,7 +488,7 @@ class MCX:
         mcx_input["Optode"]["Detector"] = []
 
         
-        for sds, r in self.fiber.values[5:]:
+        for sds, r in self.fiber.values:
             sds = self._convert_unit(sds)
             r = self._convert_unit(r)
             det = {
