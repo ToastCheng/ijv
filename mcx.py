@@ -513,6 +513,7 @@ class MCX:
         mcx_input = self.mcx_input
 
         mcx_input["Session"]["ID"] = self.config["session_id"] + "_%d" % self.wavelength[wl_idx]
+        mcx_input["Session"]["Photons"] = self.config["num_photon"]
 
         # optical parameter
  
