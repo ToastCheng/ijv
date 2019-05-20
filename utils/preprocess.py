@@ -7,6 +7,8 @@ from scipy.signal import find_peaks_cwt
 from PyEMD import EMD
 
 
+wl = [i for i in range(660, 921, 10)]
+
 class Calibrator:
     def __init__(self):
         self.a = []
@@ -35,6 +37,7 @@ class Calibrator:
         r_square = []
 
         # leave one out cross validation
+        worst = None
         for one_out in range(-1, num_p):
             index = [i for i in range(num_p) if i != one_out]
             _measured = measured[index]
@@ -57,10 +60,15 @@ class Calibrator:
 
             print("leave: %d, r_square: %.2f" % (one_out, np.mean(_r_square)))
             if np.mean(_r_square) > r_square_max:
+                worst = one_out
                 self.a = np.asarray(a)
                 self.b = np.asarray(b)
                 r_square_max = np.mean(_r_square)
                 r_square = _r_square.copy()
+        if worst:
+            print("finally leave: {}".format(worst))
+        else:
+            print("keep all phantom")
 
         return self.a, self.b, r_square
 
@@ -122,6 +130,7 @@ def get_hwfm(spec, output_path, num_sds=5):
         phantom += [spec[l:r].mean(0)]
     phantom = np.asarray(phantom)
 
+
     plt.xlabel("y-direction")
     plt.ylabel("intensity")
     plt.grid()
@@ -166,7 +175,6 @@ def preprocess_phantom(input_date):
     if not os.path.isdir(phantom_path):
         raise Exception("Folder phantom does not exist!")
 
-    wl = [i for i in range(650, 1001, 10)]
 
     bg = np.loadtxt(bg_path, delimiter=",")
     calib_wl = np.loadtxt(calib_wl_path, delimiter=',')
@@ -188,6 +196,9 @@ def preprocess_phantom(input_date):
 
     # plot and
     # save
+    plt.figure(figsize=(12, 6))
+    plt.xticks(wl)
+    
     df_dict = {}
     df_dict['wavelength'] = wl
     for p, d in zip(phantom_list, data_interp):
@@ -197,6 +208,7 @@ def preprocess_phantom(input_date):
     plt.legend()
     plt.xlabel("wavelength[nm]")
     plt.ylabel("reflectance[-]")
+    
     plt.savefig(os.path.join(output_path, "phantom", input_date + ".png"))
     plt.clf()
 
@@ -219,7 +231,6 @@ def preprocess_live(input_date):
     bg_path = os.path.join(input_path, "background.csv")
     calib_wl_path = os.path.join(input_path, "calib_wl.csv")
     live_path = os.path.join(input_path, "live")
-    wl = [i for i in range(650, 1001, 10)]
 
     bg = np.loadtxt(bg_path, delimiter=",")
     calib_wl = np.loadtxt(calib_wl_path, delimiter=',')
@@ -232,6 +243,7 @@ def preprocess_live(input_date):
         
     for l, n in zip(live_list, live_idx):
         try:
+            # [time, wavelength(1600)]
             live = np.loadtxt(l)
         except ValueError:
             live = np.loadtxt(l, delimiter=",")
@@ -241,7 +253,7 @@ def preprocess_live(input_date):
 
         live_crop = live[:, (calib_wl > 600) & (calib_wl < 950)]
         live_crop = live_crop.mean(1)
-        live_crop = 1 - live_crop/65535
+        # live_crop = 1 - live_crop/65535
 
         max_index = find_peaks_cwt(live_crop, np.arange(1, 20))
         min_index = find_peaks_cwt(1-live_crop, np.arange(1, 20))
@@ -282,11 +294,22 @@ def preprocess_live(input_date):
         live_max = (live[max_index] - artifact[max_index].reshape(-1, 1)).mean(0)
         live_min = (live[min_index] - artifact[min_index].reshape(-1, 1)).mean(0)
 
+        # plt.figure()
+        # plt.plot(live_max, label="max")
+        # plt.plot(live_min, label="min")
+        # plt.legend()
+        # plt.grid()
+        # plt.xlabel("wavelength[nm]")
+        # plt.ylabel("reflectance[-]")
+        # plt.savefig(os.path.join(output_path, "live", input_date + "_test_" + n + ".png"))
+        # plt.clf()
+
         live_max_interp = np.interp(wl, calib_wl, live_max)
         live_min_interp = np.interp(wl, calib_wl, live_min)
 
 
-        plt.figure()
+        plt.figure(figsize=(12, 6))
+        plt.xticks(wl)
         plt.plot(wl, live_max_interp, label="max")
         plt.plot(wl, live_min_interp, label="min")
         plt.legend()
@@ -349,7 +372,6 @@ def preprocess_phantom_muscle(input_date):
     except ValueError:
         calib_wl = np.loadtxt(calib_wl_path, delimiter=',')
 
-    wl = [i for i in range(650, 1001, 10)]
 
     # load background
     bg = []
@@ -409,6 +431,8 @@ def preprocess_phantom_muscle(input_date):
         for idx, pp in enumerate(p):
             plt.plot(wl, pp, label="SDS: {}".format(idx))
 
+        plt.figure(figsize=(12, 6))
+        plt.xticks(wl)
         plt.xlabel("wavelength [nm]")
         plt.ylabel("reflectance [-]")
         plt.grid()
@@ -459,7 +483,6 @@ def preprocess_live_muscle(input_date):
     except ValueError:
         calib_wl = np.loadtxt(calib_wl_path, delimiter=',')
 
-    wl = [i for i in range(650, 1001, 10)]
 
     # load background
     bg = []
@@ -525,7 +548,9 @@ def preprocess_live_muscle(input_date):
 
         for idx, ll in enumerate(l):
             plt.plot(wl, ll, label="SDS: {}".format(idx))
-
+        
+        plt.figure(figsize=(12, 6))
+        plt.xticks(wl)
         plt.xlabel("wavelength [nm]")
         plt.ylabel("reflectance [-]")
         plt.grid()
@@ -569,6 +594,16 @@ def calibrate_ijv(input_date, sim_path="CHIKEN/20190509_sim_chik.csv", p_index="
 
         df["max"] = calib.calibrate(df["max"].values)[0]
         df["min"] = calib.calibrate(df["min"].values)[0]
+
+        plt.figure(figsize=(12, 6))
+        plt.plot(wl, df["max"], label="max")
+        plt.plot(wl, df["min"], label="min")
+        plt.xlabel("wavelength [nm]")
+        plt.ylabel("reflectance [-]")
+        plt.xticks(wl)
+        plt.legend()
+        plt.grid()
+        plt.savefig(os.path.join(output_path, input_date + idx.strip(".csv") + ".png"))
 
         df.to_csv(os.path.join(output_path, input_date + idx), index=None)
 
@@ -650,8 +685,8 @@ if __name__ == "__main__":
     # calibrate(date)
 
     print("process ijv..")
-    # preprocess_phantom(date)
-    # preprocess_live(date)
+    preprocess_phantom(date)
+    preprocess_live(date)
 
     print("calibrate ijv")
     calibrate_ijv(date)
