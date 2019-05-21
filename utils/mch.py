@@ -238,7 +238,7 @@ class MCHHandler:
             # [光子數, 組織數]
             # 0: detector index
             # 1: prism
-            no_prism = True
+            no_prism = False
             if no_prism:
                 path_length = df.iloc[:, 1:-1].values
             else:
