@@ -4,6 +4,7 @@ import numpy as np
 from glob import glob
 import matplotlib.pyplot as plt 
 from scipy.signal import find_peaks_cwt
+from scipy.optimize import fmin
 from PyEMD import EMD
 
 
@@ -14,7 +15,7 @@ class Calibrator:
         self.a = []
         self.b = []
 
-    def fit(self, measured, simulated, cross_valid=True):
+    def fit(self, measured, simulated, cross_valid=False, plot=None):
         """
         [input]
         measured: 
@@ -37,38 +38,72 @@ class Calibrator:
         r_square = []
 
         # leave one out cross validation
-        worst = None
-        for one_out in range(-1, num_p):
-            index = [i for i in range(num_p) if i != one_out]
-            _measured = measured[index]
-            _simulated = simulated[index]
+        if cross_valid:
+            worst = None
+            for one_out in range(-1, num_p):
+                index = [i for i in range(num_p) if i != one_out]
+                _measured = measured[index]
+                _simulated = simulated[index]
+                a = []
+                b = []
+
+                _r_square = []
+                for idx, (x, y) in enumerate(zip(_measured.T, _simulated.T)):
+                    
+                    aa, bb = np.polyfit(x, y, 1)
+                    a.append(aa)
+                    b.append(bb)
+
+                    y_fit = x * a[idx] + b[idx]
+                    residual = ((y-y_fit)**2).sum()
+                    SS_total = ((y.mean()-y)**2).sum()
+                    _r_square.append(1 - residual/SS_total)
+
+                print("leave: %d, r_square: %.2f" % (one_out, np.mean(_r_square)))
+                if np.mean(_r_square) > r_square_max:
+                    worst = one_out
+                    self.a = np.asarray(a)
+                    self.b = np.asarray(b)
+                    r_square_max = np.mean(_r_square)
+                    r_square = _r_square.copy()
+            if worst:
+                print("finally leave: {}".format(worst))
+            else:
+                print("keep all phantom")
+        else:
+            r_square = []
             a = []
             b = []
+            for i, (x, y) in enumerate(zip(measured.T, simulated.T)):
 
-            for m, s in zip(_measured.T, _simulated.T):
-                aa, bb = np.polyfit(m, s, 1)
-                a.append(aa)
-                b.append(bb)
 
-            _r_square = []
-            for idx, (x, y) in enumerate(zip(_measured.T, _simulated.T)):
+                # polyfit
+                # result = np.polyfit(x, y, 1)
 
-                y_fit = x * a[idx] + b[idx]
+                # fmin
+                rmsp = lambda i: (((i[0] * x + i[1] - y)/y)**2).mean()
+                result = fmin(rmsp, x0=[0, 0])
+
+
+                a += [result[0]]
+                b += [result[1]]
+
+                y_fit = x * result[0] + result[1]
                 residual = ((y-y_fit)**2).sum()
                 SS_total = ((y.mean()-y)**2).sum()
-                _r_square.append(1 - residual/SS_total)
+                r_square += [1 - residual/SS_total]
 
-            print("leave: %d, r_square: %.2f" % (one_out, np.mean(_r_square)))
-            if np.mean(_r_square) > r_square_max:
-                worst = one_out
-                self.a = np.asarray(a)
-                self.b = np.asarray(b)
-                r_square_max = np.mean(_r_square)
-                r_square = _r_square.copy()
-        if worst:
-            print("finally leave: {}".format(worst))
-        else:
-            print("keep all phantom")
+                if plot:
+                    plt.scatter(x, y)
+                    plot_x = np.arange(x[0], x[-1])
+                    plt.plot(plot_x, plot_x * result[0] + result[1])
+                    plt.ylim(0, y.max()*1.1)
+                    plt.savefig(os.path.join(plot, "calibrate_{}.png".format(wl[i])))
+                    plt.clf()
+
+            self.a = np.asarray(a)
+            self.b = np.asarray(b)
+
 
         return self.a, self.b, r_square
 
@@ -77,14 +112,17 @@ class Calibrator:
         measured = np.asarray(measured)
         if len(measured.shape) == 1:
             measured = np.expand_dims(measured, 0)
+
+        calibrated = []
         for idx, m in enumerate(measured):
             if not m.shape == self.a.shape:
                 print("measured shape: ", m.shape)
                 print("calibrate shape: ", self.a.shape)
                 raise Exception("input shape does not match!")
-            measured[idx] = self.a * m + self.b
+            calibrated += [self.a * m + self.b]
 
-        return measured
+
+        return np.asarray(calibrated)
 
 
 def get_hwfm(spec, output_path, num_sds=5):
@@ -198,7 +236,7 @@ def preprocess_phantom(input_date):
     # save
     plt.figure(figsize=(12, 6))
     plt.xticks(wl)
-    
+
     df_dict = {}
     df_dict['wavelength'] = wl
     for p, d in zip(phantom_list, data_interp):
@@ -585,7 +623,7 @@ def calibrate_ijv(input_date, sim_path="CHIKEN/20190509_sim_chik.csv", p_index="
     phantom = phantom[p_index].values.T
     sim_phantom = sim_phantom[p_index].values.T
 
-    calib.fit(phantom, sim_phantom)
+    calib.fit(phantom, sim_phantom, plot=output_path)
 
     live_list = glob(os.path.join(live_path, input_date + "*.csv"))
     for l in live_list:
@@ -688,7 +726,7 @@ if __name__ == "__main__":
     preprocess_phantom(date)
     preprocess_live(date)
 
-    print("calibrate ijv")
+    print("calibrate ijv..")
     calibrate_ijv(date)
 
     print("process muscle..")
