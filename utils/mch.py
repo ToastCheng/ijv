@@ -69,7 +69,7 @@ class MCHHandler:
         phantom = self.mua[phantom_id].values
         wavelength = self.mua['wl'].values
 
-        phantom = np.interp(wl, wavelength, phantom)
+        phantom = np.interp([wl], wavelength, phantom)
 
         # if the mua is 1/cm, you need to change the unit into 1/mm
         # mua *= 0.1
@@ -202,28 +202,6 @@ class MCHHandler:
         return np.asarray(_mua).T
 
 
-    @staticmethod
-    def _load_mch(path):
-        data = load_mch(path)
-        # check if the mcx saved the photon seed
-        if data[1]["seed_byte"] == 0:
-            df, header = data
-            photon_seed = None
-        elif data[1]["seed_byte"] == 1:
-            df, header, photon_seed = data
-
-        num_media = header["maxmedia"] 
-        # selected_list = [0] + [i for i in range(num_media+1, 2*num_media+1)] + [-1]
-        selected_list = [0] + [i for i in range(2, 2 + num_media)] + [-1]
-        df = df[:, selected_list]
-        label = ["detector_idx"]
-        label += ["media_{}".format(i) for i in range(header["maxmedia"])]
-        label += ["angle"]
-        df = pd.DataFrame(df, columns=label)
-        
-
-        return df, header, photon_seed
-
 
     def run_wmc(self, args=None):
 
@@ -232,6 +210,8 @@ class MCHHandler:
 
         if isinstance(args, dict):
             args = [args]
+        if args is None:
+            args = [0]
             
         spectra = []
         portions = []
@@ -258,7 +238,11 @@ class MCHHandler:
             # [光子數, 組織數]
             # 0: detector index
             # 1: prism
-            path_length = df.iloc[:, 2:-1].values
+            no_prism = True
+            if no_prism:
+                path_length = df.iloc[:, 1:-1].values
+            else:
+                path_length = df.iloc[:, 2:-1].values
 
             path_length = torch.tensor(path_length).float().to(device)
 
@@ -294,7 +278,8 @@ class MCHHandler:
                 muscle_portion = (path_length.mean(0)[2]).tolist()
 
             elif self.config["type"] == "phantom":
-                phantom_portion = (path_length.mean(0)[0] ).tolist()
+#                 phantom_portion = (path_length.mean(0)[0] ).tolist()
+                phantom_portion = [0]
             ###
             ######
             #########
@@ -316,8 +301,10 @@ class MCHHandler:
                 
                 # [光子數, 吸收數]
                 _weight = weight[detector_list]
+                
                 _weight = _weight.sum(0)
                 _weight = _weight.unsqueeze(0)
+
                 
                 result = torch.cat((result, _weight), 0)
 
@@ -347,8 +334,7 @@ class MCHHandler:
 
 
 
-    @staticmethod
-    def _load_mch(path):
+    def _load_mch(self, path):
         data = load_mch(path)
         # check if the mcx saved the photon seed
         if data[1]["seed_byte"] == 0:
@@ -367,6 +353,7 @@ class MCHHandler:
         label += ["media_{}".format(i) for i in range(header["maxmedia"])]
         label += ["angle"]
         df = pd.DataFrame(df, columns=label)
+        self.df = df
         
 
         return df, header, photon_seed
