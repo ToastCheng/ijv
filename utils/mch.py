@@ -203,7 +203,7 @@ class MCHHandler:
 
 
 
-    def run_wmc(self, args=None):
+    def run_wmc(self, args=None, prism=False):
 
         if not self.config:
             raise Exception("Should specify the config file first!")
@@ -238,11 +238,10 @@ class MCHHandler:
             # [光子數, 組織數]
             # 0: detector index
             # 1: prism
-            no_prism = False
-            if no_prism:
-                path_length = df.iloc[:, 1:-1].values
-            else:
+            if prism:
                 path_length = df.iloc[:, 2:-1].values
+            else:
+                path_length = df.iloc[:, 1:-1].values
 
             path_length = torch.tensor(path_length).float().to(device)
 
