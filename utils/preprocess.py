@@ -610,7 +610,7 @@ def calibrate_ijv(input_date, sim_path="CHIKEN/20190509_sim_chik.csv", p_index="
 
     if not os.path.isdir(output_path):
         os.mkdir(output_path)
-
+    
     output_path = os.path.join("data", "calibrated", input_date, "IJV")
 
     if not os.path.isdir(output_path):
@@ -645,73 +645,79 @@ def calibrate_ijv(input_date, sim_path="CHIKEN/20190509_sim_chik.csv", p_index="
 
         df.to_csv(os.path.join(output_path, input_date + idx), index=None)
 
-
 def calibrate_muscle(input_date, sim_path="", p_index="chik"):
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     calib = Calibrator()
     p_index = list(p_index)
 
-    input_path = os.path.join("data", "processed", input_date)
+
+    input_path = os.path.join("data", "processed", input_date, "muscle")
     live_path = os.path.join(input_path, "live")
-    phantom_path = os.path.join(input_path, "phantom", input_date + ".csv")
+    phantom_path = os.path.join(input_path, "phantom")
 
     output_path = os.path.join("data", "calibrated", input_date)
 
     if not os.path.isdir(output_path):
         os.mkdir(output_path)
 
-    input_ijv = os.path.join(input_path, "IJV")
-    input_muscle = os.path.join(input_path, "muscle")
+    output_path = os.path.join(output_path, "muscle")
 
-    phantom_ijv = os.path.join(input_path, "IJV", "phantom", input_date + ".csv")
-    muscle_ijv = os.path.join(input_path, "muscle", "phantom", "phantom_*.csv")
+    if not os.path.isdir(output_path):
+        os.mkdir(output_path)
 
+    phantom = []
+    for pid in p_index:
+        phantom_ = pd.read_csv(os.path.join(phantom_path, "phantom_{}.csv".format(pid)))
 
-    output_ijv = os.path.join(output_path, "IJV")
-    output_muscle = os.path.join(output_path, "muscle")
+        # [SDS數, 波長數]
+        phantom_ = phantom_.iloc[:, 1:].values.T
+        phantom += [phantom_]
+    # [仿體數, SDS數, 波長數]
+    phantom = np.asarray(phantom)
 
+    def get_muscle_sim():
+        pass
+    phantom_sim = get_muscle_sim()
 
-    # fit ijv
-    phantom = pd.read_csv(phantom_path)
-    sim_phantom = pd.read_csv(sim_path)
+    calib.fit(phantom.reshape(phantom.shape[0], -1), phantom_sim.reshape(phantom.shape[0], -1))
 
-    phantom = phantom[p_index].values.T
-    sim_phantom = sim_phantom[p_index].values.T
-
-    calib.fit(phantom, sim_phantom)
-
-    live_list = glob(os.path.join(live_path, input_date + "*.csv"))
+    live_list = glob(os.path.join()live_path, "live_*.csv")
     for l in live_list:
-        idx = l.split(input_date)[-1]
+        idx = l.split("live_")[-1].strip(".csv")
         df = pd.read_csv(l)
 
-        df["max"] = calib.calibrate(df["max"].values)[0]
-        df["min"] = calib.calibrate(df["min"].values)[0]
+        df = df.iloc[:, 1:].values.T
+        num_sds = df.shape[0]
+        num_wl = df.shape[1]
 
-        df.to_csv(os.path.join(output_path, input_date + idx), index=None) 
+        df = df.reshape(-1)
+
+        df = calib.calibrate(df)
+        df = df.reshape(num_sds, num_wl)
+
+        plt.figure(figsize=(12, 6))
+        for i, d in enumerate(df):
+            plt.plot(wl, d, label=str(i))
+        
+        plt.xlabel("wavelength [nm]")
+        plt.ylabel("reflectance [-]")
+        plt.xticks(wl)
+        plt.legend()
+        plt.grid()
+        plt.savefig(os.path.join(output_path, input_date + idx + ".png"))
+
+        df = pd.DataFrame(df)
+        df["wavelength"] = wl 
+        df = df[["wavelength"] + [str(i) for i in range(num_sds)]]
+        df.to_csv(os.path.join(output_path, input_date + idx + ".csv"), index=None)
+
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
