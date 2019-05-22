@@ -7,15 +7,17 @@ from scipy.signal import find_peaks_cwt
 from scipy.optimize import fmin
 from PyEMD import EMD
 
+from kde import smooth
 
 wl = [i for i in range(660, 921, 10)]
+
 
 class Calibrator:
     def __init__(self):
         self.a = []
         self.b = []
 
-    def fit(self, measured, simulated, cross_valid=False, plot=None):
+    def fit(self, measured, simulated, cross_valid=True, plot_path=None, least_square=True):
         """
         [input]
         measured: 
@@ -50,7 +52,12 @@ class Calibrator:
                 _r_square = []
                 for idx, (x, y) in enumerate(zip(_measured.T, _simulated.T)):
                     
-                    aa, bb = np.polyfit(x, y, 1)
+                    if least_square:
+                        aa, bb = np.polyfit(x, y, 1)
+                    else:
+                        rmsp = lambda i: (((i[0] * x + i[1] - y)/y)**2).mean()
+                        aa, bb = fmin(rmsp, x0=[0, 0])
+
                     a.append(aa)
                     b.append(bb)
 
@@ -66,6 +73,188 @@ class Calibrator:
                     self.b = np.asarray(b)
                     r_square_max = np.mean(_r_square)
                     r_square = _r_square.copy()
+
+            if plot_path:
+                for idx, (x, y) in enumerate(zip(measured.T, simulated.T)):
+                    plt.scatter(x, y)
+                    plot_x = np.arange(x[0], x[-1])
+                    plt.plot(plot_x, plot_x * self.a[idx] + self.b[idx])
+                    plt.ylim(0, y.max()*1.1)
+                    plt.savefig(os.path.join(plot_path, "calibrate_{}.png".format(wl[idx])))
+                    plt.clf()
+            if worst:
+                print("finally leave: {}".format(worst))
+            else:
+                print("keep all phantom")
+        else:
+            r_square = []
+            a = []
+            b = []
+            bound = []
+            for i, (x, y) in enumerate(zip(measured.T, simulated.T)):
+
+                # 分段fit!
+                aa = []
+                bb = []
+                bound_ = []
+                for p in range(num_p-1):
+
+                    # polyfit
+                    if least_square:
+                        result = np.polyfit(x[p:p+2], y[p:p+2], 1)
+                    else:
+                    # fmin
+                        rmsp = lambda i: (((i[0] * x[p:p+2] + i[1] - y[p:p+2])/y[p:p+2]**2)).mean()
+                        result = fmin(rmsp, x0=[0, 0])
+
+                    aa += [result[0]]
+                    bb += [result[1]]
+                    bound_ += [x[p+1]]
+
+                    y_fit = x[p:p+2] * result[0] + result[1]
+                    residual = ((y[p:p+2]-y_fit)**2).sum()
+                    SS_total = ((y[p:p+2].mean()-y[p:p+2])**2).sum()
+                    r_square += [1 - residual/SS_total]
+
+
+                    if plot_path:
+                        plt.scatter(x[p:p+2], y[p:p+2])
+                        plot_x = np.arange(x[p], x[p+1])
+                        plt.plot(plot_x, plot_x * result[0] + result[1])
+
+                a += [aa]
+                b += [bb]
+                bound += [bound_]
+
+                
+
+                if plot_path:
+                    plt.ylim(0, y.max()*1.1)
+                    plt.savefig(os.path.join(plot_path, "calibrate_{}.png".format(wl[i])))
+                    plt.clf()
+
+            # a.shape, b.shape, bound.shape
+            # [波長, 區間數]
+            self.a = np.asarray(a)
+            self.b = np.asarray(b)
+            self.bound = np.asarray(bound)
+
+            # 調整校正係數
+            bw1 = 2.2
+            bw2 = 0.6
+            for i in range(self.a.shape[1]):
+                self.a[:, i] = smooth(self.a[:, i], bw1)
+                self.b[:, i] = smooth(self.b[:, i], bw2)
+
+
+
+        return self.a, self.b, r_square
+
+    def calibrate(self, measured):
+        # measured.shape
+        # [活體數, 波長]
+        measured = np.asarray(measured)
+        if len(measured.shape) == 1:
+            measured = np.expand_dims(measured, 0)
+
+
+
+        calibrated = []
+        for idx, m in enumerate(measured):
+            # m.shape 
+            # [波長]
+            if not m.shape == self.a[:, 0].shape:
+                print("measured shape: ", m.shape)
+                print("calibrate shape: ", self.a.shape)
+                raise Exception("input shape does not match!")
+
+            calibrated_ = []
+            for w_idx, (mm, bound) in enumerate(zip(m, self.bound)):
+                section = 0
+                for b in bound:
+                    if mm > b:
+                        section += 1
+                    else:
+                        break
+                calibrated_ += [self.a[w_idx, section] * mm + self.b[w_idx, section]]
+                # calibrated_ += [self.a[:, section] * mm + self.b[:, section]]
+
+            calibrated += [calibrated_]
+
+        return np.asarray(calibrated)
+
+
+
+class Calibrator_backup:
+    def __init__(self):
+        self.a = []
+        self.b = []
+
+    def fit(self, measured, simulated, cross_valid=True, plot_path=None, least_square=True):
+        """
+        [input]
+        measured: 
+            2D array of measured spectrum
+            shape: [num_phantom, num_wavelength]
+        simulated:
+            2D array of simulated spectrum
+            shape: [num_phantom, num_wavelength]
+        [output]
+        a, b:
+            in each wavelength
+            simulated = a * measured + b
+
+        """
+    
+        num_p = measured.shape[0]
+        num_wl = measured.shape[1]
+
+        r_square_max = 0
+        r_square = []
+
+        # leave one out cross validation
+        if cross_valid:
+            worst = None
+            for one_out in range(-1, num_p):
+                index = [i for i in range(num_p) if i != one_out]
+                _measured = measured[index]
+                _simulated = simulated[index]
+                a = []
+                b = []
+
+                _r_square = []
+                for idx, (x, y) in enumerate(zip(_measured.T, _simulated.T)):
+                    
+                    if least_square:
+                        aa, bb = np.polyfit(x, y, 1)
+                    else:
+                        rmsp = lambda i: (((i[0] * x + i[1] - y)/y)**2).mean()
+                        aa, bb = fmin(rmsp, x0=[0, 0])
+
+                    a.append(aa)
+                    b.append(bb)
+
+                    y_fit = x * a[idx] + b[idx]
+                    residual = ((y-y_fit)**2).sum()
+                    SS_total = ((y.mean()-y)**2).sum()
+                    _r_square.append(1 - residual/SS_total)
+
+                print("leave: %d, r_square: %.2f" % (one_out, np.mean(_r_square)))
+                if np.mean(_r_square) > r_square_max:
+                    worst = one_out
+                    self.a = np.asarray(a)
+                    self.b = np.asarray(b)
+                    r_square_max = np.mean(_r_square)
+                    r_square = _r_square.copy()
+
+            if plot_path:
+                for idx, (x, y) in enumerate(zip(measured.T, simulated.T)):
+                    plt.scatter(x, y)
+                    plot_x = np.arange(x[0], x[-1])
+                    plt.plot(plot_x, plot_x * self.a[idx] + self.b[idx])
+                    plt.ylim(0, y.max()*1.1)
+                    plt.savefig(os.path.join(plot_path, "calibrate_{}.png".format(wl[idx])))
+                    plt.clf()
             if worst:
                 print("finally leave: {}".format(worst))
             else:
@@ -78,11 +267,12 @@ class Calibrator:
 
 
                 # polyfit
-                # result = np.polyfit(x, y, 1)
-
+                if least_square:
+                    result = np.polyfit(x, y, 1)
+                else:
                 # fmin
-                rmsp = lambda i: (((i[0] * x + i[1] - y)/y)**2).mean()
-                result = fmin(rmsp, x0=[0, 0])
+                    rmsp = lambda i: (((i[0] * x + i[1] - y)/y)**2).mean()
+                    result = fmin(rmsp, x0=[0, 0])
 
 
                 a += [result[0]]
@@ -93,12 +283,12 @@ class Calibrator:
                 SS_total = ((y.mean()-y)**2).sum()
                 r_square += [1 - residual/SS_total]
 
-                if plot:
+                if plot_path:
                     plt.scatter(x, y)
                     plot_x = np.arange(x[0], x[-1])
                     plt.plot(plot_x, plot_x * result[0] + result[1])
                     plt.ylim(0, y.max()*1.1)
-                    plt.savefig(os.path.join(plot, "calibrate_{}.png".format(wl[i])))
+                    plt.savefig(os.path.join(plot_path, "calibrate_{}.png".format(wl[i])))
                     plt.clf()
 
             self.a = np.asarray(a)
@@ -598,7 +788,7 @@ def preprocess_live_muscle(input_date):
     return live_interp
 
 
-def calibrate_ijv(input_date, sim_path="CHIKEN/20190509_sim_chik.csv", p_index="chik"):
+def calibrate_ijv(input_date, sim_path="CHIKEN/sim_20190522_no_prism.csv", p_index="chik"):
     calib = Calibrator()
     p_index = list(p_index)
 
@@ -623,7 +813,7 @@ def calibrate_ijv(input_date, sim_path="CHIKEN/20190509_sim_chik.csv", p_index="
     phantom = phantom[p_index].values.T
     sim_phantom = sim_phantom[p_index].values.T
 
-    calib.fit(phantom, sim_phantom, plot=output_path)
+    calib.fit(phantom, sim_phantom, cross_valid=False, plot_path=output_path, least_square=True)
 
     live_list = glob(os.path.join(live_path, input_date + "*.csv"))
     for l in live_list:
@@ -681,7 +871,7 @@ def calibrate_muscle(input_date, sim_path="", p_index="chik"):
 
     calib.fit(phantom.reshape(phantom.shape[0], -1), phantom_sim.reshape(phantom.shape[0], -1))
 
-    live_list = glob(os.path.join()live_path, "live_*.csv")
+    live_list = glob(os.path.join(live_path, "live_*.csv"))
     for l in live_list:
         idx = l.split("live_")[-1].strip(".csv")
         df = pd.read_csv(l)
@@ -729,8 +919,8 @@ if __name__ == "__main__":
     # calibrate(date)
 
     print("process ijv..")
-    preprocess_phantom(date)
-    preprocess_live(date)
+    # preprocess_phantom(date)
+    # preprocess_live(date)
 
     print("calibrate ijv..")
     calibrate_ijv(date)
