@@ -10,6 +10,7 @@ mcx = MCX()
 """
 
 # from mcx_test import MCX
-from mcx import MCX
+from mcx_test import MCX
 mcx = MCX()
-mcx.run("configs/live/{}.json".format(sys.argv[1]))
+mcx.run("configs/phantom_muscle.json")
+# mcx.run("configs/live/{}.json".format(sys.argv[1]))

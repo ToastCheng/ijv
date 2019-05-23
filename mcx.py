@@ -654,7 +654,7 @@ class MCX:
         # mus_p = mus500 * (fray * (wl/500)**(-4) + (1-fray) * (wl/500) ** (-bmie))
         mus_p = mus500 * (wl/500) ** (-bmie)
 
-        mus = mus_p/g * 0.1
+        mus = mus_p/(1-g) * 0.1
         return mus 
 
     def _calculate_sens(self, data):

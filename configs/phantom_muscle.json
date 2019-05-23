@@ -3,7 +3,7 @@
     "session_id": "phantom_muscle",
     "type": "phantom",
 
-    "num_photon": 5e8,
+    "num_photon": 2e9,
     "photon_batch": 2e9,
     "voxel_size": 0.25, 
 
@@ -16,7 +16,7 @@
     "parameters": "input/parameters_phantom.json",
     "wavelength": "input/wavelength.csv",
     "fiber": "input/fiber_muscle.csv",
-    "mcx_input": "input_mcx/phantom_muscle.json",
+    "mcx_input": "input_mcx/phantom_no_prism.json",
 
     "phantom_idx": "CHIK",
     "phantom_mua": "CHIKEN/mua_in_mm.csv",
