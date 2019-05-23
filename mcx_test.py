@@ -514,7 +514,8 @@ class MCX:
 
         # phantom
         mcx_input["Domain"]["Media"][1]["name"] = "phantom"
-        mcx_input["Domain"]["Media"][1]["mua"] = self.mua[phantom_idx][wl_idx]
+        # mcx_input["Domain"]["Media"][1]["mua"] = self.mua[phantom_idx][wl_idx]
+        mcx_input["Domain"]["Media"][1]["mua"] = 0
         mcx_input["Domain"]["Media"][1]["mus"] = self.mus[phantom_idx][wl_idx]
         mcx_input["Domain"]["Media"][1]["g"] = self.parameters["phantom"]["g"]
         mcx_input["Domain"]["Media"][1]["n"] = self.parameters["phantom"]["n"]
