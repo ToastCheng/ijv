@@ -8,7 +8,7 @@
     "medium_n": 1.457,
     "detector_na": 0.12,
     "coefficients": "input/coefficients.csv",
-    "parameters": "input/parameters_20190502_max.json",
+    "parameters": "input/parameters/20190502_max.json",
     "wavelength": "input/wavelength.csv",
     "fiber": "input/fiber_20190511.csv",
     "mcx_input": "input_mcx/ijv.json",

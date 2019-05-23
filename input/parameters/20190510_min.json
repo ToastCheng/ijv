@@ -7,8 +7,8 @@
         "melanin_volume": 0.01,
         "n": 1.40,
         "g": 0.94,
-        "muspx": 5.17,
-        "bmie": 1.0
+        "muspx": 30,
+        "bmie": 1.5
     },
 
     "fat":{
@@ -19,8 +19,8 @@
         "melanin_volume": 0,
         "n": 1.40,
         "g": 0.94,
-        "muspx": 5.17,
-        "bmie": 1.0
+        "muspx": 20,
+        "bmie": 0.7
     },
 
     "muscle":{
@@ -31,8 +31,8 @@
         "melanin_volume": 0,
         "n": 1.40,
         "g": 0.94,
-        "muspx": 5.17,
-        "bmie": 1.0
+        "muspx": 10,
+        "bmie": 1.5
     },
 
     "IJV":{
