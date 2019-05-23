@@ -9,6 +9,7 @@ mcx = MCX()
 # mcx.run("configs/phantom.json")
 """
 
-from mcx_test import MCX
+# from mcx_test import MCX
+from mcx import MCX
 mcx = MCX()
 mcx.run("configs/live/{}.json".format(sys.argv[1]))

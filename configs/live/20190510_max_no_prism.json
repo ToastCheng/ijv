@@ -1,5 +1,5 @@
 {
-    "session_id": "20190510_max",
+    "session_id": "20190510_max_no_prism",
     "type": "ijv",
     "num_photon": 2000000000.0,
     "photon_batch": 2000000000.0,
@@ -11,7 +11,7 @@
     "parameters": "input/parameters/20190510_max.json",
     "wavelength": "input/wavelength.csv",
     "fiber": "input/fiber.csv",
-    "mcx_input": "input_mcx/ijv.json",
+    "mcx_input": "input_mcx/ijv_no_prism.json",
     "phantom_idx": "CHIK",
     "phantom_mua": "",
     "phantom_musp": ""

@@ -11,7 +11,7 @@
     "parameters": "input/parameters/20190507_min.json",
     "wavelength": "input/wavelength.csv",
     "fiber": "input/fiber.csv",
-    "mcx_input": "input_mcx/ijv_no_prism.json",
+    "mcx_input": "input_mcx/ijv.json",
     "phantom_idx": "CHIK",
     "phantom_mua": "",
     "phantom_musp": ""
