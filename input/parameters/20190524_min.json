@@ -1,0 +1,78 @@
+{
+    "skin":{
+        "blood_volume_fraction": 0.5,
+        "ScvO2": 0.7,
+        "water_volume": 0,
+        "fat_volume": 0,
+        "melanin_volume": 0.01,
+        "n": 1.40,
+        "g": 0.94,
+        "muspx": 30,
+        "bmie": 1.5
+    },
+
+    "fat":{
+        "blood_volume_fraction": 0,
+        "ScvO2": 0,
+        "water_volume": 0,
+        "fat_volume": 1,
+        "melanin_volume": 0,
+        "n": 1.40,
+        "g": 0.94,
+        "muspx": 20,
+        "bmie": 0.7
+    },
+
+    "muscle":{
+        "blood_volume_fraction": 0.05,
+        "ScvO2": 0.80,
+        "water_volume": 0.75,
+        "fat_volume": 0,
+        "melanin_volume": 0,
+        "n": 1.40,
+        "g": 0.94,
+        "muspx": 10,
+        "bmie": 1.5
+    },
+
+    "IJV":{
+        "blood_volume_fraction": 1.0,
+        "ScvO2": 0.70,
+        "water_volume": 0,
+        "fat_volume": 0,
+        "melanin_volume": 0,
+        "n": 1.40,
+        "g": 0.94,
+        "muspx": 15.0,
+        "bmie": 1.0
+    },
+
+    "CCA":{
+        "blood_volume_fraction": 1.0,
+        "ScvO2": 0.98,
+        "water_volume": 0,
+        "fat_volume": 0,
+        "melanin_volume": 0,
+        "n": 1.40,
+        "g": 0.94,
+        "muspx": 10.0,
+        "bmie": 1.0
+    },
+
+    "geometry":{
+        "skin_thickness": 1.27,
+        "fat_thickness": 1.00,
+        "ijv_radius": 7.10,
+        "ijv_depth": 14.95,
+        "cca_radius": 3.53,
+        "cca_depth": 23.86,
+        "ijv_cca_distance": 7.68
+    },
+
+    "boundary":{
+        "x_size": 150,
+        "y_size": 150,
+        "z_size": 200
+    }
+
+}
