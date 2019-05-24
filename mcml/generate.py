@@ -14,19 +14,19 @@ def get_idx(n=10):
 
 def get_param():
     upper_thickness = random.uniform(0, 0.3)
-    up_mua = random.uniform(0, 20)
-    up_mus = random.uniform(0, 500)
+    up_mua = random.uniform(0, 10)
+    up_mus = random.uniform(0, 300)
     up_tissue_n = random.uniform(1.3, 1.5)
     up_g = random.uniform(0, 1)
 
     mid_thickness = random.uniform(0, 0.3)
-    mid_mua = random.uniform(0, 20)
-    mid_mus = random.uniform(0, 500)
+    mid_mua = random.uniform(0, 3)
+    mid_mus = random.uniform(0, 300)
     mid_tissue_n = random.uniform(1.3, 1.5)
     mid_g = random.uniform(0, 1)
 
-    third_mua = random.uniform(0, 20)
-    third_mus = random.uniform(0, 500)
+    third_mua = random.uniform(0, 1)
+    third_mus = random.uniform(0, 300)
     third_tissue_n = random.uniform(1.3, 1.5)
     third_g = random.uniform(0, 1)
 
