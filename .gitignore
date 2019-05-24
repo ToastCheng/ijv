@@ -1,3 +1,5 @@
+mcml/mc
+*.o
 configs/train.json
 train/input/*
 train/data_list.csv
