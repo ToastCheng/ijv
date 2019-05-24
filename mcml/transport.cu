@@ -25,7 +25,7 @@ __device__ void AtomicAddULL(unsigned long long* address, unsigned int add);
 __device__ void detect(PhotonStruct* p, Fibers* f);
 __device__ int binarySearch(float *data, float value);
 void fiber_initialization(Fibers* f/*, float fiber1_position*/); //Wang modified
-void output_fiber(SimulationStruct* sim, float* reflectance/*, char* output*/); //Wang modified
+void output_fiber(SimulationStruct* sim, float* reflectance, char* output); //Wang modified
 void calculate_reflectance(Fibers* f, float *result);
 void input_g(int index, G_Array *g);
 int InitG(G_Array* HostG, G_Array* DeviceG, int index);
@@ -38,7 +38,7 @@ __device__ float rn_gen(curandState *s)
     return x;
 }
 
-void DoOneSimulation(SimulationStruct* simulation, int index/*, char* output, char* fiber1_position*/) //Wang modified
+void DoOneSimulation(SimulationStruct* simulation, int index, char* output)
 {
 	unsigned long long seed = time(NULL);
 	float reflectance[NUM_OF_DETECTOR] = { 0 }; //float reflectance[8] = {0}; //YU-Modified
@@ -92,7 +92,7 @@ void DoOneSimulation(SimulationStruct* simulation, int index/*, char* output, ch
 	}
 	//cout << "#" << index << " Simulation done!\n";
 	
-	output_fiber(simulation, reflectance/*, output*/); //Wang modified
+	output_fiber(simulation, reflectance, output); //Wang modified
 	FreeMemStructs(&HostMem,&DeviceMem);
 }
 

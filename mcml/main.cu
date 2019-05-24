@@ -7,8 +7,8 @@
 
 
 void FreeSimulationStruct(SimulationStruct* sim, int n_simulations);
-int read_mua_mus(SimulationStruct** simulations/*, char* input*/); //Wang modified
-void DoOneSimulation(SimulationStruct* simulation, int index/*, char* output, char* fiber1_position*/); //Wang modified
+int read_mua_mus(SimulationStruct** simulations, char* input);
+void DoOneSimulation(SimulationStruct* simulation, int index, char* output);
 
 
 
@@ -19,7 +19,7 @@ int main(int argc,char* argv[])
 	int n_simulations;
 	unsigned long long seed = (unsigned long long) time(NULL);// Default, use time(NULL) as seed
 	
-	n_simulations = read_mua_mus(&simulations/*, argv[1]*/); // read the input file
+	n_simulations = read_mua_mus(&simulations, argv[1]);
 
 	if(n_simulations == 0)
 	{
@@ -38,7 +38,7 @@ int main(int argc,char* argv[])
 	{
 		// Run a simulation
 		printf("simulating %d\n",i);
-		DoOneSimulation(&simulations[i],i/*, argv[2], argv[3]*/); //Wang modified
+		DoOneSimulation(&simulations[i],i, argv[2]);
 	}
 
 	time2=clock();

@@ -7,7 +7,7 @@
 #include <curand.h>
 #include <curand_kernel.h>
 #include <cuda_runtime.h>
-#include <helper_cuda.h>
+// #include <helper_cuda.h>
 #include <memory>
 
 using namespace std;
@@ -38,7 +38,8 @@ using namespace std;
 #define MAX_LAYERS         100
 #define STR_LEN            200
 #define NUM_OF_DETECTOR    5
-#define ANGLE              (NORMAL ? 0:0)      // normal: 0 degree, oblique: 0 degree  by CY
+#define NORMAL             0
+#define ANGLE              0
 
 #define NAOfSource         0.12
 #define NAOfDetector       0.12

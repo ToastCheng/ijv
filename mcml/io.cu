@@ -1,10 +1,10 @@
 #include "header.h"
 
-void output_fiber(SimulationStruct* sim, float *data/*, char* output*/)
+void output_fiber(SimulationStruct* sim, float *data, char* output)
 {
 	ofstream myfile;
-	myfile.open ("GPUMC_output.txt",ios::app); //Wang modified for fitting filename
-	//myfile.open(output, ios::app);
+	// myfile.open ("GPUMC_output.txt",ios::app); //Wang modified for fitting filename
+	myfile.open(output, ios::app);
 
 	double scale1 = (double)0xFFFFFFFF*(double)sim->number_of_photons;
 	if(NORMAL)
@@ -26,7 +26,7 @@ void output_fiber(SimulationStruct* sim, float *data/*, char* output*/)
 }
 
 
-int read_mua_mus(SimulationStruct** simulations/*, char* input*/) //Wang modified
+int read_mua_mus(SimulationStruct** simulations, char* input)
 {
 	// parameters to be modified
 	unsigned long number_of_photons = NUMBER_PHOTONS ;  
@@ -45,13 +45,32 @@ int read_mua_mus(SimulationStruct** simulations/*, char* input*/) //Wang modifie
 	
 	// read the file 
 	fstream myfile;
-	myfile.open("GPUMC_input.txt"); //Wang modified for fitting filename
-	//myfile.open(input);  //Wang modified
+	// myfile.open("GPUMC_input.txt"); //Wang modified for fitting filename
+	myfile.open(input);  //Wang modified
 
-	float upper_thickness[n_simulations], up_mua[n_simulations], up_mus[n_simulations], mid_thickness[n_simulations], mid_mua[n_simulations], mid_mus[n_simulations], third_thickness[n_simulations], third_mua[n_simulations], third_mus[n_simulations], down_mua[n_simulations], down_mus[n_simulations], up_tissue_n[n_simulations], mid_tissue_n[n_simulations], third_tissue_n[n_simulations], down_tissue_n[n_simulations], up_g_factor[n_simulations], mid_g_factor[n_simulations], third_g_factor[n_simulations], down_g_factor[n_simulations];
-	for (int i = 0; i < n_simulations; i++)
-		//myfile >> upper_thickness[i] >> up_mua[i] >> up_mus[i] >> up_tissue_n[i] >> up_g_factor[i] >> mid_thickness[i] >> mid_mua[i] >> mid_mus[i] >> mid_tissue_n[i] >> mid_g_factor[i] >> third_thickness[i] >> third_mua[i] >> third_mus[i] >> third_tissue_n[i] >> third_g_factor[i] >> down_mua[i] >> down_mus[i] >> down_tissue_n[i] >> down_g_factor[i]; // 4 layer
-		myfile >> upper_thickness[i] >> up_mua[i] >> up_mus[i] >> up_tissue_n[i] >> up_g_factor[i] >> mid_thickness[i] >> mid_mua[i] >> mid_mus[i] >> mid_tissue_n[i] >> mid_g_factor[i] >>  third_mua[i] >> third_mus[i] >> third_tissue_n[i] >> third_g_factor[i] ; //3 laer
+	float upper_thickness[n_simulations];
+	float up_mua[n_simulations];
+	float up_mus[n_simulations];
+	float up_tissue_n[n_simulations];
+	float up_g_factor[n_simulations];
+
+	float mid_thickness[n_simulations];
+	float mid_mua[n_simulations];
+	float mid_mus[n_simulations]; 
+	float mid_tissue_n[n_simulations];
+	float mid_g_factor[n_simulations];
+
+	float third_mua[n_simulations];
+	float third_mus[n_simulations];
+	float third_tissue_n[n_simulations];
+	float third_g_factor[n_simulations];
+
+
+	for (int i = 0; i < n_simulations; i++){
+		myfile >> upper_thickness[i] >> up_mua[i] >> up_mus[i] >> up_tissue_n[i] >> up_g_factor[i];
+		myfile >> mid_thickness[i] >> mid_mua[i] >> mid_mus[i] >> mid_tissue_n[i] >> mid_g_factor[i];
+		myfile >> third_mua[i] >> third_mus[i] >> third_tissue_n[i] >> third_g_factor[i];
+	}
 	myfile.close();
 
 	/*fstream myfile;
