@@ -39,9 +39,9 @@ for i in range(10000):
     idx = get_idx()
     input_path = os.path.join("input", idx)
     output_path = os.path.join("output", idx)
-    with open(idx, "w+") as f:
+    with open(input_path, "w+") as f:
         f.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}".format(*get_param()))
     os.system("./mc {} {}".format(input_path, output_path))
-    
+
 
 
