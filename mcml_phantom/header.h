@@ -48,7 +48,7 @@ using namespace std;
 #define illumination_r     0.022					//radius //YU-modified
 #define collect_r          0.022			//radius //YU-modified
 #define NUMBER_PHOTONS     1000000000
-#define NUMBER_SIMULATION  1
+#define NUMBER_SIMULATION  27
 
 //#define WEIGHT 0.0001f
 #define WEIGHTI 429497u //0xFFFFFFFFu*WEIGHT
