@@ -19,7 +19,6 @@ using namespace std;
 #ifdef __linux__ //uses 25 registers per thread (64-bit)
 	#define NUM_THREADS_PER_BLOCK 320 //Keep above 192 to eliminate global memory access overhead However, keep low to allow enough registers per thread
 	#define NUM_THREADS NUM_BLOCKS*NUM_THREADS_PER_BLOCK
-#endif
 #elif _WIN64
 	#define NUM_THREADS_PER_BLOCK 256 //dimBlock
 	#define NUM_THREADS NUM_BLOCKS*NUM_THREADS_PER_BLOCK
