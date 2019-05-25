@@ -35,7 +35,7 @@ def get_param():
         third_mua, third_mus, third_tissue_n, third_g)
 
 
-for i in range(10000):
+for i in range(10):
     idx = get_idx()
     input_path = os.path.join("input", idx)
     output_path = os.path.join("output", idx)
