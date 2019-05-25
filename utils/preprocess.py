@@ -13,7 +13,7 @@ from kde import smooth
 wl = [i for i in range(660, 921, 10)]
 
 
-class Calibrator:
+class SegmentCalibrator:
     def __init__(self):
         self.a = []
         self.b = []
@@ -172,14 +172,12 @@ class Calibrator:
             calibrated_ = []
             for w_idx, (mm, bound) in enumerate(zip(m, self.bound)):
                 section = 0
-                for b in bound:
+                for b in bound[:-1]:
                     if mm > b:
                         section += 1
                     else:
                         break
-                print(self.a)
-                print(w_idx, section)
-                print(self.bound)
+
                 calibrated_ += [self.a[w_idx, section] * mm + self.b[w_idx, section]]
                 # calibrated_ += [self.a[:, section] * mm + self.b[:, section]]
 
@@ -189,7 +187,7 @@ class Calibrator:
 
 
 
-class Calibrator_backup:
+class Calibrator:
     def __init__(self):
         self.a = []
         self.b = []
@@ -799,7 +797,7 @@ def preprocess_live_muscle(input_date):
 
 
 def calibrate_ijv(input_date, sim_path="CHIKEN/sim_20190525_24mm.csv", p_index="chik"):
-    calib = Calibrator()
+    calib = SegmentCalibrator()
     p_index = list(p_index)
 
     input_path = os.path.join("data", "processed", input_date, "IJV")
@@ -882,11 +880,12 @@ def calibrate_muscle(input_date, sim_path="CHIKEN/phantom_muscle.npy", p_index="
     calib_list = [Calibrator() for _ in range(phantom_sim.shape[1])]
 
     for i in range(len(calib_list)):
-        calib_list[i].fit(phantom[:, i, :], phantom_sim[:, i, :], cross_valid=False, plot_path=output_path)
+        calib_list[i].fit(phantom[:, i, :], phantom_sim[:, i, :], cross_valid=True, plot_path=output_path)
 
     live_list = glob(os.path.join(live_path, "live_*.csv"))
     for l in live_list:
         df = pd.read_csv(l)
+        idx = l.split("live_")[-1].strip(".csv")
 
         # [SDS, wl] 
         df = df.iloc[:, 1:].values.T
@@ -897,7 +896,7 @@ def calibrate_muscle(input_date, sim_path="CHIKEN/phantom_muscle.npy", p_index="
 
         live_calib = []
         for s in range(num_sds):
-            live_calib += [calib_list[s].calibrate(df[s])]
+            live_calib += [calib_list[s].calibrate(df[s])[0]]
         
         # [SDS, wl]
         live_calib = np.asarray(live_calib)
@@ -913,9 +912,15 @@ def calibrate_muscle(input_date, sim_path="CHIKEN/phantom_muscle.npy", p_index="
         plt.grid()
         plt.savefig(os.path.join(output_path, input_date + idx + ".png"))
 
-        df = pd.DataFrame(lc)
-        df["wavelength"] = wl 
-        df = df[["wavelength"] + [str(i) for i in range(num_sds)]]
+        df = pd.DataFrame({
+            "wavelength": wl,
+            "0": live_calib[0],
+            "1": live_calib[1],
+            "2": live_calib[2],
+            "3": live_calib[3],
+            "4": live_calib[4] 
+            })
+
         df.to_csv(os.path.join(output_path, input_date + idx + ".csv"), index=None)
 
 
