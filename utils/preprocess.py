@@ -7,6 +7,7 @@ from scipy.signal import find_peaks_cwt
 from scipy.optimize import fmin
 from PyEMD import EMD
 
+
 from kde import smooth
 
 wl = [i for i in range(660, 921, 10)]
@@ -17,7 +18,7 @@ class Calibrator:
         self.a = []
         self.b = []
 
-    def fit(self, measured, simulated, cross_valid=True, plot_path=None, least_square=True):
+    def fit(self, measured, simulated, cross_valid=False, plot_path=None, least_square=True):
         """
         [input]
         measured: 
@@ -176,6 +177,9 @@ class Calibrator:
                         section += 1
                     else:
                         break
+                print(self.a)
+                print(w_idx, section)
+                print(self.bound)
                 calibrated_ += [self.a[w_idx, section] * mm + self.b[w_idx, section]]
                 # calibrated_ += [self.a[:, section] * mm + self.b[:, section]]
 
@@ -326,7 +330,8 @@ def get_hwfm(spec, output_path, num_sds=5):
         raise Exception("find {} peaks, but expect more than {}!".format(len(peak_idx), num_sds))
 
     peak_idx = list(peak_idx)
-    peak_idx.sort(key=lambda x: spec_mean[x], reverse=True)
+    peak_idx.sort(key=lambda x: spec_mean[x-3:x+3].max(), reverse=True)
+    # peak_idx.sort(key=lambda x: spec_mean[x], reverse=True)
     peak_idx = peak_idx[:num_sds]
 
     # 確認抓到的peak是正確的
@@ -614,7 +619,7 @@ def preprocess_phantom_muscle(input_date):
     bg = np.asarray(bg)
     bg = bg.mean(0)
     # phantom
-    p_id = "chiken"
+    p_id = "chik"
 
     phantom = []
     for pp in p_id:
@@ -656,13 +661,16 @@ def preprocess_phantom_muscle(input_date):
             "4": p[4],
             }).to_csv(os.path.join(output_path, "phantom_{}.csv".format(i)), index=None)
 
+
+        plt.figure(figsize=(12, 6))
+
         for idx, pp in enumerate(p):
             plt.plot(wl, pp, label="SDS: {}".format(idx))
 
-        plt.figure(figsize=(12, 6))
         plt.xticks(wl)
         plt.xlabel("wavelength [nm]")
         plt.ylabel("reflectance [-]")
+        plt.legend()
         plt.grid()
         plt.savefig(os.path.join(output_path, "phantom_{}.png".format(i)), index=None)
         plt.clf()
@@ -774,13 +782,15 @@ def preprocess_live_muscle(input_date):
             "4": l[4],
             }).to_csv(os.path.join(output_path, "live_{}.csv".format(i)), index=None)
 
+        plt.figure(figsize=(12, 6))
+
         for idx, ll in enumerate(l):
             plt.plot(wl, ll, label="SDS: {}".format(idx))
         
-        plt.figure(figsize=(12, 6))
         plt.xticks(wl)
         plt.xlabel("wavelength [nm]")
         plt.ylabel("reflectance [-]")
+        plt.legend()
         plt.grid()
         plt.savefig(os.path.join(output_path, "live_{}.png".format(i)), index=None)
         plt.clf()
@@ -788,7 +798,7 @@ def preprocess_live_muscle(input_date):
     return live_interp
 
 
-def calibrate_ijv(input_date, sim_path="CHIKEN/sim_20190522_no_prism.csv", p_index="chik"):
+def calibrate_ijv(input_date, sim_path="CHIKEN/sim_20190525_24mm.csv", p_index="chik"):
     calib = Calibrator()
     p_index = list(p_index)
 
@@ -835,9 +845,8 @@ def calibrate_ijv(input_date, sim_path="CHIKEN/sim_20190522_no_prism.csv", p_ind
 
         df.to_csv(os.path.join(output_path, input_date + idx), index=None)
 
-def calibrate_muscle(input_date, sim_path="", p_index="chik"):
+def calibrate_muscle(input_date, sim_path="CHIKEN/phantom_muscle.npy", p_index="chik"):
 
-    calib = Calibrator()
     p_index = list(p_index)
 
 
@@ -865,29 +874,37 @@ def calibrate_muscle(input_date, sim_path="", p_index="chik"):
     # [仿體數, SDS數, 波長數]
     phantom = np.asarray(phantom)
 
-    def get_muscle_sim():
-        pass
-    phantom_sim = get_muscle_sim()
+    # [仿體數, SDS數, 波長數]
+    phantom_sim = np.load(sim_path)
 
-    calib.fit(phantom.reshape(phantom.shape[0], -1), phantom_sim.reshape(phantom.shape[0], -1))
+    assert phantom.shape == phantom_sim.shape, "shape should be the same!"
+
+    calib_list = [Calibrator() for _ in range(phantom_sim.shape[1])]
+
+    for i in range(len(calib_list)):
+        calib_list[i].fit(phantom[:, i, :], phantom_sim[:, i, :], cross_valid=False, plot_path=output_path)
 
     live_list = glob(os.path.join(live_path, "live_*.csv"))
     for l in live_list:
-        idx = l.split("live_")[-1].strip(".csv")
         df = pd.read_csv(l)
 
+        # [SDS, wl] 
         df = df.iloc[:, 1:].values.T
+
+
         num_sds = df.shape[0]
         num_wl = df.shape[1]
 
-        df = df.reshape(-1)
-
-        df = calib.calibrate(df)
-        df = df.reshape(num_sds, num_wl)
+        live_calib = []
+        for s in range(num_sds):
+            live_calib += [calib_list[s].calibrate(df[s])]
+        
+        # [SDS, wl]
+        live_calib = np.asarray(live_calib)
 
         plt.figure(figsize=(12, 6))
-        for i, d in enumerate(df):
-            plt.plot(wl, d, label=str(i))
+        for i, lc in enumerate(live_calib):
+            plt.plot(wl, lc, label=str(i))
         
         plt.xlabel("wavelength [nm]")
         plt.ylabel("reflectance [-]")
@@ -896,10 +913,44 @@ def calibrate_muscle(input_date, sim_path="", p_index="chik"):
         plt.grid()
         plt.savefig(os.path.join(output_path, input_date + idx + ".png"))
 
-        df = pd.DataFrame(df)
+        df = pd.DataFrame(lc)
         df["wavelength"] = wl 
         df = df[["wavelength"] + [str(i) for i in range(num_sds)]]
         df.to_csv(os.path.join(output_path, input_date + idx + ".csv"), index=None)
+
+
+
+    # calib.fit(phantom.reshape(phantom.shape[0], -1), phantom_sim.reshape(phantom.shape[0], -1))
+
+    # live_list = glob(os.path.join(live_path, "live_*.csv"))
+    # for l in live_list:
+    #     idx = l.split("live_")[-1].strip(".csv")
+    #     df = pd.read_csv(l)
+
+    #     df = df.iloc[:, 1:].values.T
+    #     num_sds = df.shape[0]
+    #     num_wl = df.shape[1]
+
+    #     df = df.reshape(-1)
+
+    #     df = calib.calibrate(df)
+    #     df = df.reshape(num_sds, num_wl)
+
+    #     plt.figure(figsize=(12, 6))
+    #     for i, d in enumerate(df):
+    #         plt.plot(wl, d, label=str(i))
+        
+    #     plt.xlabel("wavelength [nm]")
+    #     plt.ylabel("reflectance [-]")
+    #     plt.xticks(wl)
+    #     plt.legend()
+    #     plt.grid()
+    #     plt.savefig(os.path.join(output_path, input_date + idx + ".png"))
+
+    #     df = pd.DataFrame(df)
+    #     df["wavelength"] = wl 
+    #     df = df[["wavelength"] + [str(i) for i in range(num_sds)]]
+    #     df.to_csv(os.path.join(output_path, input_date + idx + ".csv"), index=None)
 
 
 
@@ -914,19 +965,17 @@ if __name__ == "__main__":
     import sys
     date = sys.argv[1]
     print(date)
-    # preprocess_phantom(date)
-    # preprocess_live(date)
-    # calibrate(date)
 
-    print("process ijv..")
+    # print("process ijv..")
     # preprocess_phantom(date)
     # preprocess_live(date)
 
-    print("calibrate ijv..")
-    calibrate_ijv(date)
+    # print("calibrate ijv..")
+    # calibrate_ijv(date)
 
-    print("process muscle..")
-    # preprocess_phantom_muscle(date)
-    # preprocess_live_muscle(date)
+    # print("ps_live_muscle(date)
+
+    print("calibrate muscle..")
+    calibrate_muscle(date)
 
 
