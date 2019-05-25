@@ -1,3 +1,5 @@
+mcml/input
+mcml/output
 mcml/mc
 *.o
 configs/train.json
