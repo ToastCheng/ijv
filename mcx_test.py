@@ -130,6 +130,8 @@ class MCX:
         if not os.path.isdir(self.json_output):
             os.mkdir(self.json_output)
 
+        with open(os.path.join(self.json_output, "parameters.json"), "w+") as f:
+            json.dump(self.parameters, f, indent=4)
         # plot tissue
         if self.config["type"] == "ijv":
             self._plot_tissue_ijv()

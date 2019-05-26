@@ -10,7 +10,7 @@
     "coefficients": "input/coefficients.csv",
     "parameters": "input/parameters/20190502_min.json",
     "wavelength": "input/wavelength.csv",
-    "fiber": "input/fiber_20190511.csv",
+    "fiber": "input/fiber.csv",
     "mcx_input": "input_mcx/ijv_no_prism.json",
     "phantom_idx": "CHIK",
     "phantom_mua": "",
