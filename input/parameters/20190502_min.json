@@ -6,9 +6,9 @@
         "fat_volume": 0,
         "melanin_volume": 0.01,
         "n": 1.40,
-        "g": 0.94,
-        "muspx": 30,
-        "bmie": 2.453
+        "g": 0.71,
+        "muspx": 1,
+        "bmie": 0.453
     },
 
     "fat":{
@@ -18,9 +18,9 @@
         "fat_volume": 1,
         "melanin_volume": 0,
         "n": 1.40,
-        "g": 0.94,
-        "muspx": 13,
-        "bmie": 1.0
+        "g": 0.90,
+        "muspx": 1,
+        "bmie": 8
     },
 
     "muscle":{
@@ -30,9 +30,9 @@
         "fat_volume": 0,
         "melanin_volume": 0,
         "n": 1.40,
-        "g": 0.94,
-        "muspx": 6,
-        "bmie": 2.82
+        "g": 0.9,
+        "muspx": 0.3,
+        "bmie": 0.52
     },
 
     "IJV":{
@@ -42,9 +42,9 @@
         "fat_volume": 0,
         "melanin_volume": 0,
         "n": 1.40,
-        "g": 0.94,
-        "muspx": 10.0,
-        "bmie": 1.0
+        "g": 0.90,
+        "muspx": 1.0,
+        "bmie": 0.7
     },
 
     "CCA":{
@@ -58,6 +58,7 @@
         "muspx": 10.0,
         "bmie": 1.0
     },
+
 
     "geometry":{
         "skin_thickness": 1.23,
