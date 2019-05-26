@@ -59,14 +59,15 @@
         "bmie": 1.0
     },
 
+
     "geometry":{
-        "skin_thickness": 1.35,
-        "fat_thickness": 1.12,
-        "ijv_radius": 6.20,
-        "ijv_depth": 12.08,
-        "cca_radius": 3.12,
-        "cca_depth": 17.13,
-        "ijv_cca_distance": 11.24
+        "skin_thickness": 1.27,
+        "fat_thickness": 1.00,
+        "ijv_radius": 7.10,
+        "ijv_depth": 14.95,
+        "cca_radius": 3.53,
+        "cca_depth": 23.86,
+        "ijv_cca_distance": 7.68
     },
 
     "boundary":{
