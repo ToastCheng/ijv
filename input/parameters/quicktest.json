@@ -19,8 +19,8 @@
         "melanin_volume": 0,
         "n": 1.40,
         "g": 0.90,
-        "muspx": 1,
-        "bmie": 8
+        "muspx": 30,
+        "bmie": 0.8
     },
 
     "muscle":{
@@ -31,8 +31,8 @@
         "melanin_volume": 0,
         "n": 1.40,
         "g": 0.9,
-        "muspx": 0.3,
-        "bmie": 0.52
+        "muspx": 37.0,
+        "bmie": 0.02
     },
 
     "IJV":{

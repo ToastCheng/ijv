@@ -971,14 +971,16 @@ if __name__ == "__main__":
     date = sys.argv[1]
     print(date)
 
-    # print("process ijv..")
-    # preprocess_phantom(date)
-    # preprocess_live(date)
+    print("process ijv..")
+    preprocess_phantom(date)
+    preprocess_live(date)
 
-    # print("calibrate ijv..")
-    # calibrate_ijv(date)
+    print("calibrate ijv..")
+    calibrate_ijv(date)
 
-    # print("ps_live_muscle(date)
+    print("process muscle..")
+    preprocess_phantom_muscle(date)
+    preprocess_live_muscle(date)
 
     print("calibrate muscle..")
     calibrate_muscle(date)
