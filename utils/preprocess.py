@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np 
 from glob import glob
 import matplotlib.pyplot as plt 
-from scipy.signal import find_peaks_cwt
+from scipy.signal import find_peaks_cwt, find_peaks, peak_prominences
 from scipy.optimize import fmin
 from PyEMD import EMD
 
@@ -487,7 +487,13 @@ def preprocess_live(input_date):
         # live_crop = 1 - live_crop/65535
 
         max_index = find_peaks_cwt(live_crop, np.arange(1, 20))
-        min_index = find_peaks_cwt(1-live_crop, np.arange(1, 20))
+        min_index = find_peaks_cwt(-live_crop, np.arange(1, 20))
+
+        filter_max = peak_prominences(live_crop, max_index)[0] < 100
+        filter_min = peak_prominences(-live_crop, min_index)[0] < 100
+        max_index = max_index[filter_max]
+        min_index = min_index[filter_min]
+
 
         plt.figure()
         plt.plot(live_crop)
@@ -509,7 +515,12 @@ def preprocess_live(input_date):
         # 1 frame = 0.05sec
         # So there would be 20 frame for 1 sec!
         max_index = find_peaks_cwt(live_crop, np.arange(1, 20))
-        min_index = find_peaks_cwt(1-live_crop, np.arange(1, 20))
+        min_index = find_peaks_cwt(-live_crop, np.arange(1, 20))
+
+        filter_max = peak_prominences(live_crop, max_index)[0] < 100
+        filter_min = peak_prominences(-live_crop, min_index)[0] < 100
+        max_index = max_index[filter_max]
+        min_index = min_index[filter_min]
 
         plt.figure()
         plt.plot(live_crop)
