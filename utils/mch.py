@@ -1,11 +1,12 @@
+import os 
 import json
+import random
 from time import time
 from glob import glob
 import torch
 import numpy as np 
 import pandas as pd
 import matplotlib.pyplot as plt
-import os 
 
 from utils import load_mch
 
@@ -21,6 +22,12 @@ class MCHHandler:
             self.load_config(config)
         else:
             self.config = None
+
+        self.config = {"type": "ijv"}
+        self.mua = pd.read_csv(os.path.join("input", "coefficients.csv"))
+        self.detector_na = 0.12
+        self.detector_n = 1.457
+        self.critical_angle = np.arcsin(self.detector_na/self.detector_n)
 
 
     def load_config(self, config):
@@ -63,6 +70,194 @@ class MCHHandler:
         self.critical_angle = np.arcsin(self.detector_na/self.detector_n)     
 
 
+    def run_wmc_single(self, mch_file, args=None):
+
+        if isinstance(args, dict):
+            args = [args]
+        if args is None:
+            args = [0]
+
+        df, header, photon = self._load_mch(mch_file)
+
+        df = df[np.arccos(df.angle.abs()) <= self.critical_angle]
+        if len(df) == 0:
+            print('no photon detected at %d' % wl)
+            return None, None
+        df = df.reset_index(drop=True)
+
+
+        path_length = df.iloc[:, 1:-1].values
+
+        path_length = torch.tensor(path_length).float().to(device)
+
+        wl = random.sample([i for i in range(660, 851)], 1)[0]
+        mua = self._make_tissue_white(wl, header, args)
+
+        mua = torch.tensor(mua).float().to(device)
+
+        
+        # [光子數, 吸收數]
+        weight = torch.exp(-torch.matmul(path_length, mua) *header["unitmm"]) 
+
+
+
+
+        # [1, 吸收數]
+        result = torch.zeros(1, len(args)).float().to(device)
+
+        # seperate photon with different detector
+        for idx in range(1, header["detnum"]+1):
+
+            # get the index of specific index
+            detector_list = df.index[df["detector_idx"] == idx].tolist()
+            if len(detector_list) == 0:
+                # print("detector #%d detected 0 photon" % idx)
+                result = torch.cat((result, torch.zeros(1, weight.shape[1]).float().to(device)), 0)
+                continue
+                
+            # pick the photon that detected by specific detector
+            
+            # [光子數, 吸收數]
+            _weight = weight[detector_list]
+            
+            _weight = _weight.sum(0)
+            _weight = _weight.unsqueeze(0)
+
+            
+            result = torch.cat((result, _weight), 0)
+
+        # [SDS, ScvO2]
+        result = result[1:]
+        s = result.cpu().numpy()/header["total_photon"]
+
+
+        return s.T
+
+
+    def run_wmc(self, args=None, prism=False):
+
+        if not self.config:
+            raise Exception("Should specify the config file first!")
+
+        if isinstance(args, dict):
+            args = [args]
+        if args is None:
+            args = [0]
+            
+        spectra = []
+        portions = []
+
+
+        for f in self.mch_list:
+            if self.config["type"] == "ijv":
+                wl = int(f.split('_')[-1].strip('.mch'))
+            elif self.config["type"] == "muscle":
+                wl = int(f.split('_')[-1].strip('.mch'))
+            elif self.config["type"] == "phantom":
+                wl = int(f.split('_')[-2])
+            else:
+                raise Exception("Tissue type error!")
+
+            df, header, photon = self._load_mch(f)
+
+            df = df[np.arccos(df.angle.abs()) <= self.critical_angle]
+            if len(df) == 0:
+                print('no photon detected at %d' % wl)
+                return None, None
+            df = df.reset_index(drop=True)
+
+            # [光子數, 組織數]
+            # 0: detector index
+            # 1: prism
+            if prism:
+                path_length = df.iloc[:, 2:-1].values
+            else:
+                path_length = df.iloc[:, 1:-1].values
+
+            path_length = torch.tensor(path_length).float().to(device)
+
+            # [ 組織數, 吸收數]
+            if self.config["type"] != "phantom":
+                mua = self._make_tissue_white(wl, header, args)
+            else:
+                phantom_id = f.split('_')[-1].strip('.mch')
+                mua = self._make_tissue_phantom(wl, header, phantom_id)
+
+            mua = torch.tensor(mua).float().to(device)
+
+            
+            # [光子數, 吸收數]
+            weight = torch.exp(-torch.matmul(path_length, mua) *header["unitmm"]) 
+
+
+            # NEW 
+            # df["weight"] = weight.tolist()
+            # 3 計算實際路徑長*權重 (in 95%)
+
+            path_length = (path_length.transpose(0, 1) @ weight)
+            if self.config["type"] == "ijv":
+                skin_portion = (path_length[0] ).tolist()
+                fat_portion = (path_length[1]).tolist()
+                muscle_portion = (path_length[2]).tolist()
+                ijv_portion = (path_length[3]).tolist()
+                cca_portion = (path_length[4]).tolist()
+
+            elif self.config["type"] == "muscle":
+                skin_portion = (path_length.mean(0)[0] ).tolist()
+                fat_portion = (path_length.mean(0)[1]).tolist()
+                muscle_portion = (path_length.mean(0)[2]).tolist()
+
+            elif self.config["type"] == "phantom":
+                # phantom_portion = (path_length.mean(0)[0] ).tolist()
+                phantom_portion = [0]
+            ###
+            ######
+            #########
+
+            # [1, 吸收數]
+            result = torch.zeros(1, len(args)).float().to(device)
+
+            # seperate photon with different detector
+            for idx in range(1, header["detnum"]+1):
+
+                # get the index of specific index
+                detector_list = df.index[df["detector_idx"] == idx].tolist()
+                if len(detector_list) == 0:
+                    # print("detector #%d detected 0 photon" % idx)
+                    result = torch.cat((result, torch.zeros(1, weight.shape[1]).float().to(device)), 0)
+                    continue
+                    
+                # pick the photon that detected by specific detector
+                
+                # [光子數, 吸收數]
+                _weight = weight[detector_list]
+                
+                _weight = _weight.sum(0)
+                _weight = _weight.unsqueeze(0)
+
+                
+                result = torch.cat((result, _weight), 0)
+
+            # [SDS, ScvO2]
+            result = result[1:]
+            s = result.cpu().numpy()/header["total_photon"]
+            
+            spectra.append(s)
+
+            if self.config["type"] == "ijv":
+                portions.append(
+                    [skin_portion, fat_portion, muscle_portion, ijv_portion, cca_portion]
+                )
+            elif self.config["type"] == "muscle":
+                portions.append(
+                    [skin_portion, fat_portion, muscle_portion]
+                )
+            elif self.config["type"] == "phantom":
+                portions.append([phantom_portion])
+            else:
+                raise Exception("tissue type does not supported yet")
+
+        return np.asarray(spectra).T, np.asarray(portions).T
         
     def _make_tissue_phantom(self, wl, header, phantom_id):
 
@@ -200,134 +395,6 @@ class MCHHandler:
                 raise Exception("tissue type does not supported yet")
                 
         return np.asarray(_mua).T
-
-
-
-    def run_wmc(self, args=None, prism=False):
-
-        if not self.config:
-            raise Exception("Should specify the config file first!")
-
-        if isinstance(args, dict):
-            args = [args]
-        if args is None:
-            args = [0]
-            
-        spectra = []
-        portions = []
-
-
-        for f in self.mch_list:
-            if self.config["type"] == "ijv":
-                wl = int(f.split('_')[-1].strip('.mch'))
-            elif self.config["type"] == "muscle":
-                wl = int(f.split('_')[-1].strip('.mch'))
-            elif self.config["type"] == "phantom":
-                wl = int(f.split('_')[-2])
-            else:
-                raise Exception("Tissue type error!")
-
-            df, header, photon = self._load_mch(f)
-
-            df = df[np.arccos(df.angle.abs()) <= self.critical_angle]
-            if len(df) == 0:
-                print('no photon detected at %d' % wl)
-                return None, None
-            df = df.reset_index(drop=True)
-
-            # [光子數, 組織數]
-            # 0: detector index
-            # 1: prism
-            if prism:
-                path_length = df.iloc[:, 2:-1].values
-            else:
-                path_length = df.iloc[:, 1:-1].values
-
-            path_length = torch.tensor(path_length).float().to(device)
-
-            # [ 組織數, 吸收數]
-            if self.config["type"] != "phantom":
-                mua = self._make_tissue_white(wl, header, args)
-            else:
-                phantom_id = f.split('_')[-1].strip('.mch')
-                mua = self._make_tissue_phantom(wl, header, phantom_id)
-
-            mua = torch.tensor(mua).float().to(device)
-
-            
-            # [光子數, 吸收數]
-            weight = torch.exp(-torch.matmul(path_length, mua) *header["unitmm"]) 
-
-
-            # NEW 
-            # df["weight"] = weight.tolist()
-            # 3 計算實際路徑長*權重 (in 95%)
-
-            path_length = (path_length.transpose(0, 1) @ weight)
-            if self.config["type"] == "ijv":
-                skin_portion = (path_length[0] ).tolist()
-                fat_portion = (path_length[1]).tolist()
-                muscle_portion = (path_length[2]).tolist()
-                ijv_portion = (path_length[3]).tolist()
-                cca_portion = (path_length[4]).tolist()
-
-            elif self.config["type"] == "muscle":
-                skin_portion = (path_length.mean(0)[0] ).tolist()
-                fat_portion = (path_length.mean(0)[1]).tolist()
-                muscle_portion = (path_length.mean(0)[2]).tolist()
-
-            elif self.config["type"] == "phantom":
-#                 phantom_portion = (path_length.mean(0)[0] ).tolist()
-                phantom_portion = [0]
-            ###
-            ######
-            #########
-
-            # [1, 吸收數]
-            result = torch.zeros(1, len(args)).float().to(device)
-
-            # seperate photon with different detector
-            for idx in range(1, header["detnum"]+1):
-
-                # get the index of specific index
-                detector_list = df.index[df["detector_idx"] == idx].tolist()
-                if len(detector_list) == 0:
-                    # print("detector #%d detected 0 photon" % idx)
-                    result = torch.cat((result, torch.zeros(1, weight.shape[1]).float().to(device)), 0)
-                    continue
-                    
-                # pick the photon that detected by specific detector
-                
-                # [光子數, 吸收數]
-                _weight = weight[detector_list]
-                
-                _weight = _weight.sum(0)
-                _weight = _weight.unsqueeze(0)
-
-                
-                result = torch.cat((result, _weight), 0)
-
-            # [SDS, ScvO2]
-            result = result[1:]
-            s = result.cpu().numpy()/header["total_photon"]
-            
-            spectra.append(s)
-
-            if self.config["type"] == "ijv":
-                portions.append(
-                    [skin_portion, fat_portion, muscle_portion, ijv_portion, cca_portion]
-                )
-            elif self.config["type"] == "muscle":
-                portions.append(
-                    [skin_portion, fat_portion, muscle_portion]
-                )
-            elif self.config["type"] == "phantom":
-                portions.append([phantom_portion])
-            else:
-                raise Exception("tissue type does not supported yet")
-
-        return np.asarray(spectra).T, np.asarray(portions).T
-            
 
 
 
