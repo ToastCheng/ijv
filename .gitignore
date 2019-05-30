@@ -3,6 +3,7 @@ mcml/output
 mcml/mc
 *.o
 configs/train.json
+train/mch/*
 train/input/*
 train/data_list.csv
 train/spec/*

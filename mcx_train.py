@@ -54,28 +54,28 @@ class MCXGen(MCX):
     def train(self):
         # 1/cm
         mus_range = {
-            "skin_musp": (29.7, 48.9),
-            "skin_bmie": (0.705, 2.453),
+            "skin_musp": (0, 30),
+            "skin_bmie": (0.01, 2.453),
             "skin_g": (0.6, 0.9),
             "skin_n": (1.38, 1.45),
 
-            "fat_musp": (13.7, 35.8),
-            "fat_bmie": (0.385, 0.988),
+            "fat_musp": (1.7, 35.8),
+            "fat_bmie": (0.085, 0.988),
             "fat_g": (0.8, 0.99),
             "fat_n": (1.38, 1.45),
 
-            "muscle_musp": (9.8, 13.0),
-            "muscle_bmie": (0.926, 2.82),
+            "muscle_musp": (9.8, 40.0),
+            "muscle_bmie": (0.01, 2.82),
             "muscle_g": (0.8, 0.99),
             "muscle_n": (1.38, 1.45),
 
-            "ijv_musp": (10, 20),
-            "ijv_bmie": (10, 20),
+            "ijv_musp": (1, 20),
+            "ijv_bmie": (0.5, 1),
             "ijv_g": (0.8, 0.99),
             "ijv_n": (1.38, 1.45),
 
-            "cca_musp": (10, 20),
-            "cca_bmie": (10, 20),
+            "cca_musp": (1, 20),
+            "cca_bmie": (0.5, 1),
             "cca_g": (0.8, 0.99),
             "cca_n": (1.38, 1.45),
         }
@@ -92,15 +92,15 @@ class MCXGen(MCX):
         }
 
         mua_range = {
-            "skin_b": (0.0012, 0.0041),
-            "skin_s": (0.985, 1.0),
-            "skin_w": (0.166, 0.261),
-            "skin_f": (0.187, 0.277),
-            "skin_m": (0.0087, 0.0165),
+            "skin_b": (0.0012, 0.8),
+            "skin_s": (0.7, 1.0),
+            "skin_w": (0.01, 0.8),
+            "skin_f": (0.01, 0.8),
+            "skin_m": (0.0087, 0.8),
 
             "fat_f": (0.5, 1),
 
-            "muscle_b": (0.005, 0.050),
+            "muscle_b": (0.005, 0.5),
             "muscle_s": (0.5, 0.9),
             "muscle_w": (0.5, 0.9),
 
@@ -545,12 +545,12 @@ class MCXGen(MCX):
         for i in range(num):
             sb = random.uniform(x_range["skin_b"][0], x_range["skin_b"][1])
             ss = random.uniform(x_range["skin_s"][0], x_range["skin_s"][1])
-            sw = random.uniform(x_range["skin_w"][0], max(x_range["skin_w"][0], min(x_range["skin_w"][1], 1-sb)))
-            sf = random.uniform(x_range["skin_f"][0], max(x_range["skin_f"][0], min(x_range["skin_f"][1], 1-sb-sw)))
+            sw = min(random.uniform(x_range["skin_w"][0], x_range["skin_w"][1]), 1-sb)
+            sf = min(random.uniform(x_range["skin_f"][0], x_range["skin_f"][1]), 1-sb-sw)
             sm = 1-sb-sw-sf
             mb = random.uniform(x_range["muscle_b"][0], x_range["muscle_b"][1])
             ms = random.uniform(x_range["muscle_s"][0], x_range["muscle_s"][1])
-            mw = random.uniform(x_range["muscle_w"][0], max(x_range["muscle_w"][0], min(x_range["muscle_w"][1], 1-mb)))
+            mw = min(random.uniform(x_range["muscle_w"][0], x_range["muscle_w"][1]), 1-mb)
             mc = 1 - mb - mw
             is_ = random.uniform(x_range["ijv_s"][0], x_range["ijv_s"][1])
             cs = random.uniform(x_range["cca_s"][0], x_range["cca_s"][1])
