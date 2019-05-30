@@ -130,8 +130,6 @@ class MCX:
         if not os.path.isdir(self.json_output):
             os.mkdir(self.json_output)
 
-        with open(os.path.join(self.json_output, "parameters.json"), "w+") as f:
-            json.dump(self.parameters, f, indent=4)
         # plot tissue
         if self.config["type"] == "ijv":
             self._plot_tissue_ijv()
@@ -251,66 +249,72 @@ class MCX:
         mcx_input["Domain"]["Media"][0]["g"] = 1
         mcx_input["Domain"]["Media"][0]["n"] = 1
 
+        # prism
+        mcx_input["Domain"]["Media"][1]["name"] = "prism"
+        mcx_input["Domain"]["Media"][1]["mua"] = 0
+        mcx_input["Domain"]["Media"][1]["mus"] = 0
+        mcx_input["Domain"]["Media"][1]["g"] = 1
+        mcx_input["Domain"]["Media"][1]["n"] = 1.515
 
         # skin
-        mcx_input["Domain"]["Media"][1]["name"] = "skin"
-        mcx_input["Domain"]["Media"][1]["mua"] = 0
-        mcx_input["Domain"]["Media"][1]["mus"] = self._calculate_mus(
+        mcx_input["Domain"]["Media"][2]["name"] = "skin"
+        mcx_input["Domain"]["Media"][2]["mua"] = 0
+        mcx_input["Domain"]["Media"][2]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["skin"]["muspx"], 
             self.parameters["skin"]["bmie"],
             self.parameters["skin"]["g"]
             )
-        mcx_input["Domain"]["Media"][1]["g"] = self.parameters["skin"]["g"]
-        mcx_input["Domain"]["Media"][1]["n"] = self.parameters["skin"]["n"]
+        mcx_input["Domain"]["Media"][2]["g"] = self.parameters["skin"]["g"]
+        mcx_input["Domain"]["Media"][2]["n"] = self.parameters["skin"]["n"]
 
         # fat
-        mcx_input["Domain"]["Media"][2]["name"] = "fat"
-        mcx_input["Domain"]["Media"][2]["mua"] = 0
-        mcx_input["Domain"]["Media"][2]["mus"] = self._calculate_mus(
+        mcx_input["Domain"]["Media"][3]["name"] = "fat"
+        mcx_input["Domain"]["Media"][3]["mua"] = 0
+        mcx_input["Domain"]["Media"][3]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["fat"]["muspx"], 
             self.parameters["fat"]["bmie"],
             self.parameters["fat"]["g"]
             )
-        mcx_input["Domain"]["Media"][2]["g"] = self.parameters["fat"]["g"]
-        mcx_input["Domain"]["Media"][2]["n"] = self.parameters["fat"]["n"]
+        mcx_input["Domain"]["Media"][3]["g"] = self.parameters["fat"]["g"]
+        mcx_input["Domain"]["Media"][3]["n"] = self.parameters["fat"]["n"]
 
         # muscle
-        mcx_input["Domain"]["Media"][3]["name"] = "muscle"
-        mcx_input["Domain"]["Media"][3]["mua"] = 0
-        mcx_input["Domain"]["Media"][3]["mus"] = self._calculate_mus(
+        mcx_input["Domain"]["Media"][4]["name"] = "muscle"
+        mcx_input["Domain"]["Media"][4]["mua"] = 0
+        mcx_input["Domain"]["Media"][4]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["muscle"]["muspx"], 
             self.parameters["muscle"]["bmie"],
             self.parameters["muscle"]["g"]
             )
-        mcx_input["Domain"]["Media"][3]["g"] = self.parameters["muscle"]["g"]
-        mcx_input["Domain"]["Media"][3]["n"] = self.parameters["muscle"]["n"]
+        mcx_input["Domain"]["Media"][4]["g"] = self.parameters["muscle"]["g"]
+        mcx_input["Domain"]["Media"][4]["n"] = self.parameters["muscle"]["n"]
         
         # IJV
-        mcx_input["Domain"]["Media"][4]["name"] = "IJV"
-        mcx_input["Domain"]["Media"][4]["mua"] = 0    # for white MC
-        mcx_input["Domain"]["Media"][4]["mus"] = self._calculate_mus(
+        mcx_input["Domain"]["Media"][5]["name"] = "IJV"
+        mcx_input["Domain"]["Media"][5]["mua"] = 0    # for white MC
+        mcx_input["Domain"]["Media"][5]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["IJV"]["muspx"], 
             self.parameters["IJV"]["bmie"],
             self.parameters["IJV"]["g"]
             )
-        mcx_input["Domain"]["Media"][4]["g"] = self.parameters["IJV"]["g"]
-        mcx_input["Domain"]["Media"][4]["n"] = self.parameters["IJV"]["n"]
+        mcx_input["Domain"]["Media"][5]["g"] = self.parameters["IJV"]["g"]
+        mcx_input["Domain"]["Media"][5]["n"] = self.parameters["IJV"]["n"]
         
         # CCA
-        mcx_input["Domain"]["Media"][5]["name"] = "CCA"
-        mcx_input["Domain"]["Media"][5]["mua"] = 0
-        mcx_input["Domain"]["Media"][5]["mus"] = self._calculate_mus(
+        mcx_input["Domain"]["Media"][6]["name"] = "CCA"
+        mcx_input["Domain"]["Media"][6]["mua"] = 0
+        mcx_input["Domain"]["Media"][6]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["CCA"]["muspx"], 
             self.parameters["CCA"]["bmie"],
             self.parameters["CCA"]["g"]
             )
-        mcx_input["Domain"]["Media"][5]["g"] = self.parameters["CCA"]["g"]
-        mcx_input["Domain"]["Media"][5]["n"] = self.parameters["CCA"]["n"]
+        mcx_input["Domain"]["Media"][6]["g"] = self.parameters["CCA"]["g"]
+        mcx_input["Domain"]["Media"][6]["n"] = self.parameters["CCA"]["n"]
 
 
         # geometry
@@ -331,27 +335,32 @@ class MCX:
 
         mcx_input["Shapes"][0]["Grid"]["Size"] = [x_size, y_size, z_size]
 
-        # skin
+        # prism
+        prism_th = 20 # changed to num of grid
         mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]
-        mcx_input["Shapes"][1]["Subgrid"]["Size"] = [x_size, y_size, skin_th]
+        mcx_input["Shapes"][1]["Subgrid"]["Size"] = [x_size, y_size, prism_th]
+
+        # skin
+        mcx_input["Shapes"][2]["Subgrid"]["O"] = [1, 1, 1+prism_th]
+        mcx_input["Shapes"][2]["Subgrid"]["Size"] = [x_size, y_size, skin_th]
 
         # fat
-        mcx_input["Shapes"][2]["Subgrid"]["O"] = [1, 1, 1+skin_th]
-        mcx_input["Shapes"][2]["Subgrid"]["Size"] = [x_size, y_size, fat_th]
+        mcx_input["Shapes"][3]["Subgrid"]["O"] = [1, 1, 1+skin_th+prism_th]
+        mcx_input["Shapes"][3]["Subgrid"]["Size"] = [x_size, y_size, fat_th]
 
         # muscle
-        mcx_input["Shapes"][3]["Subgrid"]["O"] = [1, 1, 1+skin_th+fat_th]
-        mcx_input["Shapes"][3]["Subgrid"]["Size"] = [x_size, y_size, z_size-skin_th-fat_th]
+        mcx_input["Shapes"][4]["Subgrid"]["O"] = [1, 1, 1+skin_th+fat_th+prism_th]
+        mcx_input["Shapes"][4]["Subgrid"]["Size"] = [x_size, y_size, z_size-skin_th-fat_th]
 
         # ijv 
-        mcx_input["Shapes"][4]["Cylinder"]["C0"] = [x_size, y_size//2, ijv_d]
-        mcx_input["Shapes"][4]["Cylinder"]["C1"] = [0, y_size//2, ijv_d]
-        mcx_input["Shapes"][4]["Cylinder"]["R"] = ijv_r
+        mcx_input["Shapes"][5]["Cylinder"]["C0"] = [x_size, y_size//2, ijv_d+prism_th]
+        mcx_input["Shapes"][5]["Cylinder"]["C1"] = [0, y_size//2, ijv_d+prism_th]
+        mcx_input["Shapes"][5]["Cylinder"]["R"] = ijv_r
 
         # cca 
-        mcx_input["Shapes"][5]["Cylinder"]["C0"] = [x_size, y_size//2- ic_dist, cca_d]
-        mcx_input["Shapes"][5]["Cylinder"]["C1"] = [0, y_size//2- ic_dist, cca_d]
-        mcx_input["Shapes"][5]["Cylinder"]["R"] = cca_r
+        mcx_input["Shapes"][6]["Cylinder"]["C0"] = [x_size, y_size//2- ic_dist, cca_d+prism_th]
+        mcx_input["Shapes"][6]["Cylinder"]["C1"] = [0, y_size//2- ic_dist, cca_d+prism_th]
+        mcx_input["Shapes"][6]["Cylinder"]["R"] = cca_r
 
 
         # 改成水平！ 20190511
@@ -513,14 +522,21 @@ class MCX:
         mcx_input["Domain"]["Media"][0]["g"] = 1
         mcx_input["Domain"]["Media"][0]["n"] = 1
 
+        # prism
+        mcx_input["Domain"]["Media"][1]["name"] = "prism"
+        mcx_input["Domain"]["Media"][1]["mua"] = 0
+        mcx_input["Domain"]["Media"][1]["mus"] = 0
+        mcx_input["Domain"]["Media"][1]["g"] = 1
+        mcx_input["Domain"]["Media"][1]["n"] = 1.515
+
 
         # phantom
-        mcx_input["Domain"]["Media"][1]["name"] = "phantom"
-        # mcx_input["Domain"]["Media"][1]["mua"] = self.mua[phantom_idx][wl_idx]
-        mcx_input["Domain"]["Media"][1]["mua"] = 0
-        mcx_input["Domain"]["Media"][1]["mus"] = self.mus[phantom_idx][wl_idx]
-        mcx_input["Domain"]["Media"][1]["g"] = self.parameters["phantom"]["g"]
-        mcx_input["Domain"]["Media"][1]["n"] = self.parameters["phantom"]["n"]
+        mcx_input["Domain"]["Media"][2]["name"] = "phantom"
+        # mcx_input["Domain"]["Media"][2]["mua"] = self.mua[phantom_idx][wl_idx]
+        mcx_input["Domain"]["Media"][2]["mua"] = 0
+        mcx_input["Domain"]["Media"][2]["mus"] = self.mus[phantom_idx][wl_idx]
+        mcx_input["Domain"]["Media"][2]["g"] = self.parameters["phantom"]["g"]
+        mcx_input["Domain"]["Media"][2]["n"] = self.parameters["phantom"]["n"]
 
 
 
@@ -532,11 +548,15 @@ class MCX:
 
 
         mcx_input["Shapes"][0]["Grid"]["Size"] = [x_size, y_size, z_size]
-
+        
+        # prism
+        prism_th = 20
+        mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]
+        mcx_input["Shapes"][1]["Subgrid"]["Size"] = [x_size, y_size, prism_th]
 
         # phantom
-        mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]
-        mcx_input["Shapes"][1]["Subgrid"]["Size"] = [x_size, y_size, 100]
+        mcx_input["Shapes"][2]["Subgrid"]["O"] = [1, 1, 1+prism_th]
+        mcx_input["Shapes"][2]["Subgrid"]["Size"] = [x_size, y_size, 100+prism_th]
 
 
         # load fiber
