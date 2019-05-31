@@ -98,7 +98,9 @@ class MCXGen(MCX):
             "skin_f": (0.01, 0.8),
             "skin_m": (0.0087, 0.8),
 
-            "fat_f": (0.5, 1),
+            "fat_b": (0.0, 0.1),
+            "fat_s": (0.5, 0.9),
+            "fat_f": (0.8, 1)
 
             "muscle_b": (0.005, 0.5),
             "muscle_s": (0.5, 0.9),
@@ -548,6 +550,11 @@ class MCXGen(MCX):
             sw = min(random.uniform(x_range["skin_w"][0], x_range["skin_w"][1]), 1-sb)
             sf = min(random.uniform(x_range["skin_f"][0], x_range["skin_f"][1]), 1-sb-sw)
             sm = 1-sb-sw-sf
+            fb = random.uniform(x_range["fat_b"][0], x_range["fat_b"][1])
+            fs = random.uniform(x_range["fat_s"][0], x_range["fat_s"][1])
+            ff = 1 - fb
+
+
             mb = random.uniform(x_range["muscle_b"][0], x_range["muscle_b"][1])
             ms = random.uniform(x_range["muscle_s"][0], x_range["muscle_s"][1])
             mw = min(random.uniform(x_range["muscle_w"][0], x_range["muscle_w"][1]), 1-mb)
@@ -565,10 +572,10 @@ class MCXGen(MCX):
                 },
 
                 "fat":{
-                    "blood_volume_fraction": 0,
-                    "ScvO2": 0,
+                    "blood_volume_fraction": fb,
+                    "ScvO2": fs,
                     "water_volume": 0,
-                    "fat_volume": 1,
+                    "fat_volume": ff,
                     "melanin_volume": 0,
                     "collagen_colume": 0
                 },
