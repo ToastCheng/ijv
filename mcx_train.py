@@ -184,13 +184,13 @@ class MCXGen(MCX):
         inp["CCA"]["g"] = cca_g
         inp["CCA"]["n"] = cca_n
 
-        inp["geometry"]["skin_thickness"] = geo_skin
-        inp["geometry"]["fat_thickness"] = geo_fat
-        inp["geometry"]["ijv_radius"] = geo_ijvr
-        inp["geometry"]["ijv_depth"] = geo_ijvd
-        inp["geometry"]["cca_radius"] = geo_ccar
-        inp["geometry"]["cca_depth"] = geo_ccad
-        inp["geometry"]["ijv_cca_distance"] = geo_ijvcca
+        inp["geometry"]["skin_thickness"] = self._convert_unit(geo_skin)
+        inp["geometry"]["fat_thickness"] = self._convert_unit(geo_fat)
+        inp["geometry"]["ijv_radius"] = self._convert_unit(geo_ijvr)
+        inp["geometry"]["ijv_depth"] = self._convert_unit(geo_ijvd)
+        inp["geometry"]["cca_radius"] = self._convert_unit(geo_ccar)
+        inp["geometry"]["cca_depth"] = self._convert_unit(geo_ccad)
+        inp["geometry"]["ijv_cca_distance"] = self._convert_unit(geo_ijvcca)
         inp["boundary"]["x_size"] = 150
         inp["boundary"]["y_size"] = 150
         inp["boundary"]["z_size"] = 200
