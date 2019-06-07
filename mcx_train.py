@@ -354,7 +354,7 @@ class MCXGen(MCX):
         os.chdir("../..")
 
         # run WMC
-        num = 1000
+        num = 100
         args = self._get_args(mua_range, num)
         # [吸收數, SDS]
         spec = self.mch.run_wmc_single(os.path.join("train", "mch", "{}.mch".format(idx)), args)
