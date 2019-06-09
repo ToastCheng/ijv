@@ -200,7 +200,7 @@ class MCX:
 
         elif self.config["type"] == "ijv_phantom":
             for idx, wl in enumerate(self.wavelength):
-                self._make_input_ijv(idx)
+                self._make_input_ijv_phantom(idx)
                 command = self._get_command(wl)
                 print("wavelength: ", wl)
                 print(command)
