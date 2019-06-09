@@ -77,6 +77,7 @@ class MCX:
             self.melanin = melanin * 0.1
 
         elif self.config["type"] == "phantom":
+            # 校正仿體
             mua = pd.read_csv(self.config["phantom_mua"])
             musp = pd.read_csv(self.config["phantom_musp"])
 
@@ -88,6 +89,20 @@ class MCX:
                 idx: np.interp(self.wavelength, musp["wl"], musp[idx]) for idx in self.config["phantom_idx"]
                 }
 
+        elif self.config["type"] == "ijv_phantom":
+            # IJV仿體
+            mua = pd.read_csv(self.config["phantom_mua"])
+            musp = pd.read_csv(self.config["phantom_musp"])
+
+            layers = ["skin", "fat", "ml"]
+            self.mua = {
+                layer: np.interp(self.wavelength, mua['wl'], mua[layer]) for layer in layers
+            }
+
+            layers = ["skin", "fat", "ml", "ijv"]
+            self.mus = {
+                layer: np.interp(self.wavelength, musp['wl'], musp[layer]) for layer in layers
+            }
 
         self.session = os.path.join("output", self.config["session_id"])
         self.plot = os.path.join(self.session, 'plot')
@@ -182,6 +197,17 @@ class MCX:
                     os.chdir("mcx/bin")
                     os.system(command)
                     os.chdir("../..")
+
+        elif self.config["type"] == "ijv_phantom":
+            for idx, wl in enumerate(self.wavelength):
+                self._make_input_ijv(idx)
+                command = self._get_command(wl)
+                print("wavelength: ", wl)
+                print(command)
+                sys.stdout.flush()
+                os.chdir("mcx/bin")
+                os.system(command)
+                os.chdir("../..")
 
             # self.calculate_reflectance_phantom()
 
@@ -388,6 +414,132 @@ class MCX:
         with open(os.path.join(self.json_output, "input_%d.json" % 
             self.wavelength[wl_idx]), 'w+') as f:
             json.dump(mcx_input, f, indent=4)
+
+    def _make_input_ijv_phantom(self, wl_idx):
+        mcx_input = self.mcx_input
+        mcx_input["Session"]["ID"] = self.config["session_id"] + "_%d" % self.wavelength[wl_idx]
+        mcx_input["Session"]["Photons"] = self.config["num_photon"]
+        # optical parameter
+
+        # 
+        mcx_input["Domain"]["Media"][0]["mua"] = 0
+        mcx_input["Domain"]["Media"][0]["mus"] = 0
+        mcx_input["Domain"]["Media"][0]["g"] = 1
+        mcx_input["Domain"]["Media"][0]["n"] = 1
+
+
+        # skin
+        mcx_input["Domain"]["Media"][1]["name"] = "skin"
+        mcx_input["Domain"]["Media"][1]["mua"] = 0
+        mcx_input["Domain"]["Media"][1]["mus"] = self.mus["skin"][wl_idx]
+        mcx_input["Domain"]["Media"][1]["g"] = 0
+        mcx_input["Domain"]["Media"][1]["n"] = 1.4
+
+        # fat
+        mcx_input["Domain"]["Media"][2]["name"] = "fat"
+        mcx_input["Domain"]["Media"][2]["mua"] = 0
+        mcx_input["Domain"]["Media"][2]["mus"] = self.mus["fat"][wl_idx]
+        mcx_input["Domain"]["Media"][2]["g"] = 0
+        mcx_input["Domain"]["Media"][2]["n"] = 1.4
+
+        # muscle
+        mcx_input["Domain"]["Media"][3]["name"] = "muscle"
+        mcx_input["Domain"]["Media"][3]["mua"] = 0
+        mcx_input["Domain"]["Media"][3]["mus"] = self.mus["ml"][wl_idx]
+        mcx_input["Domain"]["Media"][3]["g"] = 0
+        mcx_input["Domain"]["Media"][3]["n"] = 1.4
+        
+        # IJV
+        mcx_input["Domain"]["Media"][4]["name"] = "IJV"
+        mcx_input["Domain"]["Media"][4]["mua"] = 0    # for white MC
+        mcx_input["Domain"]["Media"][4]["mus"] = 0    # 墨水無散射
+        mcx_input["Domain"]["Media"][4]["g"] = 0.9
+        mcx_input["Domain"]["Media"][4]["n"] = 1.33
+        
+        # CCA
+        mcx_input["Domain"]["Media"][5]["name"] = "CCA"
+        mcx_input["Domain"]["Media"][5]["mua"] = 0
+        mcx_input["Domain"]["Media"][5]["mus"] = self.mus["ml"][wl_idx] # 沒有CCA
+        mcx_input["Domain"]["Media"][5]["g"] = 0
+        mcx_input["Domain"]["Media"][5]["n"] = 1.4
+
+
+        # geometry
+        skin_th = self.parameters["geometry"]["skin_thickness"]
+        fat_th = self.parameters["geometry"]["fat_thickness"]
+        ijv_r = self.parameters["geometry"]["ijv_radius"]
+        ijv_d = self.parameters["geometry"]["ijv_depth"]
+        ic_dist = self.parameters["geometry"]["ijv_cca_distance"]
+        cca_r = self.parameters["geometry"]["cca_radius"]
+        cca_d = self.parameters["geometry"]["cca_depth"]
+
+
+        x_size = self.parameters["boundary"]["x_size"]
+        y_size = self.parameters["boundary"]["y_size"]
+        z_size = self.parameters["boundary"]["z_size"]
+
+        mcx_input["Domain"]["Dim"] = [x_size, y_size, z_size]
+
+        mcx_input["Shapes"][0]["Grid"]["Size"] = [x_size, y_size, z_size]
+
+        # skin
+        mcx_input["Shapes"][1]["Subgrid"]["O"] = [1, 1, 1]
+        mcx_input["Shapes"][1]["Subgrid"]["Size"] = [x_size, y_size, skin_th]
+
+        # fat
+        mcx_input["Shapes"][2]["Subgrid"]["O"] = [1, 1, 1+skin_th]
+        mcx_input["Shapes"][2]["Subgrid"]["Size"] = [x_size, y_size, fat_th]
+
+        # muscle
+        mcx_input["Shapes"][3]["Subgrid"]["O"] = [1, 1, 1+skin_th+fat_th]
+        mcx_input["Shapes"][3]["Subgrid"]["Size"] = [x_size, y_size, z_size-skin_th-fat_th]
+
+        # ijv 
+        mcx_input["Shapes"][4]["Cylinder"]["C0"] = [x_size, y_size//2, ijv_d]
+        mcx_input["Shapes"][4]["Cylinder"]["C1"] = [0, y_size//2, ijv_d]
+        mcx_input["Shapes"][4]["Cylinder"]["R"] = ijv_r
+
+        # cca 
+        mcx_input["Shapes"][5]["Cylinder"]["C0"] = [x_size, y_size//2- ic_dist, cca_d]
+        mcx_input["Shapes"][5]["Cylinder"]["C1"] = [0, y_size//2- ic_dist, cca_d]
+        mcx_input["Shapes"][5]["Cylinder"]["R"] = cca_r
+
+
+        # 改成水平！ 20190511
+        src_x = 10
+        mcx_input["Optode"]["Source"]["Pos"][0] = src_x
+        mcx_input["Optode"]["Source"]["Pos"][1] = y_size//2
+
+        mcx_input["Optode"]["Detector"] = []
+        # 肌肉
+        # for sds, r in self.fiber.values[:5]:
+        #     sds = self._convert_unit(sds)
+        #     r = self._convert_unit(r)
+        #     det = {
+        #         "R": r,
+        #         "Pos": [src_x, y_size//2 + sds, 0.0]
+        #     }
+        #     mcx_input["Optode"]["Detector"].append(det)
+        
+        # IJV
+        for sds, r in self.fiber.values:
+            sds = self._convert_unit(sds)
+            r = self._convert_unit(r)
+            det = {
+                "R": r,
+                "Pos": [src_x + sds, y_size//2, 0.0]
+            }
+            mcx_input["Optode"]["Detector"].append(det)
+
+
+        # set seed
+        mcx_input["Session"]["RNGSeed"] = randint(0, 1000000000)
+
+        # save the .json file in the output folder
+        with open(os.path.join(self.json_output, "input_%d.json" % 
+            self.wavelength[wl_idx]), 'w+') as f:
+            json.dump(mcx_input, f, indent=4)
+
 
     def _make_input_muscle(self, wl_idx):
 

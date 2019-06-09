@@ -1,0 +1,18 @@
+{
+    "geometry":{
+        "skin_thickness": 2,
+        "fat_thickness": 2.25,
+        "ijv_radius": 5.5,
+        "ijv_depth": 13,
+        "cca_radius": 1,
+        "cca_depth": 30,
+        "ijv_cca_distance": 5
+    },
+
+    "boundary":{
+        "x_size": 150,
+        "y_size": 150,
+        "z_size": 200
+    }
+
+}
