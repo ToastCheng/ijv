@@ -180,8 +180,17 @@ class MCX:
                 plt.savefig(os.path.join(self.plot_mc2, name + ".png"))
                 plt.close()
 
-
-            # self.calculate_reflectance()
+        elif self.config["type"] == "test_cv":
+            for idx, wl in enumerate(self.wavelength):
+                self._make_input_ijv(0) # 每次都跑同一個波長算CV值
+                command = self._get_command(wl)
+                print("wavelength: ", wl)
+                print(command)
+                sys.stdout.flush()
+                os.chdir("mcx/bin")
+                os.system(command)
+                os.chdir("../..")
+            
 
         elif self.config["type"] == "artery":
             self._make_input_artery(idx)
