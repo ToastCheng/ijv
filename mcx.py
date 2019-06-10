@@ -104,6 +104,21 @@ class MCX:
                 layer: np.interp(self.wavelength, musp['wl'], musp[layer]) for layer in layers
             }
 
+        elif self.config["type"] == "test_cv":
+            # IJV仿體
+            mua = pd.read_csv(self.config["phantom_mua"])
+            musp = pd.read_csv(self.config["phantom_musp"])
+
+            layers = ["skin", "fat", "ml"]
+            self.mua = {
+                layer: np.interp(self.wavelength, mua['wl'], mua[layer]) for layer in layers
+            }
+
+            layers = ["skin", "fat", "ml", "ijv"]
+            self.mus = {
+                layer: np.interp(self.wavelength, musp['wl'], musp[layer]) for layer in layers
+            }
+
         self.session = os.path.join("output", self.config["session_id"])
         self.plot = os.path.join(self.session, 'plot')
         self.plot_mc2 = os.path.join(self.session, 'plot_mc2')
@@ -182,7 +197,7 @@ class MCX:
 
         elif self.config["type"] == "test_cv":
             for idx, wl in enumerate(self.wavelength):
-                self._make_input_ijv(0) # 每次都跑同一個波長算CV值
+                self._make_input_ijv_phantom(0) # 每次都跑同一個波長算CV值
                 command = self._get_command(wl)
                 print("wavelength: ", wl)
                 print(command)
