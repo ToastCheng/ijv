@@ -13,7 +13,7 @@ clinic_data/*
 .DS_Store
 *.png
 20180408/*
-mcx/*
+mcx/bin/*
 output/*
 __pycache__/*
 stuff/*

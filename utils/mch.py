@@ -69,6 +69,50 @@ class MCHHandler:
         self.detector_n = 1.4
         self.critical_angle = np.arcsin(self.detector_na/self.detector_n)     
 
+    def run_wmc_single_test(self, mch_file, args=None):
+
+        if isinstance(args, dict):
+            args = [args]
+        if args is None:
+            args = [0]
+
+        df, header, photon = self._load_mch(mch_file)
+
+        df = df[(np.arccos(df.angle.abs()) <= self.critical_angle)&(df.detector_idx==1)]
+        if len(df) == 0:
+            print('no photon detected at %d' % wl)
+            return None, None
+        df = df.reset_index(drop=True)
+
+
+        path_length = df.iloc[:, 1:-1].values
+
+        path_length = torch.tensor(path_length).float().to(device)
+
+        # wl = random.sample([i for i in range(660, 851)], 1)[0]
+        wl = 660
+        mua = self._make_tissue_white(wl, header, args)
+
+        mua = torch.tensor(mua).float().to(device)
+
+        
+        # [光子數, 吸收數]
+        weight = torch.exp(-torch.matmul(path_length, mua)) #*header["unitmm"])
+
+        # [1, 吸收數]
+        result = torch.zeros(1, len(args)).float().to(device)
+
+        weight = weight.unsqueeze(0)
+    
+        result = torch.cat((result, weight), 0)
+
+        # [SDS, ScvO2]
+        result = result[1:]
+        s = result.cpu().numpy()/header["total_photon"]
+
+
+        return s.T
+
 
     def run_wmc_single(self, mch_file, args=None):
 
@@ -90,14 +134,15 @@ class MCHHandler:
 
         path_length = torch.tensor(path_length).float().to(device)
 
-        wl = random.sample([i for i in range(660, 851)], 1)[0]
+        # wl = random.sample([i for i in range(660, 851)], 1)[0]
+        wl = 660
         mua = self._make_tissue_white(wl, header, args)
 
         mua = torch.tensor(mua).float().to(device)
 
         
         # [光子數, 吸收數]
-        weight = torch.exp(-torch.matmul(path_length, mua) *header["unitmm"]) 
+        weight = torch.exp(-torch.matmul(path_length, mua)) #*header["unitmm"])
 
 
 
