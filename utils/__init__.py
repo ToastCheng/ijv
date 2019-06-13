@@ -105,7 +105,8 @@ def load_mch(path):
 	columns = ["detector_idx", "scattering"]
 	columns += ["media_{}".format(i) for i in range(maxmedia)]
 	columns += ["x", "y", "z", "dx", "dy", "dz"]
-	columns += ["weight"]
+	if colcount == 2 + maxmedia + 6 + 1:
+		columns += ["weight"]
 	mch_data.columns = columns
 
 	if seed_byte > 0:
