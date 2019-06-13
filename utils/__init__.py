@@ -103,7 +103,7 @@ def load_mch(path):
 	mch_data = np.asarray(mch_data).squeeze()
 	mch_data = pd.DataFrame(mch_data)
 	columns = ["detector_idx", "scattering"]
-	columns += ["media_{}".format(i) for i in range(max_media)]
+	columns += ["media_{}".format(i) for i in range(maxmedia)]
 	columns += ["x", "y", "z", "dx", "dy", "dz"]
 	columns += ["weight"]
 	mch_data.columns = columns
