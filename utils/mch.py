@@ -85,7 +85,8 @@ class MCHHandler:
         df = df.reset_index(drop=True)
 
 
-        path_length = df.iloc[:, ["media_{}".format(i) for i in range(header["maxmedia"])]].values
+        # path_length = df.iloc[:, ["media_{}".format(i) for i in range(header["maxmedia"])]].values
+        path_length = df[["media_{}".format(i) for i in range(header["maxmedia"])]].values
 
         path_length = torch.tensor(path_length).float().to(device)
 
@@ -131,7 +132,8 @@ class MCHHandler:
         df = df.reset_index(drop=True)
 
 
-        path_length = df.iloc[:, ["media_{}".format(i) for i in range(header["maxmedia"])]].values
+        # path_length = df.iloc[:, ["media_{}".format(i) for i in range(header["maxmedia"])]].values
+        path_length = df[["media_{}".format(i) for i in range(header["maxmedia"])]].values
 
         path_length = torch.tensor(path_length).float().to(device)
 
@@ -216,9 +218,12 @@ class MCHHandler:
             # 0: detector index
             # 1: prism
             if prism:
-                path_length = df.iloc[:, ["media_{}".format(i) for i in range(1, header["maxmedia"])]].values
+                # path_length = df.iloc[:, ["media_{}".format(i) for i in range(1, header["maxmedia"])]].values
+                path_length = df[["media_{}".format(i) for i in range(1, header["maxmedia"])]].values
+
             else:
-                path_length = df.iloc[:, ["media_{}".format(i) for i in range(header["maxmedia"])]].values
+                # path_length = df.iloc[:, ["media_{}".format(i) for i in range(header["maxmedia"])]].values
+                path_length = df[["media_{}".format(i) for i in range(header["maxmedia"])]].values
 
             path_length = torch.tensor(path_length).float().to(device)
 
