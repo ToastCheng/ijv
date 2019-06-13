@@ -4,6 +4,7 @@ email: mrtoastcheng@gmail.com
 """
 from struct import unpack
 import numpy as np 
+import pandas as pd 
 
 
 def load_mch(path):
@@ -100,12 +101,18 @@ def load_mch(path):
 		f.close()
 	
 	mch_data = np.asarray(mch_data).squeeze()
+	mch_data = pd.DataFrame(mch_data)
+	columns = ["detector_idx", "scattering"]
+	columns += ["media_{}".format(i) for i in range(max_media)]
+	columns += ["x", "y", "z", "dx", "dy", "dz"]
+	columns += ["weight"]
+	mch_data.columns = columns
 
 	if seed_byte > 0:
 		photon_seed = np.asarray(photon_seed).transpose((0,2,1)).squeeze()
 		return mch_data, header, photon_seed
 	else:
-		return mch_data, header
+		return mch_data, header, None
 
 
 def load_mc2(path, dimension):

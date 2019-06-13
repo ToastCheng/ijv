@@ -76,9 +76,9 @@ class MCHHandler:
         if args is None:
             args = [0]
 
-        df, header, photon = self._load_mch(mch_file)
+        df, header, photon = load_mch(mch_file)
 
-        df = df[(np.arccos(df.angle.abs()) <= self.critical_angle)&(df.detector_idx==1)]
+        df = df[(np.arccos(df.dz.abs()) <= self.critical_angle)&(df.detector_idx==1)]
         if len(df) == 0:
             print('no photon detected at %d' % wl)
             return None, None
@@ -121,9 +121,10 @@ class MCHHandler:
         if args is None:
             args = [0]
 
-        df, header, photon = self._load_mch(mch_file)
+        # df, header, photon = self._load_mch(mch_file)
+        df, header, photon = load_mch(mch_file)
 
-        df = df[np.arccos(df.angle.abs()) <= self.critical_angle]
+        df = df[np.arccos(df.dz.abs()) <= self.critical_angle]
         if len(df) == 0:
             print('no photon detected at %d' % wl)
             return None, None
@@ -203,9 +204,9 @@ class MCHHandler:
             else:
                 raise Exception("Tissue type error!")
 
-            df, header, photon = self._load_mch(f)
+            df, header, photon = load_mch(f)
 
-            df = df[np.arccos(df.angle.abs()) <= self.critical_angle]
+            df = df[np.arccos(df.dz.abs()) <= self.critical_angle]
             if len(df) == 0:
                 print('no photon detected at %d' % wl)
                 return None, None
@@ -446,6 +447,7 @@ class MCHHandler:
 
 
     def _load_mch(self, path):
+        # to be deprecated
         data = load_mch(path)
         # check if the mcx saved the photon seed
         if data[1]["seed_byte"] == 0:
