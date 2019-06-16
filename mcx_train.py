@@ -64,19 +64,19 @@ class MCXGen(MCX):
         skin_g = random.uniform(optics_range["skin_g"][0], optics_range["skin_g"][1])
         skin_n = random.uniform(optics_range["skin_n"][0], optics_range["skin_n"][1])
         
-        fat_mus = random.uniform(optics_range["fat_musp"][0], optics_range["fat_musp"][1])
+        fat_mus = random.uniform(optics_range["fat_mus"][0], optics_range["fat_mus"][1])
         fat_g = random.uniform(optics_range["fat_g"][0], optics_range["fat_g"][1])
         fat_n = random.uniform(optics_range["fat_n"][0], optics_range["fat_n"][1])
         
-        muscle_mus = random.uniform(optics_range["muscle_musp"][0], optics_range["muscle_musp"][1])
+        muscle_mus = random.uniform(optics_range["muscle_mus"][0], optics_range["muscle_mus"][1])
         muscle_g = random.uniform(optics_range["muscle_g"][0], optics_range["muscle_g"][1])
         muscle_n = random.uniform(optics_range["muscle_n"][0], optics_range["muscle_n"][1])
         
-        ijv_mus = random.uniform(optics_range["ijv_musp"][0], optics_range["ijv_musp"][1])
+        ijv_mus = random.uniform(optics_range["ijv_mus"][0], optics_range["ijv_mus"][1])
         ijv_g = random.uniform(optics_range["ijv_g"][0], optics_range["ijv_g"][1])
         ijv_n = random.uniform(optics_range["ijv_n"][0], optics_range["ijv_n"][1])
         
-        cca_mus = random.uniform(optics_range["cca_musp"][0], optics_range["cca_musp"][1])
+        cca_mus = random.uniform(optics_range["cca_mus"][0], optics_range["cca_mus"][1])
         cca_g = random.uniform(optics_range["cca_g"][0], optics_range["cca_g"][1])
         cca_n = random.uniform(optics_range["cca_n"][0], optics_range["cca_n"][1])
                 
@@ -102,28 +102,18 @@ class MCXGen(MCX):
         with open(self.config["parameters"]) as f:
             inp = json.load(f)
 
-        inp["skin"]["muspx"] = skin_mus
-        inp["skin"]["mua"] = 0
         inp["skin"]["g"] = skin_g
         inp["skin"]["n"] = skin_n
 
-        inp["fat"]["muspx"] = fat_musp
-        inp["fat"]["mua"] = 0
         inp["fat"]["g"] = fat_g
         inp["fat"]["n"] = fat_n
 
-        inp["muscle"]["muspx"] = muscle_musp
-        inp["muscle"]["mua"] = 0
         inp["muscle"]["g"] = muscle_g
         inp["muscle"]["n"] = muscle_n
 
-        inp["IJV"]["muspx"] = ijv_musp
-        inp["IJV"]["mua"] = 0
         inp["IJV"]["g"] = ijv_g
         inp["IJV"]["n"] = ijv_n
 
-        inp["CCA"]["muspx"] = cca_musp
-        inp["CCA"]["mua"] = 0
         inp["CCA"]["g"] = cca_g
         inp["CCA"]["n"] = cca_n
 
