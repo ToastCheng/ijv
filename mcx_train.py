@@ -270,7 +270,7 @@ class MCXGen(MCX):
 
         mua = np.array(mua).T
 
-        spec = self.mch.run_wmc_train(os.path.join("train", "mch", "{}.mch".format(idx)), args)
+        spec = self.mch.run_wmc_train(os.path.join("train", "mch", "{}.mch".format(idx)), mua)
 
 
 
