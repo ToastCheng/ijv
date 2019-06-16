@@ -14,68 +14,35 @@ from utils.mch import MCHHandler
 class MCXGen(MCX):
     def __init__(self):
         self.load_config("configs/train.json")
-        self.input = {
-            "skin_mua": None,
-            "skin_mus": None,
-            "skin_g": None,
-            "skin_n": None,
-
-            "fat_mua": None,
-            "fat_mus": None,
-            "fat_g": None,
-            "fat_n": None,
-
-            "muscle_mua": None,
-            "muscle_mus": None,
-            "muscle_g": None,
-            "muscle_n": None,
-
-            "ijv_mua": None,
-            "ijv_mus": None,
-            "ijv_g": None,
-            "ijv_n": None,
-
-            "cca_mua": None,
-            "cca_mus": None,
-            "cca_g": None,
-            "cca_n": None,
-
-            "skin_thickness": None,
-            "fat_thickness": None,
-            "ijv_radius": None,
-            "ijv_depth": None,
-            "cca_radius": None,
-            "cca_depth": None,
-            "ijv_cca_distance": None
-        }
         self.mch = MCHHandler()
+        self.absorb_num = 100
 
 
     def train(self):
-        # 1/cm
-        mus_range = {
-            "skin_musp": (0, 30),
-            "skin_bmie": (0.01, 2.453),
+        # 1/mm
+        optics_range = {
+            "skin_mus": (0, 30),
+            "skin_mua": (0.01, 2.453),
             "skin_g": (0.6, 0.9),
             "skin_n": (1.38, 1.45),
 
-            "fat_musp": (1.7, 35.8),
-            "fat_bmie": (0.085, 0.988),
+            "fat_mus": (1.7, 35.8),
+            "fat_mua": (0.085, 0.988),
             "fat_g": (0.8, 0.99),
             "fat_n": (1.38, 1.45),
 
-            "muscle_musp": (9.8, 40.0),
-            "muscle_bmie": (0.01, 2.82),
+            "muscle_mus": (9.8, 40.0),
+            "muscle_mua": (0.01, 2.82),
             "muscle_g": (0.8, 0.99),
             "muscle_n": (1.38, 1.45),
 
-            "ijv_musp": (1, 20),
-            "ijv_bmie": (0.5, 1),
+            "ijv_mus": (1, 20),
+            "ijv_mua": (0.5, 1),
             "ijv_g": (0.8, 0.99),
             "ijv_n": (1.38, 1.45),
 
-            "cca_musp": (1, 20),
-            "cca_bmie": (0.5, 1),
+            "cca_mus": (1, 20),
+            "cca_mua": (0.5, 1),
             "cca_g": (0.8, 0.99),
             "cca_n": (1.38, 1.45),
         }
@@ -91,51 +58,27 @@ class MCXGen(MCX):
             "geo_ijvcca": (5, 10)
         }
 
-        mua_range = {
-            "skin_b": (0.0012, 0.8),
-            "skin_s": (0.7, 1.0),
-            "skin_w": (0.01, 0.8),
-            "skin_f": (0.01, 0.8),
-            "skin_m": (0.0087, 0.8),
-
-            "fat_b": (0.0, 0.1),
-            "fat_s": (0.5, 0.9),
-            "fat_f": (0.8, 1),
-
-            "muscle_b": (0.005, 0.5),
-            "muscle_s": (0.5, 0.9),
-            "muscle_w": (0.5, 0.9),
-
-            "ijv_s": (0.0, 1.0),
-
-            "cca_s": (0.0, 1.0),
-        }
 
         # mus
-        skin_musp = random.uniform(mus_range["skin_musp"][0], mus_range["skin_musp"][1])
-        skin_bmie = random.uniform(mus_range["skin_bmie"][0], mus_range["skin_bmie"][1])
-        skin_g = random.uniform(mus_range["skin_g"][0], mus_range["skin_g"][1])
-        skin_n = random.uniform(mus_range["skin_n"][0], mus_range["skin_n"][1])
+        skin_mus = random.uniform(optics_range["skin_mus"][0], optics_range["skin_mus"][1])
+        skin_g = random.uniform(optics_range["skin_g"][0], optics_range["skin_g"][1])
+        skin_n = random.uniform(optics_range["skin_n"][0], optics_range["skin_n"][1])
         
-        fat_musp = random.uniform(mus_range["fat_musp"][0], mus_range["fat_musp"][1])
-        fat_bmie = random.uniform(mus_range["fat_bmie"][0], mus_range["fat_bmie"][1])
-        fat_g = random.uniform(mus_range["fat_g"][0], mus_range["fat_g"][1])
-        fat_n = random.uniform(mus_range["fat_n"][0], mus_range["fat_n"][1])
+        fat_mus = random.uniform(optics_range["fat_musp"][0], optics_range["fat_musp"][1])
+        fat_g = random.uniform(optics_range["fat_g"][0], optics_range["fat_g"][1])
+        fat_n = random.uniform(optics_range["fat_n"][0], optics_range["fat_n"][1])
         
-        muscle_musp = random.uniform(mus_range["muscle_musp"][0], mus_range["muscle_musp"][1])
-        muscle_bmie = random.uniform(mus_range["muscle_bmie"][0], mus_range["muscle_bmie"][1])
-        muscle_g = random.uniform(mus_range["muscle_g"][0], mus_range["muscle_g"][1])
-        muscle_n = random.uniform(mus_range["muscle_n"][0], mus_range["muscle_n"][1])
+        muscle_mus = random.uniform(optics_range["muscle_musp"][0], optics_range["muscle_musp"][1])
+        muscle_g = random.uniform(optics_range["muscle_g"][0], optics_range["muscle_g"][1])
+        muscle_n = random.uniform(optics_range["muscle_n"][0], optics_range["muscle_n"][1])
         
-        ijv_musp = random.uniform(mus_range["ijv_musp"][0], mus_range["ijv_musp"][1])
-        ijv_bmie = random.uniform(mus_range["ijv_bmie"][0], mus_range["ijv_bmie"][1])
-        ijv_g = random.uniform(mus_range["ijv_g"][0], mus_range["ijv_g"][1])
-        ijv_n = random.uniform(mus_range["ijv_n"][0], mus_range["ijv_n"][1])
+        ijv_mus = random.uniform(optics_range["ijv_musp"][0], optics_range["ijv_musp"][1])
+        ijv_g = random.uniform(optics_range["ijv_g"][0], optics_range["ijv_g"][1])
+        ijv_n = random.uniform(optics_range["ijv_n"][0], optics_range["ijv_n"][1])
         
-        cca_musp = random.uniform(mus_range["cca_musp"][0], mus_range["cca_musp"][1])
-        cca_bmie = random.uniform(mus_range["cca_bmie"][0], mus_range["cca_bmie"][1])
-        cca_g = random.uniform(mus_range["cca_g"][0], mus_range["cca_g"][1])
-        cca_n = random.uniform(mus_range["cca_n"][0], mus_range["cca_n"][1])
+        cca_mus = random.uniform(optics_range["cca_musp"][0], optics_range["cca_musp"][1])
+        cca_g = random.uniform(optics_range["cca_g"][0], optics_range["cca_g"][1])
+        cca_n = random.uniform(optics_range["cca_n"][0], optics_range["cca_n"][1])
                 
         # geo
 
@@ -159,28 +102,28 @@ class MCXGen(MCX):
         with open(self.config["parameters"]) as f:
             inp = json.load(f)
 
-        inp["skin"]["muspx"] = skin_musp
-        inp["skin"]["bmie"] = skin_bmie
+        inp["skin"]["muspx"] = skin_mus
+        inp["skin"]["mua"] = 0
         inp["skin"]["g"] = skin_g
         inp["skin"]["n"] = skin_n
 
         inp["fat"]["muspx"] = fat_musp
-        inp["fat"]["bmie"] = fat_bmie
+        inp["fat"]["mua"] = 0
         inp["fat"]["g"] = fat_g
         inp["fat"]["n"] = fat_n
 
         inp["muscle"]["muspx"] = muscle_musp
-        inp["muscle"]["bmie"] = muscle_bmie
+        inp["muscle"]["mua"] = 0
         inp["muscle"]["g"] = muscle_g
         inp["muscle"]["n"] = muscle_n
 
         inp["IJV"]["muspx"] = ijv_musp
-        inp["IJV"]["bmie"] = ijv_bmie
+        inp["IJV"]["mua"] = 0
         inp["IJV"]["g"] = ijv_g
         inp["IJV"]["n"] = ijv_n
 
         inp["CCA"]["muspx"] = cca_musp
-        inp["CCA"]["bmie"] = cca_bmie
+        inp["CCA"]["mua"] = 0
         inp["CCA"]["g"] = cca_g
         inp["CCA"]["n"] = cca_n
 
@@ -197,9 +140,6 @@ class MCXGen(MCX):
 
 
         # make input
-        wl = [i for i in range(660, 851)]
-        wl_idx = random.sample([ i for i in range(len(wl))], 1)[0]
-        wl = wl[wl_idx]
         idx = self._get_idx()
 
         mcx_input = self.mcx_input
@@ -215,12 +155,6 @@ class MCXGen(MCX):
 
 
         # skin
-        skin_mus = self._calculate_mus(
-            wl_idx,
-            inp["skin"]["muspx"], 
-            inp["skin"]["bmie"],
-            inp["skin"]["g"]
-        )
         mcx_input["Domain"]["Media"][1]["name"] = "skin"
         mcx_input["Domain"]["Media"][1]["mua"] = 0
         mcx_input["Domain"]["Media"][1]["mus"] = skin_mus
@@ -228,12 +162,6 @@ class MCXGen(MCX):
         mcx_input["Domain"]["Media"][1]["n"] = inp["skin"]["n"]
 
         # fat
-        fat_mus = self._calculate_mus(
-            wl_idx,
-            inp["fat"]["muspx"], 
-            inp["fat"]["bmie"],
-            inp["fat"]["g"]
-        )
         mcx_input["Domain"]["Media"][2]["name"] = "fat"
         mcx_input["Domain"]["Media"][2]["mua"] = 0
         mcx_input["Domain"]["Media"][2]["mus"] = fat_mus
@@ -241,12 +169,6 @@ class MCXGen(MCX):
         mcx_input["Domain"]["Media"][2]["n"] = inp["fat"]["n"]
 
         # muscle
-        muscle_mus = self._calculate_mus(
-            wl_idx,
-            inp["muscle"]["muspx"], 
-            inp["muscle"]["bmie"],
-            inp["muscle"]["g"]
-        )
         mcx_input["Domain"]["Media"][3]["name"] = "muscle"
         mcx_input["Domain"]["Media"][3]["mua"] = 0
         mcx_input["Domain"]["Media"][3]["mus"] = muscle_mus
@@ -254,25 +176,13 @@ class MCXGen(MCX):
         mcx_input["Domain"]["Media"][3]["n"] = inp["muscle"]["n"]
         
         # IJV
-        ijv_mus = self._calculate_mus(
-            wl_idx,
-            inp["IJV"]["muspx"], 
-            inp["IJV"]["bmie"],
-            inp["IJV"]["g"]
-        )
         mcx_input["Domain"]["Media"][4]["name"] = "IJV"
-        mcx_input["Domain"]["Media"][4]["mua"] = 0    # for white MC
+        mcx_input["Domain"]["Media"][4]["mua"] = 0
         mcx_input["Domain"]["Media"][4]["mus"] = ijv_mus 
         mcx_input["Domain"]["Media"][4]["g"] = inp["IJV"]["g"]
         mcx_input["Domain"]["Media"][4]["n"] = inp["IJV"]["n"]
         
         # CCA
-        cca_mus = self._calculate_mus(
-            wl_idx,
-            inp["CCA"]["muspx"], 
-            inp["CCA"]["bmie"],
-            inp["CCA"]["g"]
-        )
         mcx_input["Domain"]["Media"][5]["name"] = "CCA"
         mcx_input["Domain"]["Media"][5]["mua"] = 0
         mcx_input["Domain"]["Media"][5]["mus"] = cca_mus 
@@ -344,7 +254,7 @@ class MCXGen(MCX):
         mcx_input["Session"]["RNGSeed"] = random.randint(0, 1000000000)
 
         # save the .json file in the output folder
-        with open("train/input_mcx.json", 'w+') as f:
+        with open("train/input_mcx_{}.json".format(idx), 'w+') as f:
             json.dump(mcx_input, f, indent=4)
 
         command = self._get_command(idx)
@@ -354,104 +264,30 @@ class MCXGen(MCX):
         os.chdir("../..")
 
         # run WMC
-        num = 100
-        args = self._get_args(mua_range, num)
-        # [吸收數, SDS]
-        spec = self.mch.run_wmc_single(os.path.join("train", "mch", "{}.mch".format(idx)), args)
+        mua = []
+        for i in range(self.absorb_num):
+            skin_mua = random.uniform(optics_range["skin_mua"][0], optics_range["skin_mua"][1])
 
-        # mua
-        oxy = self.mch.mua['oxy'].values
-        deoxy = self.mch.mua['deoxy'].values
-        water = self.mch.mua['water'].values
-        collagen = self.mch.mua['collagen'].values
-        fat = self.mch.mua['fat'].values
-        melanin = self.mch.mua['mel'].values
-        wavelength = self.mch.mua['wavelength'].values
+            fat_mua = random.uniform(optics_range["fat_mua"][0], optics_range["fat_mua"][1])
 
-        # interpolation
-        oxy = np.interp(wl, wavelength, oxy)
-        deoxy = np.interp(wl, wavelength, deoxy)
-        water = np.interp(wl, wavelength, water)
-        collagen = np.interp(wl, wavelength, collagen)
-        fat = np.interp(wl, wavelength, fat)
-        melanin = np.interp(wl, wavelength, melanin)
+            muscle_mua = random.uniform(optics_range["muscle_mua"][0], optics_range["muscle_mua"][1])
 
-        # turn the unit 1/cm --> 1/mm
-        oxy *= 0.1
-        deoxy *= 0.1
-        water *= 0.1
-        collagen *= 0.1
-        fat *= 0.1
-        melanin *= 0.1
+            ijv_mua = random.uniform(optics_range["ijv_mua"][0], optics_range["ijv_mua"][1])
+
+            cca_mua = random.uniform(optics_range["cca_mua"][0], optics_range["cca_mua"][1])
+
+            mua += [np.array([skin_mua, fat_mua, muscle_mua, ijv_mua, cca_mua])]
+
+        mua = np.array(mua).T
+
+        spec = self.mch.run_wmc_train(os.path.join("train", "mch", "{}.mch".format(idx)), args)
 
 
 
-        for i in range(num):
-            skin_mua = self.mch._calculate_mua(
-                args[i]["skin"]["blood_volume_fraction"],
-                args[i]["skin"]["ScvO2"],
-                args[i]["skin"]["water_volume"],
-                args[i]["skin"]["fat_volume"],
-                args[i]["skin"]["melanin_volume"],
-                oxy, 
-                deoxy, 
-                water,
-                fat,
-                melanin,
-                collagen
-            )
-            fat_mua = self.mch._calculate_mua(
-                args[i]["fat"]["blood_volume_fraction"],
-                args[i]["fat"]["ScvO2"],
-                args[i]["fat"]["water_volume"],
-                args[i]["fat"]["fat_volume"],
-                args[i]["fat"]["melanin_volume"],
-                oxy, 
-                deoxy, 
-                water,
-                fat,
-                melanin,
-                collagen
-            )
-            muscle_mua = self.mch._calculate_mua(
-                args[i]["muscle"]["blood_volume_fraction"],
-                args[i]["muscle"]["ScvO2"],
-                args[i]["muscle"]["water_volume"],
-                args[i]["muscle"]["fat_volume"],
-                args[i]["muscle"]["melanin_volume"],
-                oxy, 
-                deoxy, 
-                water,
-                fat,
-                melanin,
-                collagen
-            )
-            ijv_mua = self.mch._calculate_mua(
-                args[i]["ijv"]["blood_volume_fraction"],
-                args[i]["ijv"]["ScvO2"],
-                args[i]["ijv"]["water_volume"],
-                args[i]["ijv"]["fat_volume"],
-                args[i]["ijv"]["melanin_volume"],
-                oxy, 
-                deoxy, 
-                water,
-                fat,
-                melanin,
-                collagen
-            )
-            cca_mua = self.mch._calculate_mua(
-                args[i]["cca"]["blood_volume_fraction"],
-                args[i]["cca"]["ScvO2"],
-                args[i]["cca"]["water_volume"],
-                args[i]["cca"]["fat_volume"],
-                args[i]["cca"]["melanin_volume"],
-                oxy, 
-                deoxy, 
-                water,
-                fat,
-                melanin,
-                collagen
-            )
+        # save result to DB
+        for i in range(self.absorb_num):
+
+
             field = "idx, "
             field += "skin_mua, skin_mus, skin_g, skin_n, "
             field += "fat_mua, fat_mus, fat_g, fat_n, "
@@ -462,11 +298,11 @@ class MCXGen(MCX):
             field += "reflectance_20, reflectance_24, reflectance_28"
 
             values = "'{}', ".format(idx)
-            values += "'{}', '{}', '{}', '{}', ".format(skin_mua, skin_mus, skin_g, skin_n)
-            values += "'{}', '{}', '{}', '{}', ".format(fat_mua, fat_mus, fat_g, fat_n)
-            values += "'{}', '{}', '{}', '{}', ".format(muscle_mua, muscle_mus, muscle_g, muscle_n)
-            values += "'{}', '{}', '{}', '{}', ".format(ijv_mua, ijv_mus, ijv_g, ijv_n)
-            values += "'{}', '{}', '{}', '{}', ".format(cca_mua, cca_mus, cca_g, cca_n)
+            values += "'{}', '{}', '{}', '{}', ".format(mua[i][0], skin_mus, skin_g, skin_n)
+            values += "'{}', '{}', '{}', '{}', ".format(mua[i][1], fat_mus, fat_g, fat_n)
+            values += "'{}', '{}', '{}', '{}', ".format(mua[i][2], muscle_mus, muscle_g, muscle_n)
+            values += "'{}', '{}', '{}', '{}', ".format(mua[i][3], ijv_mus, ijv_g, ijv_n)
+            values += "'{}', '{}', '{}', '{}', ".format(mua[i][4], cca_mus, cca_g, cca_n)
             values += "'{}', '{}', '{}', '{}', '{}', '{}', '{}', ".format(
                 geo_skin, geo_fat, geo_ijvr, geo_ijvd, geo_ccar, geo_ccad, geo_ijvcca
             )
@@ -480,16 +316,17 @@ class MCXGen(MCX):
                 db="ijv"
             )
 
-            sql = "INSERT INTO ijv_ann_2({}) VALUES({})".format(field, values)
+            sql = "INSERT INTO ijv_ann_3({}) VALUES({})".format(field, values)
             cursor = conn.cursor()
             cursor.execute(sql)
             conn.commit()
+
 
     def _get_command(self, idx):
         # create the command for mcx
 
         session_name = "\"{}\" ".format(idx)
-        geometry_file = "\"{}\" ".format(os.path.abspath(os.path.join("train", "input_mcx.json")))
+        geometry_file = "\"{}\" ".format(os.path.abspath(os.path.join("train", "input_mcx_{}.json".format(idx))))
         root = "\"{}\" ".format(os.path.abspath(os.path.join("train", "mch")))
         unitmm = "%f " % self.config["voxel_size"]
         photon = "%d " % self.config["photon_batch"]
@@ -530,7 +367,6 @@ class MCXGen(MCX):
         return command
 
 
-
     @staticmethod
     def _get_idx(n=10):
         assert n > 1, "n should be greater than 1"
@@ -538,76 +374,6 @@ class MCXGen(MCX):
         rest = "".join(random.sample(string.ascii_letters + string.digits, n-1))
         return first + rest
 
-
-
-    @staticmethod
-    def _get_args(x_range, num=50000):
-        args = []
-
-        for i in range(num):
-            sb = random.uniform(x_range["skin_b"][0], x_range["skin_b"][1])
-            ss = random.uniform(x_range["skin_s"][0], x_range["skin_s"][1])
-            sw = min(random.uniform(x_range["skin_w"][0], x_range["skin_w"][1]), 1-sb)
-            sf = min(random.uniform(x_range["skin_f"][0], x_range["skin_f"][1]), 1-sb-sw)
-            sm = 1-sb-sw-sf
-            fb = random.uniform(x_range["fat_b"][0], x_range["fat_b"][1])
-            fs = random.uniform(x_range["fat_s"][0], x_range["fat_s"][1])
-            ff = 1 - fb
-
-
-            mb = random.uniform(x_range["muscle_b"][0], x_range["muscle_b"][1])
-            ms = random.uniform(x_range["muscle_s"][0], x_range["muscle_s"][1])
-            mw = min(random.uniform(x_range["muscle_w"][0], x_range["muscle_w"][1]), 1-mb)
-            mc = 1 - mb - mw
-            is_ = random.uniform(x_range["ijv_s"][0], x_range["ijv_s"][1])
-            cs = random.uniform(x_range["cca_s"][0], x_range["cca_s"][1])
-            arg = {
-                "skin":{
-                    "blood_volume_fraction": sb,
-                    "ScvO2": ss,
-                    "water_volume": sw,
-                    "fat_volume": sf,
-                    "melanin_volume": sm,
-                    "collagen_colume": 0
-                },
-
-                "fat":{
-                    "blood_volume_fraction": fb,
-                    "ScvO2": fs,
-                    "water_volume": 0,
-                    "fat_volume": ff,
-                    "melanin_volume": 0,
-                    "collagen_colume": 0
-                },
-
-                "muscle":{
-                    "blood_volume_fraction": mb,
-                    "ScvO2": ms,
-                    "water_volume": mw,
-                    "fat_volume": 0,
-                    "melanin_volume": 0,
-                    "collagen_colume": mc
-                },
-                "ijv":{
-                    "blood_volume_fraction": 1,
-                    "ScvO2": is_,
-                    "water_volume": 0,
-                    "fat_volume": 0,
-                    "melanin_volume": 0,
-                    "collagen_colume": 0
-                },
-                "cca":{
-                    "blood_volume_fraction": 1,
-                    "ScvO2": cs,
-                    "water_volume": 0,
-                    "fat_volume": 0,
-                    "melanin_volume": 0,
-                    "collagen_colume": 0
-                },
-            }
-            args += [arg]
-        
-        return args
 
 
 if __name__ == "__main__":

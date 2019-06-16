@@ -69,48 +69,54 @@ class MCHHandler:
         self.detector_n = 1.4
         self.critical_angle = np.arcsin(self.detector_na/self.detector_n)     
 
-    def run_wmc_single_test(self, mch_file, args=None):
+    def run_wmc_train(self, mch_file, mua):
+        # mua_list [num_absorb, num_medium]
 
-        if isinstance(args, dict):
-            args = [args]
-        if args is None:
-            args = [0]
+
 
         df, header, photon = load_mch(mch_file)
-
-        df = df[(np.arccos(df.dz.abs()) <= self.critical_angle)&(df.detector_idx==1)]
-        if len(df) == 0:
-            print('no photon detected at %d' % wl)
-            return None, None
+        df = df[np.arccos(df.dz.abs()) <= self.critical_angle]
+        
         df = df.reset_index(drop=True)
-
-
         # path_length = df.iloc[:, ["media_{}".format(i) for i in range(header["maxmedia"])]].values
         path_length = df[["media_{}".format(i) for i in range(header["maxmedia"])]].values
 
         path_length = torch.tensor(path_length).float().to(device)
 
-        # wl = random.sample([i for i in range(660, 851)], 1)[0]
-        wl = 660
-        mua = self._make_tissue_white(wl, header, args)
-
         mua = torch.tensor(mua).float().to(device)
 
         
         # [光子數, 吸收數]
-        weight = torch.exp(-torch.matmul(path_length, mua)) #*header["unitmm"])
+        weight = torch.exp(-torch.matmul(path_length, mua))
+
 
         # [1, 吸收數]
         result = torch.zeros(1, len(args)).float().to(device)
 
-        weight = weight.unsqueeze(0)
-    
-        result = torch.cat((result, weight), 0)
+        # seperate photon with different detector
+        for idx in range(1, header["detnum"]+1):
+
+            # get the index of specific index
+            detector_list = df.index[df["detector_idx"] == idx].tolist()
+            if len(detector_list) == 0:
+                # print("detector #%d detected 0 photon" % idx)
+                result = torch.cat((result, torch.zeros(1, weight.shape[1]).float().to(device)), 0)
+                continue
+                
+            # pick the photon that detected by specific detector
+            
+            # [光子數, 吸收數]
+            _weight = weight[detector_list]
+            
+            _weight = _weight.sum(0)
+            _weight = _weight.unsqueeze(0)
+
+            
+            result = torch.cat((result, _weight), 0)
 
         # [SDS, ScvO2]
         result = result[1:]
         s = result.cpu().numpy()/header["total_photon"]
-
 
         return s.T
 
@@ -137,8 +143,8 @@ class MCHHandler:
 
         path_length = torch.tensor(path_length).float().to(device)
 
-        # wl = random.sample([i for i in range(660, 851)], 1)[0]
-        wl = 660
+        wl = random.sample([i for i in range(660, 851)], 1)[0]
+        # wl = 660
         mua = self._make_tissue_white(wl, header, args)
 
         mua = torch.tensor(mua).float().to(device)
@@ -146,8 +152,6 @@ class MCHHandler:
         
         # [光子數, 吸收數]
         weight = torch.exp(-torch.matmul(path_length, mua)) #*header["unitmm"])
-
-
 
 
         # [1, 吸收數]

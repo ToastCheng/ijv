@@ -323,6 +323,7 @@ class MCX:
             self.parameters["fat"]["bmie"],
             self.parameters["fat"]["g"]
             )
+
         mcx_input["Domain"]["Media"][2]["g"] = self.parameters["fat"]["g"]
         mcx_input["Domain"]["Media"][2]["n"] = self.parameters["fat"]["n"]
 
@@ -335,12 +336,13 @@ class MCX:
             self.parameters["muscle"]["bmie"],
             self.parameters["muscle"]["g"]
             )
+
         mcx_input["Domain"]["Media"][3]["g"] = self.parameters["muscle"]["g"]
         mcx_input["Domain"]["Media"][3]["n"] = self.parameters["muscle"]["n"]
         
         # IJV
         mcx_input["Domain"]["Media"][4]["name"] = "IJV"
-        mcx_input["Domain"]["Media"][4]["mua"] = 0    # for white MC
+        mcx_input["Domain"]["Media"][4]["mua"] = 0
         mcx_input["Domain"]["Media"][4]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["IJV"]["muspx"], 
@@ -352,7 +354,7 @@ class MCX:
         
         # CCA
         mcx_input["Domain"]["Media"][5]["name"] = "CCA"
-        mcx_input["Domain"]["Media"][5]["mua"] = 0
+        mcx_input["Domain"]["Media"][5]["mua"] = 30
         mcx_input["Domain"]["Media"][5]["mus"] = self._calculate_mus(
             wl_idx,
             self.parameters["CCA"]["muspx"], 
@@ -432,7 +434,7 @@ class MCX:
 
 
         # set seed
-        mcx_input["Session"]["RNGSeed"] = randint(0, 1000000000)
+        # mcx_input["Session"]["RNGSeed"] = randint(0, 1000000000)
 
         # save the .json file in the output folder
         with open(os.path.join(self.json_output, "input_%d.json" % 
@@ -455,35 +457,35 @@ class MCX:
         # skin
         mcx_input["Domain"]["Media"][1]["name"] = "skin"
         mcx_input["Domain"]["Media"][1]["mua"] = 0
-        mcx_input["Domain"]["Media"][1]["mus"] = self.mus["skin"][0]
-        mcx_input["Domain"]["Media"][1]["g"] = 0
+        mcx_input["Domain"]["Media"][1]["mus"] = 5
+        mcx_input["Domain"]["Media"][1]["g"] = 0.7
         mcx_input["Domain"]["Media"][1]["n"] = 1.4
 
         # fat
         mcx_input["Domain"]["Media"][2]["name"] = "fat"
         mcx_input["Domain"]["Media"][2]["mua"] = 0
-        mcx_input["Domain"]["Media"][2]["mus"] = self.mus["fat"][0]
-        mcx_input["Domain"]["Media"][2]["g"] = 0
+        mcx_input["Domain"]["Media"][2]["mus"] = 30
+        mcx_input["Domain"]["Media"][2]["g"] = 0.9
         mcx_input["Domain"]["Media"][2]["n"] = 1.4
 
         # muscle
         mcx_input["Domain"]["Media"][3]["name"] = "muscle"
         mcx_input["Domain"]["Media"][3]["mua"] = 0
-        mcx_input["Domain"]["Media"][3]["mus"] = self.mus["ml"][0]
-        mcx_input["Domain"]["Media"][3]["g"] = 0
+        mcx_input["Domain"]["Media"][3]["mus"] = 10
+        mcx_input["Domain"]["Media"][3]["g"] = 0.9
         mcx_input["Domain"]["Media"][3]["n"] = 1.4
         
         # IJV
         mcx_input["Domain"]["Media"][4]["name"] = "IJV"
         mcx_input["Domain"]["Media"][4]["mua"] = 0    # for white MC
-        mcx_input["Domain"]["Media"][4]["mus"] = 0    # 墨水無散射
+        mcx_input["Domain"]["Media"][4]["mus"] = 5    # 墨水無散射
         mcx_input["Domain"]["Media"][4]["g"] = 0.9
         mcx_input["Domain"]["Media"][4]["n"] = 1.33
         
         # CCA
         mcx_input["Domain"]["Media"][5]["name"] = "CCA"
         mcx_input["Domain"]["Media"][5]["mua"] = 0
-        mcx_input["Domain"]["Media"][5]["mus"] = self.mus["ml"][0] # 沒有CCA
+        mcx_input["Domain"]["Media"][5]["mus"] = 0.1 # 沒有CCA
         mcx_input["Domain"]["Media"][5]["g"] = 0
         mcx_input["Domain"]["Media"][5]["n"] = 1.4
 
@@ -857,7 +859,7 @@ class MCX:
 
 
         # set seed
-        mcx_input["Session"]["RNGSeed"] = randint(0, 1000000000)
+        # mcx_input["Session"]["RNGSeed"] = randint(0, 1000000000)
 
 
         # save the .json file in the output folder
@@ -886,7 +888,6 @@ class MCX:
         # maxdetphoton = "%d" % (self.config["num_photon"]//5)
         # save_mc2 = "0 " if self.config["train"] else "1 "
         # mc2 is seldom used
-        save_mc2 = "0 "
 
         if os.name == "posix":
             # linux
@@ -896,25 +897,39 @@ class MCX:
             command = "mcx.exe"
         else:
             command = "./mcx"
-        command += " --session " + session_name +\
-        "--input " + geometry_file +\
-        "--root " + root +\
-        "--gpu 1 " +\
-        "--autopilot 1 " +\
-        "--photon " + photon +\
-        "--repeat " + num_batch +\
-        "--normalize 1 " +\
-        "--save2pt " + save_mc2 +\
-        "--reflect 1 " +\
-        "--savedet 1 " +\
-        "--saveexit 1 " +\
-        "--unitinmm " + unitmm +\
-        "--saveseed 0 " +\
-        "--skipradius -2 " +\
-        "--array 0 " +\
-        "--dumpmask 0 " +\
-        "--maxdetphoton " + maxdetphoton
-        
+        command += " --session {} ".format(session_name)
+        command += "--input {} ".format(geometry_file)
+        command += "--root {} ".format(root)
+        command += "--gpu 1 " 
+        command += "--autopilot 1 " 
+        command += "--photon {} ".format(photon)
+        command += "--repeat {} ".format(num_batch)
+        command += "--normalize 1 " 
+        command += "--reflect 1 " 
+        command += "--savedet 1 " 
+        command += "--saveexit 1 " 
+        command += "--unitinmm {} ".format(unitmm )
+        command += "--skipradius -2 " 
+        command += "--array 0 " 
+        command += "--dumpmask 0 " 
+        command += "--maxdetphoton {} ".format(maxdetphoton)
+        if self.config.get("replay", None):
+            command += "--saveseed 1 "
+            if self.config.get("replay_mch", None):
+                command += "--save2pt 1 "
+                command += "--replaydet 1 "
+                command += "--seed {} ".format(self.config["replay_mch"])
+                command += "--outputtype {} ".format("J")
+            else:
+                command += "--seed {} ".format(randint(0, 1000000000))
+                command += "--save2pt 0 "
+        else:
+            command += "--saveseed 0 "
+            command += "--save2pt 0 "
+
+
+
+
         return command
 
     def _calculate_mua(self, idx, b, s, w, f, m):
