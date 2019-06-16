@@ -288,11 +288,11 @@ class MCXGen(MCX):
             field += "reflectance_20, reflectance_24, reflectance_28"
 
             values = "'{}', ".format(idx)
-            values += "'{}', '{}', '{}', '{}', ".format(mua[i][0], skin_mus, skin_g, skin_n)
-            values += "'{}', '{}', '{}', '{}', ".format(mua[i][1], fat_mus, fat_g, fat_n)
-            values += "'{}', '{}', '{}', '{}', ".format(mua[i][2], muscle_mus, muscle_g, muscle_n)
-            values += "'{}', '{}', '{}', '{}', ".format(mua[i][3], ijv_mus, ijv_g, ijv_n)
-            values += "'{}', '{}', '{}', '{}', ".format(mua[i][4], cca_mus, cca_g, cca_n)
+            values += "'{}', '{}', '{}', '{}', ".format(mua[0][i], skin_mus, skin_g, skin_n)
+            values += "'{}', '{}', '{}', '{}', ".format(mua[1][i], fat_mus, fat_g, fat_n)
+            values += "'{}', '{}', '{}', '{}', ".format(mua[2][i], muscle_mus, muscle_g, muscle_n)
+            values += "'{}', '{}', '{}', '{}', ".format(mua[3][i], ijv_mus, ijv_g, ijv_n)
+            values += "'{}', '{}', '{}', '{}', ".format(mua[4][i], cca_mus, cca_g, cca_n)
             values += "'{}', '{}', '{}', '{}', '{}', '{}', '{}', ".format(
                 geo_skin, geo_fat, geo_ijvr, geo_ijvd, geo_ccar, geo_ccad, geo_ijvcca
             )
