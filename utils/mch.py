@@ -91,7 +91,7 @@ class MCHHandler:
 
 
         # [1, 吸收數]
-        result = torch.zeros(1, len(args)).float().to(device)
+        result = torch.zeros(1, mua.shape[0]).float().to(device)
 
         # seperate photon with different detector
         for idx in range(1, header["detnum"]+1):
