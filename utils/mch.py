@@ -111,6 +111,9 @@ class MCHHandler:
             _weight = _weight.sum(0)
             _weight = _weight.unsqueeze(0)
 
+            print("000000000000")
+            print(result.shape)
+            print(_weight.shape)
             
             result = torch.cat((result, _weight), 0)
 
