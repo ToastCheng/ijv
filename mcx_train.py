@@ -21,28 +21,28 @@ class MCXGen(MCX):
     def train(self):
         # 1/mm
         optics_range = {
-            "skin_mus": (0, 30),
-            "skin_mua": (0.01, 2.453),
+            "skin_mus": (0, 5),
+            "skin_mua": (0.001, 0.1),
             "skin_g": (0.6, 0.9),
             "skin_n": (1.38, 1.45),
 
-            "fat_mus": (1.7, 35.8),
-            "fat_mua": (0.085, 0.988),
+            "fat_mus": (0.1, 5),
+            "fat_mua": (0.001, 0.05),
             "fat_g": (0.8, 0.99),
             "fat_n": (1.38, 1.45),
 
-            "muscle_mus": (9.8, 40.0),
-            "muscle_mua": (0.01, 2.82),
+            "muscle_mus": (0.1, 5),
+            "muscle_mua": (0.01, 0.1),
             "muscle_g": (0.8, 0.99),
             "muscle_n": (1.38, 1.45),
 
-            "ijv_mus": (1, 20),
-            "ijv_mua": (0.5, 1),
+            "ijv_mus": (0.1, 5),
+            "ijv_mua": (0.01, 0.5),
             "ijv_g": (0.8, 0.99),
             "ijv_n": (1.38, 1.45),
 
-            "cca_mus": (1, 20),
-            "cca_mua": (0.5, 1),
+            "cca_mus": (0.1, 5),
+            "cca_mua": (0.01, 0.1),
             "cca_g": (0.8, 0.99),
             "cca_n": (1.38, 1.45),
         }
