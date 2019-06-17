@@ -19,7 +19,7 @@ for i, d in df.iterrows():
     mua = np.array([[d["skin_mua"], d["fat_mua"], d["muscle_mua"], d["ijv_mua"], d["cca_mua"]]]).T
     idx = d["idx"]
     try:
-        s = mch.run_wmc_train("/home/md703/ijv/train/mch/{}.mch".format(idx), mua)
+        s = mch.run_wmc_train("/home/mrtoastcheng/ijv-1.0/train/mch/{}.mch".format(idx), mua)
         
     except:
         continue
