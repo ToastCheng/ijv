@@ -306,7 +306,7 @@ class MCXGen(MCX):
                 db="ijv"
             )
 
-            sql = "INSERT INTO ijv_ann_3({}) VALUES({})".format(field, values)
+            sql = "INSERT INTO ijv_ann_4({}) VALUES({})".format(field, values)
             cursor = conn.cursor()
             cursor.execute(sql)
             conn.commit()
