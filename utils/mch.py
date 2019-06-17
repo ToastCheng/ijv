@@ -80,54 +80,24 @@ class MCHHandler:
         df = df.reset_index(drop=True)
         # path_length = df.iloc[:, ["media_{}".format(i) for i in range(header["maxmedia"])]].values
 
-        result = torch.zeros(1, mua.shape[1]).float().to(device)
+        result = torch.zeros(1, mua.shape[1]).float()
 
         for idx in range(1, header["detnum"]+1):
             tmp = df[df["detector_idx"]==idx]
 
             path_length = tmp[["media_{}".format(i) for i in range(header["maxmedia"])]].values
 
-            path_length = torch.tensor(path_length).float().to(device)
+            path_length = torch.tensor(path_length).float()
 
-            mua = torch.tensor(mua).float().to(device)
+            mua = torch.tensor(mua).float()
 
             
             # [光子數, 吸收數]
             weight = torch.exp(-torch.matmul(path_length, mua))
-            weight.sum(0)
-            weight.unsqueeze(0)
+            weight = weight.sum(0)
+            weight = weight.unsqueeze(0)
             result = torch.cat((result, weight), 0)
 
-
-
-
-
-        # # [1, 吸收數]
-        # result = torch.zeros(1, mua.shape[0]).float().to(device)
-
-        # # seperate photon with different detector
-        # for idx in range(1, header["detnum"]+1):
-
-        #     # get the index of specific index
-        #     detector_list = df.index[df["detector_idx"] == idx].tolist()
-        #     if len(detector_list) == 0:
-        #         # print("detector #%d detected 0 photon" % idx)
-        #         result = torch.cat((result, torch.zeros(1, weight.shape[1]).float().to(device)), 0)
-        #         continue
-                
-        #     # pick the photon that detected by specific detector
-            
-        #     # [光子數, 吸收數]
-        #     _weight = weight[detector_list]
-            
-        #     _weight = _weight.sum(0)
-        #     _weight = _weight.unsqueeze(0)
-
-        #     print("000000000000")
-        #     print(result.shape)
-        #     print(_weight.shape)
-            
-        #     result = torch.cat((result, _weight), 0)
 
         # # [SDS, ScvO2]
         result = result[1:]
