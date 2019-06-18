@@ -346,7 +346,7 @@ class MCXGen(MCX):
         if self.high_mus:
             if self.config["num_photon"] < 1e10:
                 raise Exception("If you set high mus, you have to launch more than 1e10 photon!")
-                
+
         session_name = "\"{}\" ".format(idx)
         geometry_file = "\"{}\" ".format(os.path.abspath(os.path.join("train", "input_mcx_{}.json".format(idx))))
         root = "\"{}\" ".format(os.path.abspath(os.path.join("train", "mch")))
@@ -403,6 +403,9 @@ class MCXGen(MCX):
 
 if __name__ == "__main__":
     import sys
-    mcx = MCXGen()
+    if len(sys.argv) > 2 and bool(sys.argv[2]) == True:
+        mcx = MCXGen(high_mus=True)
+    else:
+        mcx = MCXGen()
     for i in range(int(sys.argv[1])):
         mcx.train()
