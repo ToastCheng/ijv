@@ -12,10 +12,11 @@ from utils.mch import MCHHandler
 
 
 class MCXGen(MCX):
-    def __init__(self):
+    def __init__(self, high_mus=False):
         self.load_config("configs/train.json")
         self.mch = MCHHandler()
         self.absorb_num = 100
+        self.high_mus = high_mus
 
 
     def train(self):
@@ -46,6 +47,34 @@ class MCXGen(MCX):
             "cca_g": (0.8, 0.99),
             "cca_n": (1.38, 1.45),
         }
+        if self.high_mus:
+            print("[high scatter]")
+            optics_range = {
+                "skin_mus": (0, 50),
+                "skin_mua": (0.001, 0.1),
+                "skin_g": (0.6, 0.9),
+                "skin_n": (1.38, 1.45),
+
+                "fat_mus": (0.1, 50),
+                "fat_mua": (0.001, 0.05),
+                "fat_g": (0.8, 0.99),
+                "fat_n": (1.38, 1.45),
+
+                "muscle_mus": (5, 50),
+                "muscle_mua": (0.01, 0.1),
+                "muscle_g": (0.8, 0.99),
+                "muscle_n": (1.38, 1.45),
+
+                "ijv_mus": (0.1, 5),
+                "ijv_mua": (0.01, 0.5),
+                "ijv_g": (0.8, 0.99),
+                "ijv_n": (1.38, 1.45),
+
+                "cca_mus": (0.1, 5),
+                "cca_mua": (0.01, 0.1),
+                "cca_g": (0.8, 0.99),
+                "cca_n": (1.38, 1.45),
+            }
 
         geo_range = {
         # mm
@@ -314,14 +343,20 @@ class MCXGen(MCX):
 
     def _get_command(self, idx):
         # create the command for mcx
-
+        if self.high_mus:
+            if self.config["num_photon"] < 1e10:
+                raise Exception("If you set high mus, you have to launch more than 1e10 photon!")
+                
         session_name = "\"{}\" ".format(idx)
         geometry_file = "\"{}\" ".format(os.path.abspath(os.path.join("train", "input_mcx_{}.json".format(idx))))
         root = "\"{}\" ".format(os.path.abspath(os.path.join("train", "mch")))
         unitmm = "%f " % self.config["voxel_size"]
         photon = "%d " % self.config["photon_batch"]
         num_batch = "%d " % (self.config["num_photon"]//self.config["photon_batch"])
-        maxdetphoton = "10000000"
+        if self.high_mus:
+            maxdetphoton = "50000000"
+        else:
+            maxdetphoton = "10000000"
         # maxdetphoton = "%d" % (self.config["num_photon"]//5)
         # save_mc2 = "0 " if self.config["train"] else "1 "
         # mc2 is seldom used
