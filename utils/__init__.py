@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd 
 
 
-def load_mch(path):
+def load_mch(path, compress_ratio=None):
 	"""
 	input: 
 		path: 
@@ -68,11 +68,34 @@ def load_mch(path):
 			assert version == 1, "version higher than 1 is not supported"
 
 
-			# data = unpack('%df' % (colcount), f.read(4*colcount))
-			data = unpack('%df' % (colcount*saved_photon), f.read(4*colcount*saved_photon))
-			data = np.asarray(data).reshape(saved_photon, colcount)
-			# number of vortex -> actual length
-			data[:, 2:1+maxmedia] = data[:, 2:1+maxmedia] * unitmm
+			if compress_ratio:
+				batch = saved_photon // compress_ratio
+				residual = saved_photon % compress_ratio
+				data = np.zeros((1, colcount-7))
+				for c in range(compress_ratio):
+					_data = unpack('%df' % (colcount*batch), f.read(4*colcount*batch))
+					_data = np.asarray(_data).reshape(batch, colcount)
+					# keep only: detector_idx, pathlength, dz
+					_data = _data[:, [0] + [m+2 for m in range(maxmedia)] + [maxmedia+2+5]]
+					_data[:, 1:1+maxmedia] = _data[:, 1:1+maxmedia] * unitmm
+					
+					data = np.concatenate([data, _data], 0)
+
+				# the rest
+				_data = unpack('%df' % (colcount*residual), f.read(4*colcount*residual))
+				_data = np.asarray(_data).reshape(residual, colcount)
+				_data = _data[:, [0] + [m+2 for m in range(maxmedia)] + [maxmedia+2+5]]
+				_data[:, 1:1+maxmedia] = _data[:, 1:1+maxmedia] * unitmm
+				data = np.concatenate([data, _data], 0)
+				data = data[1:]
+
+			else:
+				# data = unpack('%df' % (colcount), f.read(4*colcount))
+				data = unpack('%df' % (colcount*saved_photon), f.read(4*colcount*saved_photon))
+				data = np.asarray(data).reshape(saved_photon, colcount)
+				# number of voxel -> actual length
+				data[:, 2:2+maxmedia] = data[:, 2:2+maxmedia] * unitmm
+
 			mch_data.append(data)
 
 			# if "save photon seed" is True
@@ -99,14 +122,21 @@ def load_mch(path):
 
 	finally:
 		f.close()
-	
+
 	mch_data = np.asarray(mch_data).squeeze()
 	mch_data = pd.DataFrame(mch_data)
-	columns = ["detector_idx", "scattering"]
-	columns += ["media_{}".format(i) for i in range(maxmedia)]
-	columns += ["x", "y", "z", "dx", "dy", "dz"]
-	if colcount == 2 + maxmedia + 6 + 1:
-		columns += ["weight"]
+	
+	if compress_ratio:
+		columns = ["detector_idx"]
+		columns += ["media_{}".format(i) for i in range(maxmedia)]
+		columns += ["dz"]
+	else:
+		columns = ["detector_idx", "scattering"]
+		columns += ["media_{}".format(i) for i in range(maxmedia)]
+		columns += ["x", "y", "z", "dx", "dy", "dz"]
+		if colcount == 2 + maxmedia + 6 + 1:
+			columns += ["weight"]
+
 	mch_data.columns = columns
 
 	if seed_byte > 0:

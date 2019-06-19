@@ -74,7 +74,7 @@ class MCHHandler:
 
 
 
-        df, header, photon = load_mch(mch_file)
+        df, header, photon = load_mch(mch_file, compress_ratio=5)
         df = df[np.arccos(df.dz.abs()) <= self.critical_angle]
         
         df = df.reset_index(drop=True)
