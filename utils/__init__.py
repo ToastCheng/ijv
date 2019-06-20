@@ -71,7 +71,11 @@ def load_mch(path, compress_ratio=None):
 			if compress_ratio:
 				batch = saved_photon // compress_ratio
 				residual = saved_photon % compress_ratio
-				data = np.zeros((1, colcount-7))
+
+				if colcount == 2 + maxmedia + 6 + 1:
+					data = np.zeros((1, colcount-7))
+				else:
+					data = np.zeros((1, colcount-6))
 				for c in range(compress_ratio):
 					_data = unpack('%df' % (colcount*batch), f.read(4*colcount*batch))
 					_data = np.asarray(_data).reshape(batch, colcount)
