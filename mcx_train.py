@@ -50,17 +50,17 @@ class MCXGen(MCX):
         if self.high_mus:
             print("[high scatter]")
             optics_range = {
-                "skin_mus": (0, 50),
+                "skin_mus": (0, 40),
                 "skin_mua": (0.001, 0.1),
                 "skin_g": (0.6, 0.9),
                 "skin_n": (1.38, 1.45),
 
-                "fat_mus": (0.1, 50),
+                "fat_mus": (0.1, 30),
                 "fat_mua": (0.001, 0.05),
                 "fat_g": (0.8, 0.99),
                 "fat_n": (1.38, 1.45),
 
-                "muscle_mus": (5, 50),
+                "muscle_mus": (5, 10),
                 "muscle_mua": (0.01, 0.1),
                 "muscle_g": (0.8, 0.99),
                 "muscle_n": (1.38, 1.45),
