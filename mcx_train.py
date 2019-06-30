@@ -318,7 +318,7 @@ class MCXGen(MCX):
             field += "skin_thickness, fat_thickness, ijv_radius, ijv_depth, cca_radius, cca_depth, ijv_cca_distance, "
             field += "reflectance_20, reflectance_24, reflectance_28"
 
-            values = "'{}', '{}'".format(idx, src)
+            values = "'{}', '{}', ".format(idx, src)
             values += "'{}', '{}', '{}', '{}', ".format(mua[0][i], skin_mus, skin_g, skin_n)
             values += "'{}', '{}', '{}', '{}', ".format(mua[1][i], fat_mus, fat_g, fat_n)
             values += "'{}', '{}', '{}', '{}', ".format(mua[2][i], muscle_mus, muscle_g, muscle_n)
