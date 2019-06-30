@@ -10,8 +10,8 @@ from PyEMD import EMD
 
 from kde import smooth
 
-wl = [i for i in range(660, 921, 10)]
-
+# wl = [i for i in range(660, 921, 10)]
+wl = [i for i in range(660, 851, 10)]
 
 class SegmentCalibrator:
     def __init__(self):
@@ -987,13 +987,13 @@ if __name__ == "__main__":
     preprocess_live(date)
 
     print("calibrate ijv..")
-    calibrate_ijv(date)
+    calibrate_ijv(date, sim_path="CHIKEN/20190621_sim_chik.csv")
 
-    print("process muscle..")
-    preprocess_phantom_muscle(date)
-    preprocess_live_muscle(date)
+    # print("process muscle..")
+    # preprocess_phantom_muscle(date)
+    # preprocess_live_muscle(date)
 
-    print("calibrate muscle..")
-    calibrate_muscle(date)
+    # print("calibrate muscle..")
+    # calibrate_muscle(date)
 
 

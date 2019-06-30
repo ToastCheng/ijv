@@ -41,7 +41,8 @@ class MCHHandler:
         elif self.config["type"] == "muscle":
             self.mch_list.sort(key=lambda x: int(x.split("_")[-1].strip('.mch')))
         elif self.config["type"] == "phantom":
-            pid = { c: i for i, c in enumerate("CHIKEN")}
+            self.mch_list = [m for m in self.mch_list if m.split("_")[-1].strip(".mch") in self.config["phantom_idx"]]
+            pid = { c: i for i, c in enumerate(self.config["phantom_idx"])}
             self.mch_list.sort(
                 key=lambda x: (int(x.split("_")[-2]), pid[x.split('_')[-1].strip('.mch')])
             )
@@ -227,7 +228,7 @@ class MCHHandler:
 
             
             # [光子數, 吸收數]
-            weight = torch.exp(-torch.matmul(path_length, mua) *header["unitmm"]) 
+            weight = torch.exp(-torch.matmul(path_length, mua))#  *header["unitmm"]) 
 
 
             # NEW 

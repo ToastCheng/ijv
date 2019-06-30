@@ -2,6 +2,8 @@ import os
 import json 
 import random 
 import string 
+from getpass import getuser
+from socket import gethostname
 
 import numpy as np 
 import pandas as pd 
@@ -301,13 +303,13 @@ class MCXGen(MCX):
 
         spec = self.mch.run_wmc_train(os.path.join("train", "mch", "{}.mch".format(idx)), mua)
 
-
+        src = getuser() + '@' + gethostname()
 
         # save result to DB
         for i in range(self.absorb_num):
 
 
-            field = "idx, "
+            field = "idx, src, "
             field += "skin_mua, skin_mus, skin_g, skin_n, "
             field += "fat_mua, fat_mus, fat_g, fat_n, "
             field += "muscle_mua, muscle_mus, muscle_g, muscle_n, "
@@ -316,7 +318,7 @@ class MCXGen(MCX):
             field += "skin_thickness, fat_thickness, ijv_radius, ijv_depth, cca_radius, cca_depth, ijv_cca_distance, "
             field += "reflectance_20, reflectance_24, reflectance_28"
 
-            values = "'{}', ".format(idx)
+            values = "'{}', '{}'".format(idx, src)
             values += "'{}', '{}', '{}', '{}', ".format(mua[0][i], skin_mus, skin_g, skin_n)
             values += "'{}', '{}', '{}', '{}', ".format(mua[1][i], fat_mus, fat_g, fat_n)
             values += "'{}', '{}', '{}', '{}', ".format(mua[2][i], muscle_mus, muscle_g, muscle_n)
@@ -329,13 +331,13 @@ class MCXGen(MCX):
 
 
             conn = connect(
-                host="140.112.174.26",
+                host="140.112.174.28",
                 user="md703",
                 passwd=os.getenv("PASSWD"),
                 db="ijv"
             )
 
-            sql = "INSERT INTO ijv_ann_4({}) VALUES({})".format(field, values)
+            sql = "INSERT INTO ijv_ann_5({}) VALUES({})".format(field, values)
             cursor = conn.cursor()
             cursor.execute(sql)
             conn.commit()

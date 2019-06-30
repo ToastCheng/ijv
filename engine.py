@@ -1,4 +1,6 @@
 import torch 
+import numpy as np 
+import pandas as pd 
 from model.model import Model
 
 args_template = {
@@ -74,7 +76,7 @@ class Engine:
         self.model.eval()
 
         # absorption
-        self.wl = np.array([i for i in range(660, 851)])
+        self.wl = np.array([i for i in range(660, 851, 10)])
  
         self.mua = pd.read_csv("input/coefficients.csv")
         oxy = self.mua["oxy"].values
@@ -104,19 +106,26 @@ class Engine:
     def get_spectrum(self, args):
 
         geo = args["geometry"]
-        hyper_param = args["hyper_param"]
 
         spec = []
         for idx in range(len(self.wl)):
-            param = self._make_param(hyper_param, idx)
-            s = self._predict(param, geo)
-            spec += [s]
+            param = self._make_param(args, idx)
 
-        return spec 
+            s = self._predict(param, geo)
+            spec += [float(s[0][0])]
+
+        return np.array(spec)
 
 
     def _predict(self, param, geo):
-        pred = model(param, geo)
+        if len(param.shape) == 1:
+            param = torch.tensor(param).float().unsqueeze(0)
+            geo = torch.tensor(geo).float().unsqueeze(0)
+        elif len(param.shape) == 2:
+            param = torch.tensor(param).float()
+            geo = torch.tensor(geo).float()
+
+        pred = self.model(param, geo)
         pred = torch.exp(pred)
 
         return pred
@@ -156,8 +165,9 @@ class Engine:
         w = medium["water_volume"]
         f = medium["fat_volume"]
         m = medium["melanin_volume"]
+        c = medium["collagen_volume"]
 
-        mua = b * (s * self.oxy[idx] + (1-s) * self.deoxy[idx]) + w * self.water[idx] + f * self.fat[idx] + m * self.melanin[idx]
+        mua = b * (s * self.oxy[idx] + (1-s) * self.deoxy[idx]) + w * self.water[idx] + f * self.fat[idx] + m * self.melanin[idx] + c * self.collagen[idx]
         return mua
 
 
@@ -167,7 +177,7 @@ class Engine:
         bmie = medium["bmie"]
         g = medium["g"] 
 
-        mus_p = muspx500 * (self.wl[idx]/500) ** (-bmie)
+        mus_p = muspx * (self.wl[idx]/500) ** (-bmie)
 
         mus = mus_p/(1-g) * 0.1
         
