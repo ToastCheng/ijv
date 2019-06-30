@@ -334,7 +334,7 @@ class MCXGen(MCX):
                 host="140.112.174.28",
                 user="md703",
                 passwd=os.getenv("PASSWD"),
-                db="ijv"
+                db="ijv_1066"
             )
 
             sql = "INSERT INTO ijv_ann_5({}) VALUES({})".format(field, values)
