@@ -70,7 +70,7 @@ class MCHHandler:
         self.detector_n = 1.4
         self.critical_angle = np.arcsin(self.detector_na/self.detector_n)     
 
-    def run_wmc_train(self, mch_file, mua):
+    def run_wmc_train(self, mch_file, mua, num_photon=None):
         # mua_list [num_absorb, num_medium]
 
 
@@ -102,12 +102,15 @@ class MCHHandler:
 
         # # [SDS, ScvO2]
         result = result[1:]
-        s = result.cpu().numpy()/header["total_photon"]
+        if num_photon:
+            s = result.cpu().numpy()/num_photon 
+        else:
+            s = result.cpu().numpy()/header["num_photon"]
 
         return s.T
 
 
-    def run_wmc_single(self, mch_file, args=None):
+    def run_wmc_single(self, mch_file, args=None, num_photon=None):
 
         if isinstance(args, dict):
             args = [args]
@@ -166,7 +169,10 @@ class MCHHandler:
 
         # [SDS, ScvO2]
         result = result[1:]
-        s = result.cpu().numpy()/header["total_photon"]
+        if num_photon:
+            s = result.cpu().numpy()/num_photon 
+        else:
+            s = result.cpu().numpy()/header["num_photon"]
 
 
         return s.T
@@ -281,7 +287,7 @@ class MCHHandler:
 
             # [SDS, ScvO2]
             result = result[1:]
-            s = result.cpu().numpy()/header["total_photon"]
+            s = result.cpu().numpy()/self.config["num_photon"]
             
             spectra.append(s)
 
