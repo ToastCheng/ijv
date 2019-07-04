@@ -33,9 +33,10 @@ class SegmentCalibrator:
             simulated = a * measured + b
 
         """
-    
+
         num_p = measured.shape[0]
         num_wl = measured.shape[1]
+        num_fit_point = 2
 
         r_square_max = 0
         r_square = []
@@ -98,11 +99,11 @@ class SegmentCalibrator:
                 aa = []
                 bb = []
                 bound_ = []
-                for p in range(num_p-1):
+                for p in range(num_p-num_fit_point+1):
 
                     # polyfit
                     if least_square:
-                        result = np.polyfit(x[p:p+2], y[p:p+2], 1)
+                        result = np.polyfit(x[p:p+num_fit_point], y[p:p+num_fit_point], 1)
                     else:
                     # fmin
                         rmsp = lambda i: (((i[0] * x[p:p+2] + i[1] - y[p:p+2])/y[p:p+2]**2)).mean()
@@ -112,14 +113,14 @@ class SegmentCalibrator:
                     bb += [result[1]]
                     bound_ += [x[p+1]]
 
-                    y_fit = x[p:p+2] * result[0] + result[1]
-                    residual = ((y[p:p+2]-y_fit)**2).sum()
-                    SS_total = ((y[p:p+2].mean()-y[p:p+2])**2).sum()
+                    y_fit = x[p:p+num_fit_point] * result[0] + result[1]
+                    residual = ((y[p:p+num_fit_point]-y_fit)**2).sum()
+                    SS_total = ((y[p:p+num_fit_point].mean()-y[p:p+num_fit_point])**2).sum()
                     r_square += [1 - residual/SS_total]
 
 
                     if plot_path:
-                        plt.scatter(x[p:p+2], y[p:p+2])
+                        plt.scatter(x[p:p+num_fit_point], y[p:p+num_fit_point])
                         plot_x = np.arange(x[p], x[p+1])
                         plt.plot(plot_x, plot_x * result[0] + result[1])
 
@@ -146,6 +147,10 @@ class SegmentCalibrator:
             for i in range(self.a.shape[1]):
                 self.a[:, i] = smooth(self.a[:, i], bw1)
                 self.b[:, i] = smooth(self.b[:, i], bw2)
+                plt.plot(self.a[:, i])
+                plt.show()
+                plt.plot(self.b[:, i])
+                plt.show()
 
 
 
@@ -809,6 +814,7 @@ def preprocess_live_muscle(input_date):
 
 def calibrate_ijv(input_date, sim_path="CHIKEN/sim_20190525_24mm.csv", p_index="chik"):
     calib = SegmentCalibrator()
+    # calib = Calibrator()
     p_index = list(p_index)
 
     input_path = os.path.join("data", "processed", input_date, "IJV")
@@ -983,8 +989,8 @@ if __name__ == "__main__":
     print(date)
 
     print("process ijv..")
-    preprocess_phantom(date)
-    preprocess_live(date)
+    # preprocess_phantom(date)
+    # preprocess_live(date)
 
     print("calibrate ijv..")
     calibrate_ijv(date, sim_path="CHIKEN/20190621_sim_chik.csv")
