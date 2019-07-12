@@ -70,13 +70,14 @@ args_template = {
 }
 
 class Engine:
-    def __init__(self, path):
+    def __init__(self, path, phantom=False):
         self.model = Model()
         self.model.load_state_dict(torch.load(path))
         self.model.eval()
+        self.phantom = phantom
 
         # absorption
-        self.wl = np.array([i for i in range(660, 851, 10)])
+        self.wl = np.array([i for i in range(660, 811, 10)])
  
         self.mua = pd.read_csv("input/coefficients.csv")
         oxy = self.mua["oxy"].values
@@ -103,13 +104,37 @@ class Engine:
         self.fat = fat * 0.1
         self.melanin = melanin * 0.1
 
-    def get_spectrum(self, args):
+        if self.phantom:
+            mua = pd.read_csv("phantom/tissue_mua.csv")
+            mus = pd.read_csv("phantom/tissue_mus.csv")
+            ink = pd.read_csv("phantom/ink.csv")
+            mua = mua[
+                (mua["wl"] >= self.wl[0])&
+                (mua["wl"] <= self.wl[-1])
+            ]
+            mus = mus[
+                (mus["wl"] >= self.wl[0])&
+                (mus["wl"] <= self.wl[-1])
+            ]
+
+            self.skin_mua = np.interp(self.wl, mua["wl"], mua["skin"])
+            self.fat_mua = np.interp(self.wl, mua["wl"], mua["fat"])
+            self.muscle_mua = np.interp(self.wl, mua["wl"], mua["ml"])
+            self.ink780 = np.interp(self.wl, ink["wl"], ink["780"])
+            self.ink832 = np.interp(self.wl, ink["wl"], ink["832"])
+
+            self.skin_mus = np.interp(self.wl, mus["wl"], mus["skin"])
+            self.fat_mus = np.interp(self.wl, mus["wl"], mus["fat"])
+            self.muscle_mus = np.interp(self.wl, mus["wl"], mus["ml"])
+
+
+    def get_spectrum(self, args, warning=False):
 
         geo = args["geometry"]
 
         spec = []
         for idx in range(len(self.wl)):
-            param = self._make_param(args, idx)
+            param = self._make_param(args, idx, warning)
 
             s = self._predict(param, geo)
             spec += [float(s[0][0])]
@@ -130,24 +155,93 @@ class Engine:
 
         return pred
 
-    def _make_param(self, hyper_param, idx):
+    #deprecated
+    def _make_param_tissue_phantom(self, args, idx):
+
+        ratio = args["780ratio"]
+        skin_mua = self.skin_mua[idx]
+        skin_mus = self.skin_mus[idx]
+        skin_g = 0
+        skin_n = 1.4
+        
+        fat_mua = self.fat_mua[idx]
+        fat_mus = self.fat_mus[idx]
+        fat_g = 0
+        fat_n = 1.4
+
+        muscle_mua = self.muscle_mua[idx]
+        muscle_mus = self.muscle_mus[idx]
+        muscle_g = 0
+        muscle_n = 1.4
+
+        ijv_mua = self.ink832[idx] * (1-ratio) + self.ink780[idx] * ratio
+        ijv_mus = 1
+        ijv_g = 0
+        ijv_n = 1.4
+
+        cca_mua = self.muscle_mua[idx]
+        cca_mus = self.muscle_mus[idx]
+        cca_g = 0
+        cca_n = 1.4
+
+        return np.array([
+            skin_mua, skin_mus, skin_g, skin_n,
+            fat_mua, fat_mus, fat_g, fat_n,
+            muscle_mua, muscle_mus, muscle_g, muscle_n,
+            ijv_mua, ijv_mus, ijv_g, ijv_n,
+            cca_mua, cca_mus, cca_g, cca_n,
+        ])
+
+    def _make_param(self, hyper_param, idx, warning=False):
         skin = hyper_param["skin"]
         fat = hyper_param["fat"]
         muscle = hyper_param["muscle"]
         ijv = hyper_param["IJV"]
         cca = hyper_param["CCA"]
 
-        skin_mua = self._mua(skin, idx)
-        fat_mua = self._mua(fat, idx)
-        muscle_mua = self._mua(muscle, idx)
-        ijv_mua = self._mua(ijv, idx)
-        cca_mua = self._mua(cca, idx)
+
+        if self.phantom:
+            skin_mua = self._mua_phantom_pdms(skin["water_volume"], idx)
+            fat_mua = self._mua_phantom_pdms(fat["ScvO2"], idx)
+            muscle_mua = self._mua_phantom_pdms(muscle["water_volume"], idx)
+            ijv_mua = self._mua_phantom_ink(ijv, idx)
+            cca_mua = muscle_mua
+
+        else:
+            skin_mua = self._mua(skin, idx)
+            fat_mua = self._mua(fat, idx)
+            muscle_mua = self._mua(muscle, idx)
+            ijv_mua = self._mua(ijv, idx)
+            cca_mua = self._mua(cca, idx)
 
         skin_mus = self._mus(skin, idx)
         fat_mus = self._mus(fat, idx)
         muscle_mus = self._mus(muscle, idx)
         ijv_mus = self._mus(ijv, idx)
         cca_mus = self._mus(cca, idx)
+        
+        if warning:
+#             if skin_mus > 5:
+#                 print(f"[Warning]: skin mus is high: {skin_mus}")
+#             if fat_mus > 5:
+#                 print(f"[Warning]: fat mus is high: {fat_mus}")
+#             if muscle_mus > 5:
+#                 print(f"[Warning]: muscle mus is high: {muscle_mus}")
+#             if ijv_mus > 5:
+#                 print(f"[Warning]: ijv mus is high: {ijv_mus}")
+#             if cca_mus > 5:
+#                 print(f"[Warning]: cca mus is high: {cca_mus}")
+            if skin_mus > 8:
+                print(f"[Warning]: skin mus is high: {skin_mus}")
+            if fat_mus > 10:
+                print(f"[Warning]: fat mus is high: {fat_mus}")
+            if muscle_mus > 10:
+                print(f"[Warning]: muscle mus is high: {muscle_mus}")
+            if ijv_mus > 5:
+                print(f"[Warning]: ijv mus is high: {ijv_mus}")
+            if cca_mus > 5:
+                print(f"[Warning]: cca mus is high: {cca_mus}")
+        
 
         return np.array([
             skin_mua, skin_mus, skin["g"], skin["n"],
@@ -170,7 +264,14 @@ class Engine:
         mua = b * (s * self.oxy[idx] + (1-s) * self.deoxy[idx]) + w * self.water[idx] + f * self.fat[idx] + m * self.melanin[idx] + c * self.collagen[idx]
         return mua
 
+    def _mua_phantom_ink(self, medium, idx):
+        r = medium["ScvO2"]
+        mua = self.ink780[idx] * r + self.ink832[idx] * (1-r)
+        return mua
 
+    def _mua_phantom_pdms(self, c, idx):
+        mua = c * 10 * self.skin_mua[idx]
+        return mua
 
     def _mus(self, medium, idx):
         muspx = medium["muspx"]

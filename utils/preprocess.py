@@ -142,16 +142,19 @@ class SegmentCalibrator:
             self.bound = np.asarray(bound)
 
             # 調整校正係數
+            # bw1 = 2.2
+            # bw2 = 0.6
             bw1 = 2.2
             bw2 = 0.6
             for i in range(self.a.shape[1]):
+                # plt.plot(wl, self.a[:, i])
+                # plt.plot(wl, smooth(self.a[:, i], bw1))
+                # plt.show()
+                # plt.plot(wl, self.b[:, i])
+                # plt.plot(wl, smooth(self.b[:, i], bw2))
+                # plt.show()
                 self.a[:, i] = smooth(self.a[:, i], bw1)
                 self.b[:, i] = smooth(self.b[:, i], bw2)
-                plt.plot(self.a[:, i])
-                plt.show()
-                plt.plot(self.b[:, i])
-                plt.show()
-
 
 
         return self.a, self.b, r_square
@@ -427,7 +430,8 @@ def preprocess_phantom(input_date):
 
     data_interp = []
     for d in data_sub_bg:
-        data_interp.append(np.interp(wl, calib_wl, d))
+        # add smooth
+        data_interp.append(np.interp(wl, calib_wl, smooth(d)))
     data_interp = np.asarray(data_interp)
 
     # plot and
@@ -551,8 +555,9 @@ def preprocess_live(input_date):
         # plt.savefig(os.path.join(output_path, "live", input_date + "_test_" + n + ".png"))
         # plt.clf()
 
-        live_max_interp = np.interp(wl, calib_wl, live_max)
-        live_min_interp = np.interp(wl, calib_wl, live_min)
+        # add smooth
+        live_max_interp = np.interp(wl, calib_wl, smooth(live_max))
+        live_min_interp = np.interp(wl, calib_wl, smooth(live_min))
 
 
         plt.figure(figsize=(12, 6))
@@ -812,6 +817,57 @@ def preprocess_live_muscle(input_date):
     return live_interp
 
 
+def preprocess_tissue_phantom(date):
+    path = "data/raw/" + date
+
+    calib_wl = np.loadtxt(path + "/calib_wl.csv", delimiter=",")
+    bg1 = np.loadtxt(path + "/background.csv", delimiter=",")
+    bg2 = np.loadtxt(path + "/background_2.csv", delimiter=",")
+
+    path_list = glob(path + "/live/live_*_*.csv")
+    path_list.sort(key=lambda x: (int(x.split('/')[-1].split('_')[-2]), int(x.split('/')[-1].split('_')[-1].strip('.csv'))))
+
+    wl = [i for i in range(660, 851, 10)]
+
+
+    # live
+    df = {}
+    for i, p in enumerate(path_list):
+        l = np.loadtxt(p, delimiter=",")
+        l -= bg1
+        l = l.mean(0)
+
+        l = np.interp(wl, calib_wl, l)
+
+        if i % 2 == 0:
+            df["wavelength"] = wl
+            df["min"] = smooth(l)
+        else:
+            df["max"] = smooth(l)
+            df = pd.DataFrame(df)
+            df = df[["wavelength", "max", "min"]]
+            df.to_csv("data/processed/" + date + "/IJV/live/" + date + "_" + str(i//2+1) + ".csv", index=None)
+
+    # phantom
+    path_list = path + "/phantom/phantom_{}.csv" 
+    df_dict = {"wavelength": wl}
+    for i, p in enumerate("chiken"):
+        pp = np.loadtxt(path_list.format(p), delimiter=",")
+        if p in "chi":
+            pp -= bg1
+        else:
+            pp -= bg2
+        pp = pp.mean(0)
+        pp = np.interp(wl, calib_wl, smooth(pp))
+        df_dict[p] = pp
+
+    df = pd.DataFrame(df_dict)
+    df = df[["wavelength", "c", "h", "i", "k", "e", "n"]]
+    df.to_csv("data/processed/" + date + "/IJV/phantom/" + date + ".csv", index=None)
+
+
+
+
 def calibrate_ijv(input_date, sim_path="CHIKEN/sim_20190525_24mm.csv", p_index="chik"):
     calib = SegmentCalibrator()
     # calib = Calibrator()
@@ -991,6 +1047,7 @@ if __name__ == "__main__":
     print("process ijv..")
     # preprocess_phantom(date)
     # preprocess_live(date)
+    preprocess_tissue_phantom(date)
 
     print("calibrate ijv..")
     calibrate_ijv(date, sim_path="CHIKEN/20190621_sim_chik.csv")

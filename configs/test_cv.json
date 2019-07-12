@@ -3,8 +3,8 @@
     "session_id": "test_cv",
     "type": "test_cv",
 
-    "num_photon": 2e9,
-    "photon_batch": 5e9,
+    "num_photon": 1e10,
+    "photon_batch": 5e10,
     "voxel_size": 0.25,
 
     "binary_path": "mcx/bin/mcx",

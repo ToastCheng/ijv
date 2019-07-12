@@ -457,7 +457,7 @@ class MCX:
         # skin
         mcx_input["Domain"]["Media"][1]["name"] = "skin"
         mcx_input["Domain"]["Media"][1]["mua"] = 0
-        mcx_input["Domain"]["Media"][1]["mus"] = 5
+        mcx_input["Domain"]["Media"][1]["mus"] = 10
         mcx_input["Domain"]["Media"][1]["g"] = 0.7
         mcx_input["Domain"]["Media"][1]["n"] = 1.4
 

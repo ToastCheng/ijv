@@ -336,8 +336,10 @@ class MCXGen(MCX):
                 passwd=os.getenv("PASSWD"),
                 db="ijv_1066"
             )
-
-            sql = "INSERT INTO ijv_ann_high({}) VALUES({})".format(field, values)
+            if self.high_mus:
+                sql = "INSERT INTO ijv_ann_high({}) VALUES({})".format(field, values)
+            else:
+                sql = "INSERT INTO ijv_ann_5({}) VALUES({})".format(field, values)
             cursor = conn.cursor()
             cursor.execute(sql)
             conn.commit()
@@ -354,14 +356,14 @@ class MCXGen(MCX):
         root = "\"{}\" ".format(os.path.abspath(os.path.join("train", "mch")))
         unitmm = "%f " % self.config["voxel_size"]
         if self.high_mus:
-            photon = "50000000000 "
+            photon = "10000000000 "
             num_batch = "1 "
         else:
             photon = "%d " % self.config["photon_batch"]
             num_batch = "%d " % (self.config["num_photon"]//self.config["photon_batch"])
 
         if self.high_mus:
-            maxdetphoton = "50000000"
+            maxdetphoton = "10000000"
         else:
             maxdetphoton = "10000000"
         # maxdetphoton = "%d" % (self.config["num_photon"]//5)

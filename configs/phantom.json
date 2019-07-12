@@ -20,7 +20,7 @@
 
 
     "phantom_idx": "CHIK",
-    "phantom_mua": "CHIKEN/mua_in_mm.csv",
-    "phantom_musp": "CHIKEN/musp_in_mm.csv"
+    "phantom_mua": "CHIKEN/20190604_mua.csv",
+    "phantom_musp": "CHIKEN/20190604_musp.csv"
 
 }
