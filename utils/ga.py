@@ -201,11 +201,11 @@ class GA:
             
             rmse_list.append(self.gene[0][1])
             
-            if rand < 0.1:
+            if rand < 0.3:
                 
                 self.mutate()
 
-            if epoch % 100 == 0:
+            if epoch % 50 == 0:
 
                 if verbose:
 

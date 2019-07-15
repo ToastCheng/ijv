@@ -72,7 +72,10 @@ args_template = {
 class Engine:
     def __init__(self, path, phantom=False):
         self.model = Model()
-        self.model.load_state_dict(torch.load(path))
+        if torch.cuda.is_available():
+            self.model.load_state_dict(torch.load(path))
+        else:
+            self.model.load_state_dict(torch.load(path, map_location='cpu'))
         self.model.eval()
         self.phantom = phantom
 
