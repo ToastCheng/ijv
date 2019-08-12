@@ -1,5 +1,10 @@
+import os
+import json
 import numpy as np 
+import pandas as pd 
 import matplotlib.pyplot as plt 
+from huepy import *
+
 from engine import Engine 
 from random import uniform, sample, shuffle
 
@@ -14,7 +19,7 @@ def normalize(x):
 
 class GA:
 
-    def __init__(self, gene_size, para_size, target_max, target_min, geo_max, geo_min, ratio=0.05, iteration=1000, phantom=False, ink_ratio=None, dual_constraint=True):
+    def __init__(self, gene_size, para_size, target_max, target_min, geo_max, geo_min, ratio=0.05, iteration=1000, phantom=False, ink_ratio=None, dual_ratio=0.05, log_period=100, scvO2=None):
 
         self.gene_size = gene_size
         self.para_size = para_size
@@ -22,7 +27,9 @@ class GA:
         self.iteration = iteration
         self.phantom = phantom
         self.ink_ratio = ink_ratio
-        self.dual_constraint = dual_constraint
+        self.dual_ratio = dual_ratio
+        self.log_period = log_period
+        self.scvO2 = scvO2
 
         self.para_range = [np.array([])
                            ]
@@ -38,6 +45,45 @@ class GA:
 
         self.geo_max = geo_max
         self.geo_min = geo_min
+        
+        self.df = pd.DataFrame({
+            "epoch": [],
+            "spec_rmsp": [],
+            "absorb_rmsp": [],
+            "s_b": [],
+            "s_s": [],
+            "s_w": [],
+            "s_f": [],
+            "s_m": [],
+            "s_muspx": [],
+            "s_bmie": [],
+            "f_b": [],
+            "f_s": [],
+            "f_f": [],
+            "f_muspx": [],
+            "f_bmie": [],
+            "m_b": [],
+            "m_s": [],
+            "m_w": [],
+            "m_c": [],
+            "m_muspx": [],
+            "m_bmie": [],
+            "i_s": [],
+            "i_muspx": [],
+            "i_bmie": [],
+            "c_s": [],
+            "c_muspx": [],
+            "c_bmie": []
+        })
+        self.df.columns = [[
+            "epoch", "spec_rmsp", "absorb_rmsp",
+            "s_b", "s_s", "s_w", "s_f", "s_m", "s_muspx", "s_bmie",
+            "f_b", "f_s", "f_f", "f_muspx", "f_bmie",
+            "m_b", "m_s", "m_w", "m_c", "m_muspx", "m_bmie",
+            "i_s", "i_muspx", "i_bmie",
+            "c_s", "c_muspx", "c_bmie"
+        ]]
+
 
     def generate(self, num_gene):
         for n in range(num_gene):
@@ -54,8 +100,8 @@ class GA:
             #    self.rmse(spec_max, self.target_max)+\
             #    self.rmse(spec_min, self.target_min)+\
             #    self.rmse(abs_fit, abs_target))/3
-            if self.dual_constraint:
-                error = (self.rmse(spec_max, self.target_max)+self.rmse(spec_min, self.target_min))/2  + self.rmse(abs_fit, abs_target) * 0.05
+            if self.dual_ratio:
+                error = (self.rmse(spec_max, self.target_max)+self.rmse(spec_min, self.target_min))/2 + self.rmse(abs_fit, abs_target) * self.dual_ratio
             else:
                 error = (self.rmse(spec_max, self.target_max)+self.rmse(spec_min, self.target_min))/2 
 
@@ -66,8 +112,8 @@ class GA:
     def survive(self):
 
         num_pick = 100
-        self.gene = self.gene[:100]
-        self.generate(self.gene_size-100)
+        self.gene = self.gene[:num_pick]
+        self.generate(self.gene_size-num_pick)
         self.gene.sort(key=lambda x: x[1])
 
         return self.gene[0:num_pick].copy()
@@ -137,8 +183,8 @@ class GA:
             #    self.rmse(spec_max, self.target_max)+\
             #    self.rmse(spec_min, self.target_min)+\
             #    self.rmse(abs_fit, abs_target))/3
-            if self.dual_constraint:
-                error = (self.rmse(spec_max, self.target_max)+self.rmse(spec_min, self.target_min))/2  + self.rmse(abs_fit, abs_target) * 0.05
+            if self.dual_ratio:
+                error = (self.rmse(spec_max, self.target_max)+self.rmse(spec_min, self.target_min))/2  + self.rmse(abs_fit, abs_target) * self.dual_ratio
             else:
                 error = (self.rmse(spec_max, self.target_max)+self.rmse(spec_min, self.target_min))/2 
             self.gene += [(gene, error)]
@@ -159,7 +205,7 @@ class GA:
         x, y = np.array(x), np.array(y)
         return 100 * np.sqrt(((x-y)**2)).mean()/y.mean()
 
-    def __call__(self, plot=False, verbose=False):
+    def __call__(self, output_dir=None, plot=False, verbose=False):
 
         self.gene = []
 
@@ -172,9 +218,9 @@ class GA:
         for epoch in range(self.iteration):
 
             rand = np.random.rand()
-            if epoch % 100 == 0:
-                good = self.survive()
-            new_genes = self.crossover([i[0] for i in good].copy(), 50)
+            if epoch % 50 == 0:
+                good_gene = self.survive()
+            new_genes = self.crossover([i[0] for i in good_gene].copy(), 50)
             
             for new_gene in new_genes:
                 # calculate rmse
@@ -191,21 +237,41 @@ class GA:
                 #    self.rmse(spec_max, self.target_max)+\
                 #    self.rmse(spec_min, self.target_min)+\
                 #    self.rmse(abs_fit, abs_target))/3
-            if self.dual_constraint:
-                error = (self.rmse(spec_max, self.target_max)+self.rmse(spec_min, self.target_min))/2  + self.rmse(abs_fit, abs_target) * 0.05
-            else:
-                error = (self.rmse(spec_max, self.target_max)+self.rmse(spec_min, self.target_min))/2 
+                if self.dual_ratio:
+                    error = (self.rmse(spec_max, self.target_max)+self.rmse(spec_min, self.target_min))/2  + self.rmse(abs_fit, abs_target) * self.dual_ratio
+                else:
+                    error = (self.rmse(spec_max, self.target_max)+self.rmse(spec_min, self.target_min))/2 
                 self.gene.append((new_gene, error))
 
             self.gene.sort(key=lambda x: x[1])
+            del self.gene[-50:]
             
             rmse_list.append(self.gene[0][1])
             
-            if rand < 0.3:
+            if rand < 0.1:
                 
                 self.mutate()
 
-            if epoch % 50 == 0:
+                
+            args_max_ = self.vec2args(self.gene[0][0], self.geo_max)
+            args_min_ = self.vec2args(self.gene[0][0], self.geo_min)
+            spec_max_ = self.engine.get_spectrum(args_min_)
+            spec_min_ = self.engine.get_spectrum(args_max_)
+
+            abs_fit_ = normalize((np.log(spec_max_) - np.log(spec_min_))[6:])
+            error1 = (self.rmse(spec_max_, self.target_max)+self.rmse(spec_min_, self.target_min))/2
+            error2 = self.rmse(abs_fit_, abs_target)
+            
+#             self.df.loc[len(self.df)] = [
+#                 epoch, error1, error2,
+#                 args_max_["skin"]["blood_volume_fraction"], args_max_["skin"]["ScvO2"], args_max_["skin"]["water_volume"], args_max_["skin"]["fat_volume"], args_max_["skin"]["melanin_volume"], args_max_["skin"]["muspx"], args_max_["skin"]["bmie"],
+#                 args_max_["fat"]["blood_volume_fraction"], args_max_["fat"]["ScvO2"], args_max_["fat"]["fat_volume"], args_max_["fat"]["muspx"], args_max_["fat"]["bmie"],
+#                 args_max_["muscle"]["blood_volume_fraction"], args_max_["muscle"]["ScvO2"], args_max_["muscle"]["water_volume"], args_max_["muscle"]["collagen_volume"], args_max_["muscle"]["muspx"], args_max_["muscle"]["bmie"], 
+#                 args_max_["IJV"]["ScvO2"], args_max_["IJV"]["muspx"], args_max_["IJV"]["bmie"], 
+#                 args_max_["CCA"]["ScvO2"], args_max_["CCA"]["muspx"], args_max_["CCA"]["bmie"], 
+#             ]
+            
+            if epoch % self.log_period == 0:
 
                 if verbose:
 
@@ -217,10 +283,18 @@ class GA:
 
                 if plot:
                     fig, ax = plt.subplots(1, 3, figsize=(20, 5))
-                    args_max_ = self.vec2args(self.gene[0][0], self.geo_max)
-                    args_min_ = self.vec2args(self.gene[0][0], self.geo_min)
-                    spec_max_ = self.engine.get_spectrum(args_min_)
-                    spec_min_ = self.engine.get_spectrum(args_max_)
+                    
+                    with open(os.path.join(output_dir, "log", "epoch_{}.json".format(epoch)), "w+") as f:
+                        args_max_["spec_rmsp"] = error1
+                        args_max_["absorb_rmsp"] = error2
+                        json.dump(args_max_, f, indent=4)
+                    
+                    
+                    if verbose:
+
+                        print('best fit spectrum rmsp: {:.2f}'.format(error1))
+                        print('best fit absorption rmsp: {:.2f}'.format(error2))
+                        print(red('ijv scvO2: {:.2f}'.format(args_max_["IJV"]["ScvO2"])))
                     
                     ax[0].plot(self.wavelength, spec_max_, '--', label="fitting")
                     ax[0].plot(self.wavelength, spec_min_, '--', label="")
@@ -246,7 +320,18 @@ class GA:
                     ax[2].set_xlabel("iteration")
                     ax[2].grid()
                     ax[2].set_title('RMS percentage')
-                    plt.show()
+                    
+                    if output_dir:
+                        plt.savefig(os.path.join(output_dir, "fig", "iter_{}.png".format(epoch)))
+                        plt.clf()
+                    else:
+                        plt.show()
+                        
+#                 self.df.to_csv(os.path.join(output_dir, "log", "log.csv"), index=None)
+        for i, g in enumerate(self.gene):
+            gg = [i, g[1], 0] + list(g[0])
+            self.df.loc[len(self.df)] = gg
+        self.df.to_csv(os.path.join(output_dir, "log", "log.csv"), index=None)
 
 
 
@@ -354,25 +439,46 @@ class GA:
 
     def get_args(self, geo_max, geo_min):
         if not self.phantom:
-            x_range = {
-                "sb": (0, 0.1),
-                "ss": (0.5, 1.0),
-                "sw": (0, 1.0),
-                "sf": (0, 1.0),
-                "sm": (0, 1.0),
+            if not self.scvO2:
+                x_range = {
+                    "sb": (0, 0.1),
+                    "ss": (0.5, 1.0),
+                    "sw": (0, 1.0),
+                    "sf": (0, 1.0),
+                    "sm": (0, 1.0),
 
-                "fb": (0, 0.1),
-                "fs": (0, 1.0),
-                "ff": (0.9, 1),
+                    "fb": (0, 0.1),
+                    "fs": (0, 1.0),
+                    "ff": (0.9, 1),
 
-                "mb": (0.005, 0.1),
-                "ms": (0.0, 1.0),
-                "mw": (0.0, 1.0),
+                    "mb": (0.005, 0.1),
+                    "ms": (0.0, 1.0),
+                    "mw": (0.0, 1.0),
 
-                "is": (0.4, 0.8),
+                    "is": (0.4, 0.8),
 
-                "cs": (0.85, 1.0),
-            }
+                    "cs": (0.85, 1.0),
+                }
+            else:
+                x_range = {
+                    "sb": (0, 0.1),
+                    "ss": (0.5, 1.0),
+                    "sw": (0, 1.0),
+                    "sf": (0, 1.0),
+                    "sm": (0, 1.0),
+
+                    "fb": (0, 0.1),
+                    "fs": (0, 1.0),
+                    "ff": (0.9, 1),
+
+                    "mb": (0.005, 0.1),
+                    "ms": (0.0, 1.0),
+                    "mw": (0.0, 1.0),
+
+                    "is": (self.scvO2-0.05, self.scvO2+0.05),
+
+                    "cs": (0.85, 1.0),
+                }
         else:
             x_range = {
                 "sb": (0, 0.1),

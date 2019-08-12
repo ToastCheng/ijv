@@ -339,7 +339,7 @@ class MCXGen(MCX):
             if self.high_mus:
                 sql = "INSERT INTO ijv_ann_high({}) VALUES({})".format(field, values)
             else:
-                sql = "INSERT INTO ijv_ann_5({}) VALUES({})".format(field, values)
+                sql = "INSERT INTO ijv_ann_v2({}) VALUES({})".format(field, values)
             cursor = conn.cursor()
             cursor.execute(sql)
             conn.commit()
@@ -363,9 +363,9 @@ class MCXGen(MCX):
             num_batch = "%d " % (self.config["num_photon"]//self.config["photon_batch"])
 
         if self.high_mus:
-            maxdetphoton = "10000000"
+            maxdetphoton = "50000000"
         else:
-            maxdetphoton = "10000000"
+            maxdetphoton = "50000000"
         # maxdetphoton = "%d" % (self.config["num_photon"]//5)
         # save_mc2 = "0 " if self.config["train"] else "1 "
         # mc2 is seldom used
@@ -413,7 +413,7 @@ class MCXGen(MCX):
 if __name__ == "__main__":
     import sys
     if len(sys.argv) > 2 and bool(sys.argv[2]) == True:
-        mcx = MCXGen(high_mus=True)
+        mcx = MCXGen(high_mus=False)
     else:
         mcx = MCXGen()
     for i in range(int(sys.argv[1])):
