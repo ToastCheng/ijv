@@ -2,6 +2,7 @@ import os
 import pandas as pd 
 import numpy as np 
 from glob import glob
+import re
 import matplotlib.pyplot as plt 
 from scipy.signal import find_peaks_cwt, find_peaks, peak_prominences
 from scipy.optimize import fmin
@@ -865,16 +866,28 @@ def preprocess_tissue_phantom_0619(date):
     df = df[["wavelength", "c", "h", "i", "k", "e", "n"]]
     df.to_csv("data/processed/" + date + "/IJV/phantom/" + date + ".csv", index=None)
 
-
+# 20190812 update
 def preprocess_tissue_phantom(date):
     path = "data/raw/" + date
+    
+    output_path = os.path.join("data", "processed", date)
+    if not os.path.isdir(output_path):
+        os.mkdir(output_path)
+    output_path = os.path.join(output_path, "IJV")
+    if not os.path.isdir(output_path):
+        os.mkdir(output_path)
+    if not os.path.isdir(os.path.join(output_path, "live")):
+        os.mkdir(os.path.join(output_path, "live"))
+    if not os.path.isdir(os.path.join(output_path, "phantom")):
+        os.mkdir(os.path.join(output_path, "phantom"))
+    
 
     calib_wl = np.loadtxt(path + "/calib_wl.csv", delimiter=",")
     bg1 = np.loadtxt(path + "/background.csv", delimiter=",")
-    bg2 = np.loadtxt(path + "/background_2.csv", delimiter=",")
 
-    path_list = glob(path + "/live/live_*_*.csv")
-    path_list.sort(key=lambda x: (int(x.split('/')[-1].split('_')[-2]), int(x.split('/')[-1].split('_')[-1].strip('.csv'))))
+    path_list = glob(path + "/live/live_*_*_*.csv")
+    path_list.sort(key=lambda x: re.findall('_(.+?)', x))
+#     path_list.sort(key=lambda x: (int(x.split('/')[-1].split('_')[-2]), int(x.split('/')[-1].split('_')[-1].strip('.csv'))))
 
     wl = [i for i in range(660, 851, 10)]
 
@@ -895,17 +908,14 @@ def preprocess_tissue_phantom(date):
             df["max"] = smooth(l)
             df = pd.DataFrame(df)
             df = df[["wavelength", "max", "min"]]
-            df.to_csv("data/processed/" + date + "/IJV/live/" + date + "_" + str(i//2+1) + ".csv", index=None)
+            df.to_csv("data/processed/" + date + "/IJV/live/" + date + "_" + str(i//10+1) + "_" + str((i//2+1)%5+1) + ".csv", index=None)
 
     # phantom
     path_list = path + "/phantom/phantom_{}.csv" 
     df_dict = {"wavelength": wl}
     for i, p in enumerate("chiken"):
         pp = np.loadtxt(path_list.format(p), delimiter=",")
-        if p in "chi":
-            pp -= bg1
-        else:
-            pp -= bg2
+        pp -= bg1
         pp = pp.mean(0)
         pp = np.interp(wl, calib_wl, smooth(pp))
         df_dict[p] = pp

@@ -1,0 +1,73 @@
+{
+    "skin": {
+        "blood_volume_fraction": 0.07606900505989067,
+        "ScvO2": 0.9256453721238986,
+        "water_volume": 0.41927910098120286,
+        "fat_volume": 0.30504964040102683,
+        "melanin_volume": 0.19960225355787964,
+        "collagen_volume": 0,
+        "n": 1.4,
+        "g": 0.71,
+        "muspx": 96.0646401653632,
+        "bmie": 0.06315968172592418
+    },
+    "fat": {
+        "blood_volume_fraction": 0.011694015841110971,
+        "ScvO2": 0.00044090872171877486,
+        "water_volume": 0,
+        "fat_volume": 0.988305984158889,
+        "melanin_volume": 0,
+        "collagen_volume": 0,
+        "n": 1.4,
+        "g": 0.9,
+        "muspx": 11.587413069605681,
+        "bmie": 1.2469787543682178
+    },
+    "muscle": {
+        "blood_volume_fraction": 0.01855572105300418,
+        "ScvO2": 0.07921124339046835,
+        "water_volume": 0.09344531340691987,
+        "fat_volume": 0,
+        "melanin_volume": 0,
+        "collagen_volume": 0.887998965540076,
+        "n": 1.4,
+        "g": 0.9,
+        "muspx": 72.04780917746466,
+        "bmie": 7.04493677711903
+    },
+    "IJV": {
+        "blood_volume_fraction": 1.0,
+        "ScvO2": 0.02361596490967944,
+        "water_volume": 0,
+        "fat_volume": 0,
+        "melanin_volume": 0,
+        "collagen_volume": 0,
+        "n": 1.4,
+        "g": 0.9,
+        "muspx": 3.824238289864267,
+        "bmie": 0.06396440612173855
+    },
+    "CCA": {
+        "blood_volume_fraction": 1.0,
+        "ScvO2": 0.9497138365335667,
+        "water_volume": 0,
+        "fat_volume": 0,
+        "melanin_volume": 0,
+        "collagen_volume": 0,
+        "n": 1.4,
+        "g": 0.94,
+        "muspx": 0.021864261045535235,
+        "bmie": 0.08452655491701477
+    },
+    "geometry": [
+        2,
+        2.25,
+        5.21,
+        13,
+        6,
+        16,
+        3
+    ],
+    "spec_rmsp": 5.9740165072409805,
+    "absorb_rmsp": 19.246642835229764
+}

@@ -155,9 +155,9 @@ class MCXGen(MCX):
         inp["geometry"]["cca_radius"] = self._convert_unit(geo_ccar)
         inp["geometry"]["cca_depth"] = self._convert_unit(geo_ccad)
         inp["geometry"]["ijv_cca_distance"] = self._convert_unit(geo_ijvcca)
-        inp["boundary"]["x_size"] = 150
-        inp["boundary"]["y_size"] = 150
-        inp["boundary"]["z_size"] = 200
+        inp["boundary"]["x_size"] = 375
+        inp["boundary"]["y_size"] = 375
+        inp["boundary"]["z_size"] = 400
 
 
         # make input
@@ -253,9 +253,10 @@ class MCXGen(MCX):
 
 
         # 改成水平！ 20190511
-        src_x = 10
+        src_x = self._convert_unit(2.5)
         mcx_input["Optode"]["Source"]["Pos"][0] = src_x
         mcx_input["Optode"]["Source"]["Pos"][1] = y_size//2
+        mcx_input["Optode"]["Source"]["Pos"][2] = -self._convert_unit(15)
 
         mcx_input["Optode"]["Detector"] = []
 
@@ -339,7 +340,7 @@ class MCXGen(MCX):
             if self.high_mus:
                 sql = "INSERT INTO ijv_ann_high({}) VALUES({})".format(field, values)
             else:
-                sql = "INSERT INTO ijv_ann_v2({}) VALUES({})".format(field, values)
+                sql = "INSERT INTO ijv_ann_v4_high_reso_5e10({}) VALUES({})".format(field, values)
             cursor = conn.cursor()
             cursor.execute(sql)
             conn.commit()
